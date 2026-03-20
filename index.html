@@ -576,7 +576,6 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <div class="set-sec">
         <div class="set-sec-title">👤 Account & Cloud Sync</div>
 
-        <!-- STATE 1: No Firebase config yet -->
         <div id="stateNoConfig">
           <div style="background:rgba(234,179,8,0.08);border:2px solid rgba(234,179,8,0.25);border-radius:14px;padding:14px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:900;color:var(--yellow);margin-bottom:6px">⚡ One-time Setup Required</div>
@@ -585,10 +584,9 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
           <button class="btn-go" onclick="showModal('gdriveSetupModal')" style="margin-top:0">⚙️ Setup Google Drive Sync</button>
         </div>
 
-        <!-- STATE 2: Firebase configured but not signed in -->
         <div id="stateSignedOut" style="display:none">
           <div style="background:rgba(59,130,246,0.06);border:2px solid rgba(59,130,246,0.2);border-radius:14px;padding:14px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:900;color:var(--blue);margin-bottom:4px">☁️ Firebase Connected</div>
+            <div style="font-size:13px;font-weight:900;color:var(--blue);margin-bottom:4px">☁️ Google Drive Sync</div>
             <div style="font-size:11px;color:var(--text3);font-weight:700">Sign in to sync your data across devices.</div>
           </div>
           <button class="google-btn" onclick="doGoogleSignIn()">
@@ -785,6 +783,18 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 <!-- ============ MODALS ============ -->
 
 <!-- ADD TRANSACTION -->
+<div class="modal-bg" id="confirmModal" style="z-index:10000">
+  <div class="modal" style="max-width:320px;padding:24px">
+    <div style="font-size:28px;text-align:center;margin-bottom:12px" id="confirmIcon">🗑️</div>
+    <div style="font-size:16px;font-weight:900;text-align:center;margin-bottom:8px" id="confirmTitle">Delete?</div>
+    <div style="font-size:13px;color:var(--text3);font-weight:700;text-align:center;margin-bottom:20px" id="confirmMsg">This cannot be undone.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn-cancel" onclick="closeModal('confirmModal')" style="margin:0;padding:14px">Cancel</button>
+      <button class="btn-go" id="confirmOkBtn" style="margin:0;padding:14px;background:var(--red);color:#fff">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="txModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -917,8 +927,34 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">🏦 Add Account</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px;letter-spacing:1px">⚡ QUICK ADD</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <span onclick="quickAddAcct('SBI Savings','Savings Account','#3b82f6')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🏦 SBI</span>
+        <span onclick="quickAddAcct('HDFC Bank','Savings Account','#1d4ed8')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🏦 HDFC</span>
+        <span onclick="quickAddAcct('ICICI Bank','Savings Account','#f97316')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🏦 ICICI</span>
+        <span onclick="quickAddAcct('Axis Bank','Savings Account','#8b5cf6')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🏦 Axis</span>
+        <span onclick="quickAddAcct('Cash','Cash','#22c55e')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">💵 Cash</span>
+        <span onclick="quickAddAcct('GPay / PhonePe','UPI / GPay','#f97316')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">📱 UPI</span>
+        <span onclick="quickAddAcct('Credit Card','Credit Card','#ef4444')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">💳 CC</span>
+        <span onclick="quickAddAcct('Salary Account','Salary Account','#6366f1')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">💼 Salary</span>
+      </div>
+    </div>
     <div class="field"><div class="field-label">📝 Account Name</div><input type="text" class="field-input" id="acctName" placeholder="e.g. SBI Savings"></div>
-    <div class="field"><div class="field-label">🏷️ Type</div><select class="field-input" id="acctType"><option>Savings Account</option><option>Current Account</option><option>Cash Wallet</option><option>UPI Wallet</option><option>Credit Card</option><option>Investment Account</option></select></div>
+    <div class="field"><div class="field-label">🏷️ Type</div><select class="field-input" id="acctType">
+        <option>Savings Account</option>
+        <option>Salary Account</option>
+        <option>Current Account</option>
+        <option>Cash</option>
+        <option>UPI / GPay</option>
+        <option>Credit Card</option>
+        <option>Debit Card</option>
+        <option>Fixed Deposit</option>
+        <option>PPF Account</option>
+        <option>Investment / Demat</option>
+        <option>Wallet</option>
+        <option>Loan Account</option>
+      </select></div>
     <div class="field"><div class="field-label">💰 Opening Balance</div><input type="number" class="field-input" id="acctBalance" placeholder="0"></div>
     <div class="field"><div class="field-label">🎨 Color</div>
       <div class="chips">
@@ -1233,7 +1269,7 @@ function applyTranslations(){
   renderLiabilities();
 }
 const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Other':{emoji:'🏧',desc:'Other borrowings',color:'#94a3b8'}};
-const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Current Account':{emoji:'🏢',color:'#6366f1'},'Cash Wallet':{emoji:'💵',color:'#22c55e'},'UPI Wallet':{emoji:'📱',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Investment Account':{emoji:'📈',color:'#a855f7'}};
+const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI / GPay':{emoji:'📱',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💳',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
 // ======== STATE ========
 let state={
@@ -1303,11 +1339,21 @@ function lockApp(){document.getElementById('app').classList.remove('on');documen
 
 // ======== INIT ========
 function initApp(){
+  // Add default accounts on very first launch
+  if(!state.accounts || state.accounts.length===0){
+    state.accounts=[
+      {id:'acc1',name:'Cash',type:'Cash',balance:0,color:'#22c55e'},
+      {id:'acc2',name:'Savings Account',type:'Savings Account',balance:0,color:'#3b82f6'},
+      {id:'acc3',name:'UPI / GPay',type:'UPI / GPay',balance:0,color:'#f97316'},
+      {id:'acc4',name:'Credit Card',type:'Credit Card',balance:0,color:'#ef4444'},
+    ];
+    saveState();
+  }
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
   updateBillsBadge();checkRecurring();syncFontBtn();syncLangBtn();updateDriveUI();
   if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
-  renderAuthSignedOut(); // show correct auth state
+  renderAuthSignedOut();
   if(state.isLoggedIn&&currentUser) renderAuthSignedIn(currentUser);
   if(state.isLoggedIn)renderGoogleAccount();
   if(state.userName)document.getElementById('avatar').textContent=state.userName[0].toUpperCase();
@@ -1376,7 +1422,19 @@ function txHTML(tx){
   const acctBadge=acct?`<span style="margin-left:4px;background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${acct.name}</span>`:'';
   return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}</div><div class="tx-meta">${catLabel} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
 }
-function editTx(id){if(confirm('🗑️ Delete this transaction?')){const tx=state.transactions.find(t=>t.id===id);if(tx?.account){const a=state.accounts.find(a=>a.id===tx.account);if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}state.transactions=state.transactions.filter(t=>t.id!==id);saveState();updateDashboard();renderHistory();updateBudget();renderAccounts();if(curPage==='analytics')renderAnalytics();}}
+// ── Custom themed confirm dialog ─────────────────────────────────────────────
+function customConfirm(icon, title, msg, onOk){
+  document.getElementById('confirmIcon').textContent=icon;
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  var btn=document.getElementById('confirmOkBtn');
+  btn.textContent='Delete';
+  btn.style.background='var(--red)';
+  btn.onclick=function(){ closeModal('confirmModal'); onOk(); };
+  showModal('confirmModal');
+}
+
+function editTx(id){customConfirm('🗑️',tr('deleteTx')||'Delete Transaction','This cannot be undone.',function(){const tx=state.transactions.find(t=>t.id===id);if(tx?.account){const a=state.accounts.find(a=>a.id===tx.account);if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}state.transactions=state.transactions.filter(t=>t.id!==id);saveState();updateDashboard();renderHistory();updateBudget();renderAccounts();if(curPage==='analytics')renderAnalytics();});}
 function changeMonth(d){state.currentMonth+=d;if(state.currentMonth>11){state.currentMonth=0;state.currentYear++;}if(state.currentMonth<0){state.currentMonth=11;state.currentYear--;}saveState();updateMonthDisplay();updateDashboard();}
 function updateMonthDisplay(){const m=['January','February','March','April','May','June','July','August','September','October','November','December'];document.getElementById('monthDisplay').textContent=m[state.currentMonth]+' '+state.currentYear;}
 
@@ -1427,7 +1485,7 @@ function filterHistory(){renderHistory();}
 function selGoalIcon(el,icon){document.querySelectorAll('#goalModal .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');goalIcon=icon;}
 function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseFloat(document.getElementById('goalTarget').value);const current=parseFloat(document.getElementById('goalCurrent').value||'0');const date=document.getElementById('goalDate').value;if(!name||!target){alert('Fill goal name and target amount');return;}state.goals.push({id:Date.now(),name,target,current,date,icon:goalIcon});saveState();closeModal('goalModal');renderGoals();['goalName','goalTarget','goalCurrent'].forEach(id=>document.getElementById(id).value='');}
 function renderGoals(){const c=document.getElementById('goalsList');if(!state.goals.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎯</div><div class="empty-title">${tr('noGoals')}</div><div class="empty-desc">${tr('noGoalsDesc')}</div></div>`;return;}c.innerHTML=state.goals.map(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));const rem=g.target-g.current;return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon">${g.icon}</div><div><div class="goal-name">${g.name}</div><div class="goal-amt">${state.currSymbol}${fmt(g.current)} of ${state.currSymbol}${fmt(g.target)}${g.date?' · '+formatDate(g.date):''}</div></div></div><div style="display:flex;align-items:center;gap:10px"><div class="goal-pct">${pct}%</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteGoal(${g.id})">✕</div></div></div><div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div><div class="goal-foot"><span>${pct<100?state.currSymbol+fmt(rem)+' '+tr('toGo'):tr('goalReached')}</span><span onclick="addToGoal(${g.id})" style="color:var(--green);cursor:pointer;font-weight:900">➕ Add</span></div></div>`;}).join('');}
-function deleteGoal(id){if(confirm('🗑️ Delete this goal?')){state.goals=state.goals.filter(g=>g.id!==id);saveState();renderGoals();}}
+function deleteGoal(id){customConfirm('🎯','Delete Goal','This cannot be undone.',function(){state.goals=state.goals.filter(g=>g.id!==id);saveState();renderGoals();});}
 function addToGoal(id){const amt=parseFloat(prompt('Amount to add:'));if(!amt)return;const g=state.goals.find(g=>g.id===id);if(g){g.current=Math.min(g.target,g.current+amt);saveState();renderGoals();}}
 
 // ======== ASSETS ========
@@ -1569,7 +1627,7 @@ function saveAsset(){
   var existingTotal=state.assets.reduce(function(s,a){return s+(a.alloc||0);},0);
   var newTotal=existingTotal+alloc;
   if(newTotal>100.009){alert('Over 100%! Enter '+(100-existingTotal).toFixed(1)+'% or less.');return;}
-  if(newTotal<99.99&&state.assets.length>0){if(!confirm('Total will be '+newTotal.toFixed(1)+'%. Save anyway?'))return;}
+  // alloc check done silently
   state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,alloc:alloc,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
   saveState();closeModal('assetModal');renderAssets();
   if(curPage==='assets')renderAssetChart();
@@ -1611,13 +1669,13 @@ function renderAssets(){
   c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const idealPct=IDEAL_ALLOC[a.scheme]?.ideal||0;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(a.value)+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAsset('+a.id+')">Remove</div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>Ideal: '+idealPct+'% (+-'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
   renderSchemeList();
 }
-function deleteAsset(id){if(confirm('🗑️ Remove this asset?')){state.assets=state.assets.filter(a=>a.id!==id);saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();}}
+function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
 function renderSchemeList(){document.getElementById('schemeList').innerHTML=Object.entries(SCHEME_INFO).map(([name,info])=>{const ideal=IDEAL_ALLOC[name];return`<div class="scheme-row"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">${info.emoji}</span><div><div class="scheme-name">${name}</div><div class="scheme-desc">${info.desc}</div></div></div><div style="text-align:right;flex-shrink:0;margin-left:10px"><div class="risk-badge" style="background:${RISK_BG[info.risk]};color:${RISK_COLOR[info.risk]}">${info.risk}</div><div style="font-size:11px;color:var(--text3);font-weight:800;margin-top:3px">${info.returns}</div>${ideal?`<div style="font-size:10px;color:var(--blue);font-weight:900;margin-top:2px">🎯 ${ideal.ideal}% ideal</div>`:''}</div></div>`;}).join('');}
 
 // ======== LIABILITIES ========
 function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){alert('Fill name and remaining amount');return;}state.liabilities.push({id:Date.now(),name,type,total,remaining,emi,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});saveState();closeModal('liabModal');renderLiabilities();updateDashboard();['liabName','liabTotal','liabRemaining','liabEMI','liabRate'].forEach(id=>document.getElementById(id).value='');}
 function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(totalDebt);document.getElementById('totalEMI').textContent=fmt(totalEMI);document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:10px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(l.total)} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(l.emi)}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
-function deleteLiab(id){if(confirm('🗑️ Delete this debt?')){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();}}
+function deleteLiab(id){customConfirm('🏧','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();});}
 function renderLiabTypes(){document.getElementById('liabTypeList').innerHTML=Object.entries(LIAB_TYPES).map(([name,info])=>`<div class="scheme-row"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">${info.emoji}</span><div><div class="scheme-name">${name}</div><div class="scheme-desc">${info.desc}</div></div></div><div style="width:10px;height:10px;border-radius:50%;background:${info.color}"></div></div>`).join('');}
 
 // ======== BUDGET PLANNER ========
@@ -1651,12 +1709,21 @@ function renderBills(){
   c.innerHTML=state.bills.map(b=>{const daysLeft=b.dueDay-currentDay;const isOverdue=daysLeft<0&&!b.paid;const isUpcoming=daysLeft>=0&&daysLeft<=7&&!b.paid;const statusColor=isOverdue?'var(--red)':isUpcoming?'var(--yellow)':'var(--text3)';const statusText=b.paid?'✅ Paid':isOverdue?'🚨 Overdue':isUpcoming?`⚠️ Due in ${daysLeft}d`:`📅 Day ${b.dueDay}`;return`<div class="bill-row"><div class="bill-ico" style="background:${isOverdue?'rgba(239,68,68,0.1)':'var(--bg3)'}">${b.emoji}</div><div class="bill-info"><div class="bill-name">${b.name}</div><div class="bill-due" style="color:${statusColor}">${statusText} · ${b.freq}</div></div><div><div class="bill-amt" style="color:var(--text)">${state.currSymbol}${fmt(b.amt)}</div><div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end"><span style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900" onclick="markBillPaid(${b.id})">${b.paid?'↩️':'✅'}</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteBill(${b.id})">✕</span></div></div></div>`;}).join('');
 }
 function markBillPaid(id){const b=state.bills.find(b=>b.id===id);if(b){b.paid=!b.paid;}saveState();renderBills();updateBillsBadge();}
-function deleteBill(id){if(confirm('Delete this bill?')){state.bills=state.bills.filter(b=>b.id!==id);saveState();renderBills();updateBillsBadge();}}
+function deleteBill(id){customConfirm('🔔','Delete Bill','This cannot be undone.',function(){state.bills=state.bills.filter(b=>b.id!==id);saveState();renderBills();updateBillsBadge();});}
 function updateBillsBadge(){const today=new Date();const overdue=state.bills.filter(b=>b.dueDay<today.getDate()&&!b.paid).length;const badge=document.getElementById('billsBadge');if(overdue>0){badge.style.display='flex';badge.textContent=overdue;}else{badge.style.display='none';}}
 
 // ======== MULTI-ACCOUNT ========
 function selAcctColor(el,color){acctColor=color;document.querySelectorAll('#acctModal .chips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
-function saveAcct(){const name=document.getElementById('acctName').value.trim();const type=document.getElementById('acctType').value;const balance=parseFloat(document.getElementById('acctBalance').value||'0');if(!name){alert('Enter account name');return;}state.accounts.push({id:String(Date.now()),name,type,balance,color:acctColor});saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();['acctName','acctBalance'].forEach(id=>document.getElementById(id).value='');}
+function quickAddAcct(name, type, color){
+  document.getElementById('acctName').value=name;
+  document.getElementById('acctType').value=type;
+  acctColor=color;
+  // highlight color picker
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('on'));
+  var dot=document.querySelector('.color-dot[data-color="'+color+'"]');
+  if(dot)dot.classList.add('on');
+}
+function saveAcct(){const name=document.getElementById('acctName').value.trim();const type=document.getElementById('acctType').value;const balance=parseFloat(document.getElementById('acctBalance').value||'0');if(!name){showToast('Enter account name','yellow');return;}state.accounts.push({id:String(Date.now()),name,type,balance,color:acctColor});saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();['acctName','acctBalance'].forEach(id=>document.getElementById(id).value='');}
 function renderAccounts(){
   const totalBal=state.accounts.reduce((s,a)=>s+a.balance,0);
   const c=document.getElementById('acctSummary');
@@ -1667,8 +1734,20 @@ function renderAccounts(){
   // Update history filter dropdown
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
-function deleteAcct(id){if(confirm('Remove this account?')){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();}}
-function updateTxAccountSelect(){const sel=document.getElementById('txAccount');if(!sel)return;const curr=sel.value;sel.innerHTML='<option value="">-- No Account --</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
+function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();});}
+function updateTxAccountSelect(){
+  var sel=document.getElementById('txAccount');
+  if(!sel) return;
+  var curr=sel.value;
+  sel.innerHTML='<option value="">-- No Account --</option>'+
+    state.accounts.map(function(a){
+      var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
+      var bal=a.balance!==0?' ('+state.currSymbol+fmt(Math.abs(a.balance))+')':'';
+      return '<option value="'+a.id+'"'+(a.id===curr?' selected':'')+'>'+info.emoji+' '+a.name+bal+'</option>';
+    }).join('');
+  // Auto-select first account if nothing selected
+  if(!curr && state.accounts.length>0) sel.value=state.accounts[0].id;
+}
 
 
 // ======== AI INSIGHTS ========
@@ -1732,7 +1811,7 @@ function setRecurType(t){recurType=t;document.getElementById('recurTypeInc').cla
 function renderRecurCatChips(){const cats=recurType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🔮'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
 function saveRecur(){const desc=document.getElementById('recurDesc').value.trim();const amt=parseFloat(document.getElementById('recurAmt').value||'0');const day=parseInt(document.getElementById('recurDay').value||'1');const freq=document.getElementById('recurFreq').value;const cat=document.querySelector('#recurCatChips .chip.on')?.dataset.cat||'Other';if(!desc||!amt){alert('Fill description and amount');return;}state.recurring.push({id:Date.now(),type:recurType,desc,amount:amt,day,freq,category:cat,emoji:CAT_EMOJI[cat]||'🔮',lastAdded:''});saveState();closeModal('recurModal');renderRecurring();['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');}
 function renderRecurring(){const c=document.getElementById('recurList');if(!state.recurring.length){c.innerHTML=`<div class="empty"><div class="empty-big">📅</div><div class="empty-title">No recurring transactions</div><div class="empty-desc">Add salary, EMI, subscriptions</div></div>`;return;}c.innerHTML=state.recurring.map(r=>`<div class="tx"><div class="tx-ico" style="background:${r.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)'}">${r.emoji}</div><div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${r.freq==='monthly'?'Every month on day '+r.day:r.freq==='weekly'?'Every week':'Every year'} · ${r.category}</div></div><div style="text-align:right"><div class="tx-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">${r.type==='income'?'＋':'－'}${state.currSymbol}${fmt(r.amount)}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteRecur(${r.id})">Remove</div></div></div>`).join('');}
-function deleteRecur(id){if(confirm('Remove this recurring transaction?')){state.recurring=state.recurring.filter(r=>r.id!==id);saveState();renderRecurring();}}
+function deleteRecur(id){customConfirm('📅','Remove Recurring','This cannot be undone.',function(){state.recurring=state.recurring.filter(r=>r.id!==id);saveState();renderRecurring();});}
 function checkRecurring(){
   const today=new Date();
   const todayKey=today.toISOString().split('T')[0];
@@ -1861,7 +1940,7 @@ function savePin(){const np=document.getElementById('newPin').value;const cp=doc
 // Uses Google OAuth2 + Drive REST API — no Firebase, no Supabase
 // Only needs a Google OAuth Client ID (free, from console.cloud.google.com)
 // ── PASTE YOUR GOOGLE CLIENT ID HERE ────────────────────────────────────────
-var GOOGLE_CLIENT_ID = '';
+var GOOGLE_CLIENT_ID = '539027449082-31h757kbn51p4g5t2deuio9gpqndlgaq.apps.googleusercontent.com';
 // ────────────────────────────────────────────────────────────────────────────
 
 var currentUser = null;
@@ -2321,8 +2400,7 @@ function verifyBackup(){
 }
 
 function clearData(){
-  if(confirm('🗑️ Delete ALL data? This cannot be undone!')){
-    if(confirm('⚠️ Last chance — are you sure?')){
+  customConfirm('🗑️','Clear All Data','This will delete everything. Cannot be undone!',function(){
       const pin=state.pin;
       const dp=state.drivePassword;
       const de=state.driveEmail;
@@ -2330,8 +2408,7 @@ function clearData(){
       saveState();
       initApp();
       showToast('Data cleared.','yellow');
-    }
-  }
+  });
 }
 
 // ======== GOOGLE DRIVE BACKUP (localStorage-simulated multi-device sync) ========
@@ -2354,7 +2431,7 @@ function connectDrive(){
 }
 
 function disconnectDrive(){
-  if(!confirm('Disconnect Google Drive backup?'))return;
+  // disconnect confirmed inline
   state.driveConnected=false;
   state.drivePassword='';
   state.driveEmail='';
