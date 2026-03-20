@@ -299,7 +299,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <span class="topbar-logo">💰</span>
       <div>
         <div class="topbar-title" id="pageTitle">Home</div>
-        <div class="topbar-sub">Finance Tracker v5</div>
+        <div class="topbar-sub">Finance Tracker</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -718,41 +718,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
           <div class="set-row-right" style="color:var(--red)">⚠️</div>
         </div>
       </div>
-      <!-- Version History -->
-      <div class="set-sec">
-        <div class="set-sec-title">📋 Version History</div>
-        <div class="ver-card" style="border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.05)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">🚀</span><div><div style="font-size:15px;font-weight:900">v5.0 — Current</div><div style="font-size:11px;color:var(--text3);font-weight:700">2025</div></div></div>
-            <span class="ver-badge" style="background:var(--green);color:#0f1f0a">LATEST</span>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:5px">
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Recurring Transactions — auto-add on schedule</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Budget Planner — per-category spending limits</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Bill Reminders — due date alerts with badge</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Multi-Account — Cash, Bank, UPI, Credit Card</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ AI Insights — Claude-powered spending analysis</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Receipt Scanner — camera + AI auto-fill</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Advanced Reports — net worth timeline, yearly summary</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Import/Restore — JSON backup & restore</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Account filter in history</div>
-          </div>
-        </div>
-        <div class="ver-card">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:20px">💎</span><div><div style="font-size:15px;font-weight:900">v4.0 — Allocation & Language</div><div style="font-size:11px;color:var(--text3);font-weight:700">2025</div></div></div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Asset allocation 100% enforcement</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Tamil language support</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Liabilities / Debts page</div>
-            <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Pictogram Bold UI</div>
-          </div>
-        </div>
-        <div class="ver-card">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:20px">🌱</span><div><div style="font-size:15px;font-weight:900">v1–v3 · Foundation</div><div style="font-size:11px;color:var(--text3);font-weight:700">2024–2025</div></div></div>
-          <div style="font-size:12px;font-weight:700;color:var(--text2)">✅ Core tracking, goals, assets, charts, themes, PIN lock, PWA</div>
-        </div>
-      </div>
-      <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 16px">💰 Finance Tracker · v5.0 · Made with ❤️</div>
+      <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 16px">💰 Finance Tracker · Made with ❤️</div>
     </div>
 
   </div><!-- /content -->
@@ -1949,7 +1915,7 @@ var gDriveFileId = null; // cached Drive file ID for ft_backup.json
 var emailAuthMode = 'login';
 var GIS_LOADED = false;
 var GAPI_LOADED = false;
-var TOKEN_SCOPES = 'https://www.googleapis.com/auth/drive.appdata email profile';
+var TOKEN_SCOPES = 'https://www.googleapis.com/auth/drive.file email profile';
 
 function getClientId(){
   if(GOOGLE_CLIENT_ID) return GOOGLE_CLIENT_ID;
@@ -2133,119 +2099,154 @@ function renderAuthSignedOut(){ updateAuthUI(); }
 function renderGoogleAccount(){ updateAuthUI(); }
 
 // ── Drive Sync ────────────────────────────────────────────────────────────────
-var DRIVE_FILE_NAME = 'ft_backup.json';
-
-function getDriveHeaders(){
-  return { Authorization:'Bearer '+gAccessToken, 'Content-Type':'application/json' };
-}
+var DRIVE_FILE_NAME = 'finance_tracker_backup.json';
 
 function findDriveFile(){
-  return fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D%22'+DRIVE_FILE_NAME+'%22&fields=files(id,name,modifiedTime)',{
+  // Search in user's Drive (drive.file scope)
+  var q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
+  return fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name,modifiedTime)&spaces=drive',{
     headers:{Authorization:'Bearer '+gAccessToken}
   }).then(function(r){ return r.json(); }).then(function(res){
+    if(res.error){ console.error('findDriveFile error:',res.error); return null; }
     if(res.files && res.files.length>0){ gDriveFileId=res.files[0].id; return res.files[0]; }
     return null;
   });
 }
 
 function syncToCloud(){
-  if(!currentUser||!gAccessToken){ return; }
+  if(!currentUser||!gAccessToken){
+    showToast('Sign in first to sync','yellow'); return;
+  }
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Syncing...';
 
+  // Build clean state to save
   var safeState=JSON.parse(JSON.stringify(state));
   delete safeState.gClientId;
+  safeState.lastSync=new Date().toISOString();
+
   var payload=JSON.stringify({
-    updatedAt:new Date().toISOString(),
-    device:navigator.userAgent.substring(0,60),
-    data:JSON.stringify(safeState)
+    v:'1',
+    updatedAt:safeState.lastSync,
+    data:safeState
   });
 
   var timedOut=false;
   var timer=setTimeout(function(){
     timedOut=true;
-    if(el) el.textContent='Timed out';
-    showToast('⚠️ Sync timed out. Check internet connection.','red');
-  },15000);
+    if(el) el.textContent='Timed out — check internet';
+    showToast('⚠️ Sync timed out.','red');
+  },20000);
 
   findDriveFile().then(function(existing){
-    var url, method, body;
     if(existing){
-      // Update existing file
-      url='https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=media';
-      method='PATCH';
+      // PATCH existing file content
+      return fetch('https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=media',{
+        method:'PATCH',
+        headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'application/json'},
+        body:payload
+      }).then(function(r){ return r.json(); });
     } else {
-      // Create new file in appDataFolder
-      url='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-      method='POST';
-      // Use multipart for creation
-      var meta=JSON.stringify({name:DRIVE_FILE_NAME, parents:['appDataFolder']});
-      var boundary='ftboundary';
+      // POST new file with metadata
+      var boundary='ft_bound_'+Date.now();
+      var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
       var CRLF='\r\n';
-      var multipart='--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
-      return fetch(url,{
-        method:method,
+      var body='--'+boundary+CRLF
+        +'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF
+        +meta+CRLF
+        +'--'+boundary+CRLF
+        +'Content-Type: application/json'+CRLF+CRLF
+        +payload+CRLF
+        +'--'+boundary+'--';
+      return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+        method:'POST',
         headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'multipart/related; boundary='+boundary},
-        body:multipart
-      }).then(function(r){ return r.json(); }).then(function(res){
-        clearTimeout(timer); if(timedOut) return;
-        if(res.error){ showToast('❌ Sync failed: '+res.error.message,'red'); if(el)el.textContent='Sync failed'; return; }
-        gDriveFileId=res.id;
-        state.lastSync=new Date().toISOString(); saveState(); updateCloudSyncStatus();
-      });
+        body:body
+      }).then(function(r){ return r.json(); });
     }
-    return fetch(url,{
-      method:method,
-      headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'application/json'},
-      body:payload
-    }).then(function(r){ return r.json(); }).then(function(res){
-      clearTimeout(timer); if(timedOut) return;
-      if(res.error){ showToast('❌ Sync failed: '+res.error.message,'red'); if(el)el.textContent='Sync failed'; return; }
-      state.lastSync=new Date().toISOString(); saveState(); updateCloudSyncStatus();
-    });
+  }).then(function(res){
+    clearTimeout(timer); if(timedOut) return;
+    if(!res||res.error){
+      var msg=(res&&res.error)?res.error.message:'Unknown error';
+      showToast('❌ Sync failed: '+msg,'red');
+      if(el) el.textContent='Sync failed';
+      console.error('Sync error:',res);
+      return;
+    }
+    if(res.id) gDriveFileId=res.id;
+    state.lastSync=safeState.lastSync;
+    saveState();
+    updateCloudSyncStatus();
+    showToast('✅ Synced to Google Drive!','green');
   }).catch(function(e){
     clearTimeout(timer);
     showToast('❌ Sync error: '+e.message,'red');
     if(el) el.textContent='Sync failed';
+    console.error('Sync catch:',e);
   });
 }
 
 function loadFromCloud(){
-  if(!currentUser||!gAccessToken){ return; }
+  if(!currentUser||!gAccessToken){
+    showToast('Sign in first to load','yellow'); return;
+  }
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
-  if(el) el.textContent='Loading...';
+  if(el) el.textContent='Loading from Drive...';
 
   var timedOut=false;
   var timer=setTimeout(function(){
     timedOut=true;
     if(el) el.textContent='Timed out';
     showToast('⚠️ Load timed out.','red');
-  },15000);
+  },20000);
 
   findDriveFile().then(function(existing){
-    if(!existing){ clearTimeout(timer); if(el)el.textContent='No backup found'; return; }
+    if(!existing){
+      clearTimeout(timer);
+      if(el) el.textContent='No backup found on Drive';
+      showToast('No backup found. Sync first from another device.','yellow');
+      return;
+    }
     return fetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media',{
       headers:{Authorization:'Bearer '+gAccessToken}
-    }).then(function(r){ return r.json(); }).then(function(payload){
-      clearTimeout(timer); if(timedOut) return;
-      var imported=JSON.parse(payload.data);
-      var cloudDate=new Date(payload.updatedAt||0);
-      var localDate=new Date(state.lastSync||0);
-      if(state.lastSync&&cloudDate<=localDate){ updateCloudSyncStatus(); return; }
-      var keep={isLoggedIn:state.isLoggedIn,userName:state.userName,userEmail:state.userEmail,
-        lastSync:payload.updatedAt, gClientId:state.gClientId,
-        localProfilePhoto:state.localProfilePhoto, pin:state.pin, fpEnabled:state.fpEnabled};
-      Object.assign(state,imported,keep);
-      ['liabilities','bills','accounts','recurring','assets','transactions','goals'].forEach(function(k){ if(!Array.isArray(state[k]))state[k]=[]; });
-      if(!state.budgets)state.budgets={};
-      saveState(); applyTheme(state.theme); applyFont(state.font); updateCurrSymbols(); initApp();
+    }).then(function(r){ return r.json(); });
+  }).then(function(payload){
+    if(!payload) return;
+    clearTimeout(timer); if(timedOut) return;
+    if(payload.error){
+      showToast('❌ Load failed: '+payload.error.message,'red');
+      if(el) el.textContent='Load failed';
+      return;
+    }
+    // Handle both formats
+    var imported=payload.data||payload;
+    if(typeof imported==='string') imported=JSON.parse(imported);
+    // Always restore — ignore timestamp comparison so "clear + load" always works
+    var keep={
+      isLoggedIn:state.isLoggedIn, userName:state.userName, userEmail:state.userEmail,
+      lastSync:payload.updatedAt||new Date().toISOString(),
+      gClientId:state.gClientId,
+      localProfilePhoto:state.localProfilePhoto,
+      pin:state.pin, fpEnabled:state.fpEnabled
+    };
+    Object.assign(state,imported,keep);
+    ['liabilities','bills','accounts','recurring','assets','transactions','goals'].forEach(function(k){
+      if(!Array.isArray(state[k])) state[k]=[];
     });
+    if(!state.budgets) state.budgets={};
+    saveState();
+    applyTheme(state.theme);
+    applyFont(state.font);
+    updateCurrSymbols();
+    initApp();
+    showToast('✅ Data loaded! '+state.transactions.length+' transactions restored.','green');
   }).catch(function(e){
     clearTimeout(timer);
     showToast('❌ Load error: '+e.message,'red');
     if(el) el.textContent='Load failed';
+    console.error('Load catch:',e);
   });
 }
 
