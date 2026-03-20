@@ -579,10 +579,10 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
         <!-- STATE 1: No Firebase config yet -->
         <div id="stateNoConfig">
           <div style="background:rgba(234,179,8,0.08);border:2px solid rgba(234,179,8,0.25);border-radius:14px;padding:14px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:900;color:var(--yellow);margin-bottom:6px">⚡ Firebase Setup Required</div>
-            <div style="font-size:11px;color:var(--text3);font-weight:700;line-height:1.7">Enter your Firebase config below. <b style="color:var(--text)">Tip: To avoid this on every device, download the HTML file after saving config — it will have your config embedded.</b></div>
+            <div style="font-size:13px;font-weight:900;color:var(--yellow);margin-bottom:6px">⚡ One-time Setup Required</div>
+            <div style="font-size:11px;color:var(--text3);font-weight:700;line-height:1.7">Enter your Google OAuth Client ID (free) to enable Google sign-in and Drive sync. Takes 5 minutes once.</div>
           </div>
-          <button class="btn-go" onclick="showModal('firebaseSetupModal')" style="margin-top:0">⚙️ Enter Firebase Config</button>
+          <button class="btn-go" onclick="showModal('gdriveSetupModal')" style="margin-top:0">⚙️ Setup Google Drive Sync</button>
         </div>
 
         <!-- STATE 2: Firebase configured but not signed in -->
@@ -597,7 +597,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
           </button>
           <div style="text-align:center;margin:10px 0;font-size:11px;color:var(--text3);font-weight:700">— or use email —</div>
           <button class="btn-go" onclick="showModal('emailAuthModal')" style="background:var(--bg3);color:var(--text);margin-top:0">📧 Sign in with Email</button>
-          <div style="text-align:center;margin-top:10px"><span style="font-size:11px;color:var(--text3);cursor:pointer;font-weight:700" onclick="showModal('firebaseSetupModal')">⚙️ Change Firebase config</span></div>
+          <div style="text-align:center;margin-top:10px"><span style="font-size:11px;color:var(--text3);cursor:pointer;font-weight:700" onclick="showModal('gdriveSetupModal')">⚙️ Change Google Client ID</span></div>
         </div>
 
         <!-- STATE 3: Signed in -->
@@ -623,8 +623,8 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
             <div class="set-row-left"><span class="set-row-icon">📥</span><div><div class="set-row-label">Load from Cloud</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="lastSyncDisplay">Never synced</div></div></div>
             <div class="set-row-right">Load ▶</div>
           </div>
-          <div class="set-row" onclick="showModal('firestoreRulesModal')" style="margin-bottom:8px;border-color:rgba(234,179,8,0.2)">
-            <div class="set-row-left"><span class="set-row-icon">🛡️</span><div><div class="set-row-label">Fix Firestore Rules</div><div style="font-size:11px;color:var(--yellow);font-weight:700;margin-top:2px">If sync hangs or shows permission error</div></div></div>
+          <div class="set-row" onclick="showModal('gdriveHelpModal')" style="margin-bottom:8px;border-color:rgba(234,179,8,0.2)">
+            <div class="set-row-left"><span class="set-row-icon">🛡️</span><div><div class="set-row-label">Google Drive Help</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Troubleshoot sync issues</div></div></div>
             <div class="set-row-right">Help ▶</div>
           </div>
           <button class="btn-cancel" onclick="signOutGoogle()" style="width:100%;margin-top:4px;color:var(--red)">Sign out</button>
@@ -969,102 +969,58 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 </div>
 
 
-<div class="modal-bg" id="embedConfigModal">
+<div class="modal-bg" id="gdriveHelpModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">📲 One More Step</div>
-    <div style="background:rgba(34,197,94,0.08);border:2px solid rgba(34,197,94,0.25);border-radius:14px;padding:14px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:900;color:var(--green);margin-bottom:6px">✅ Firebase config saved on this device</div>
-      <div style="font-size:12px;color:var(--text3);font-weight:700;line-height:1.6">To skip this setup on <b style="color:var(--text)">all other devices</b> (mobile, tablet, etc), download a new version of the app with your Firebase config <b style="color:var(--text)">permanently built-in</b>.</div>
-    </div>
-
+    <div class="modal-title">☁️ Google Drive Help</div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">1️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">Click <b style="color:var(--accent)">Download index.html</b> below</div>
+      <div style="background:var(--bg3);border-radius:12px;padding:12px">
+        <div style="font-size:12px;font-weight:900;margin-bottom:4px">Sign-in popup blocked?</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:700">Allow popups for this site in Chrome → Settings → Privacy → Site Settings → Pop-ups</div>
       </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">2️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">Go to <b style="color:var(--text)">app.netlify.com</b> → your site → <b style="color:var(--text)">Deploys</b> → drag the new file to redeploy</div>
+      <div style="background:var(--bg3);border-radius:12px;padding:12px">
+        <div style="font-size:12px;font-weight:900;margin-bottom:4px">Token expired?</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:700">Sign out and sign in again. Google tokens expire after 1 hour.</div>
       </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">3️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">On mobile — open the same Netlify URL → <b style="color:var(--green)">Sign in with Google directly</b> — no setup needed ✅</div>
+      <div style="background:var(--bg3);border-radius:12px;padding:12px">
+        <div style="font-size:12px;font-weight:900;margin-bottom:4px">Drive API not enabled?</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:700">Go to console.cloud.google.com → APIs → Enable "Google Drive API"</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:12px;padding:12px">
+        <div style="font-size:12px;font-weight:900;margin-bottom:4px">Wrong Client ID?</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:700">Tap "Change Google Client ID" below to re-enter your credentials.</div>
       </div>
     </div>
-
-    <button class="btn-go" onclick="downloadWithEmbeddedConfig()">📥 Download index.html (with config)</button>
-    <button class="btn-cancel" onclick="closeModal('embedConfigModal')">Skip — I'll set up manually</button>
+    <button class="btn-go" onclick="doGoogleSignIn();closeModal('gdriveHelpModal')">🔄 Try Sign In Again</button>
+    <button class="btn-go" style="background:var(--bg3);color:var(--text);margin-top:8px" onclick="closeModal('gdriveHelpModal');showModal('gdriveSetupModal')">⚙️ Change Client ID</button>
+    <button class="btn-cancel" onclick="closeModal('gdriveHelpModal')">Close</button>
   </div>
 </div>
 
-<div class="modal-bg" id="firestoreRulesModal">
+<div class="modal-bg" id="gdriveSetupModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">🛡️ Fix Firestore Rules</div>
-    <div style="background:rgba(239,68,68,0.08);border:2px solid rgba(239,68,68,0.2);border-radius:14px;padding:14px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:900;color:var(--red);margin-bottom:6px">Most common cause of sync hanging</div>
-      <div style="font-size:12px;color:var(--text3);font-weight:700;line-height:1.6">Firestore security rules are blocking writes. Fix in 30 seconds:</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">1️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">Go to <b style="color:var(--text)">console.firebase.google.com</b> → your project</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">2️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">Click <b style="color:var(--text)">Firestore Database</b> in the left sidebar</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">3️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">Click the <b style="color:var(--text)">Rules</b> tab at the top</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">4️⃣</span>
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">Replace ALL the text with this:</div>
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--font);font-size:11px;color:var(--green);line-height:1.6;word-break:break-all">rules_version = '2';<br>service cloud.firestore {<br>&nbsp;&nbsp;match /databases/{database}/documents {<br>&nbsp;&nbsp;&nbsp;&nbsp;match /ft_users/{uid} {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;&amp; request.auth.uid == uid;<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;}<br>}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border-radius:12px;padding:12px">
-        <span style="font-size:20px;flex-shrink:0">5️⃣</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">Click <b style="color:var(--text)">Publish</b> → wait 30 seconds → try Sync again</div>
-      </div>
-    </div>
-    <div style="background:rgba(34,197,94,0.08);border:2px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--green);line-height:1.6">✅ These rules let only <b>you</b> read and write your own data — secure and private.</div>
-    </div>
-    <button class="btn-go" onclick="syncToCloud();closeModal('firestoreRulesModal')">🔄 Try Sync Now</button>
-    <button class="btn-cancel" onclick="closeModal('firestoreRulesModal')">Close</button>
-  </div>
-</div>
-
-<div class="modal-bg" id="firebaseSetupModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">⚙️ Firebase Setup</div>
+    <div class="modal-title">☁️ Google Drive Setup</div>
     <div style="background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.2);border-radius:14px;padding:14px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:900;color:var(--blue);margin-bottom:8px">📋 How to get your Firebase config (5 min, free)</div>
-      <div style="font-size:12px;color:var(--text3);font-weight:700;line-height:1.8">
-        1. Go to <b style="color:var(--text)">console.firebase.google.com</b><br>
+      <div style="font-size:13px;font-weight:900;color:var(--blue);margin-bottom:8px">📋 Get your Google Client ID (5 min, free)</div>
+      <div style="font-size:12px;color:var(--text3);font-weight:700;line-height:1.9">
+        1. Go to <b style="color:var(--text)">console.cloud.google.com</b><br>
         2. Create a project → any name<br>
-        3. Authentication → Sign-in method → Enable <b style="color:var(--green)">Email/Password</b> &amp; <b style="color:var(--blue)">Google</b><br>
-        4. Firestore Database → Create database → Test mode<br>
-        5. Project Settings → Your apps → &lt;/&gt; Web → Register → copy config<br>
-        6. Paste values below
+        3. <b style="color:var(--text)">APIs & Services → Enable APIs</b> → search <b style="color:var(--green)">Google Drive API</b> → Enable<br>
+        4. <b style="color:var(--text)">APIs & Services → OAuth consent screen</b> → External → Fill app name + email → Save<br>
+        5. <b style="color:var(--text)">APIs & Services → Credentials → Create Credentials → OAuth Client ID</b><br>
+        6. Application type: <b style="color:var(--green)">Web application</b><br>
+        7. Authorised JavaScript origins: add your GitHub Pages URL e.g. <b style="color:var(--green)">https://yourname.github.io</b><br>
+        8. Click Create → copy the <b style="color:var(--green)">Client ID</b> below
       </div>
     </div>
-    <div class="field"><div class="field-label">🔑 API Key</div><input type="text" class="field-input" id="fb_apiKey" placeholder="AIzaSy..."></div>
-    <div class="field"><div class="field-label">🌐 Auth Domain</div><input type="text" class="field-input" id="fb_authDomain" placeholder="your-project.firebaseapp.com"></div>
-    <div class="field"><div class="field-label">🗄️ Project ID</div><input type="text" class="field-input" id="fb_projectId" placeholder="your-project-id"></div>
-    <div class="field"><div class="field-label">📦 Storage Bucket</div><input type="text" class="field-input" id="fb_storageBucket" placeholder="your-project.appspot.com"></div>
-    <div class="field"><div class="field-label">💬 Messaging Sender ID</div><input type="text" class="field-input" id="fb_messagingSenderId" placeholder="123456789"></div>
-    <div class="field"><div class="field-label">📱 App ID</div><input type="text" class="field-input" id="fb_appId" placeholder="1:123:web:abc..."></div>
-    <div id="fbSetupError" style="color:var(--red);font-size:12px;font-weight:900;display:none;margin-bottom:8px;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px"></div>
-    <button class="btn-go" onclick="saveFirebaseConfig()">✅ Save & Connect</button>
-    <button class="btn-cancel" onclick="closeModal('firebaseSetupModal')">Cancel</button>
+    <div class="field"><div class="field-label">🔑 Google OAuth Client ID</div><input type="text" class="field-input" id="gClientIdInput" placeholder="xxxx.apps.googleusercontent.com"></div>
+    <div id="gdriveSetupError" style="color:var(--red);font-size:12px;font-weight:900;display:none;margin-bottom:8px;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px"></div>
+    <button class="btn-go" onclick="saveGdriveConfig()">✅ Save & Connect</button>
+    <button class="btn-cancel" onclick="closeModal('gdriveSetupModal')">Cancel</button>
   </div>
 </div>
+
 
 <div class="modal-bg" id="emailAuthModal">
   <div class="modal">
@@ -1381,8 +1337,9 @@ function showModal(id){
   if(id==='txModal'){setTodayDate();updateTxAccountSelect();}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
+  if(id==='gdriveSetupModal'){prefillGdriveForm();}
   if(id==='emailAuthModal'){document.getElementById('authError').style.display='none';setEmailTab('login');}
-  if(id==='firebaseSetupModal'){prefillFirebaseForm();}
+  if(id==='gdriveSetupModal'){prefillGdriveForm();}
   if(id==='budgetModal')renderBudgetInputs();
   if(id==='billModal')renderBillCatChips();
   if(id==='recurModal')renderRecurCatChips();
@@ -1900,39 +1857,172 @@ function setLang(lang,el){
 }
 function toggleFP(){state.fpEnabled=!state.fpEnabled;saveState();var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';showToast(state.fpEnabled?'Fingerprint unlock enabled':'Fingerprint unlock disabled',state.fpEnabled?'green':'yellow');}
 function savePin(){const np=document.getElementById('newPin').value;const cp=document.getElementById('confirmPin').value;if(np.length!==4||!/^\d{4}$/.test(np)){alert('PIN must be exactly 4 digits');return;}if(np!==cp){alert('PINs do not match');return;}state.pin=np;saveState();closeModal('pinModal');alert('✅ PIN updated!');}
-// ======== FIREBASE / GOOGLE AUTH ========
-var firebaseApp=null, firebaseAuth=null, firebaseDb=null, currentUser=null;
-var emailAuthMode='login';
+// ======== GOOGLE DRIVE SYNC ========
+// Uses Google OAuth2 + Drive REST API — no Firebase, no Supabase
+// Only needs a Google OAuth Client ID (free, from console.cloud.google.com)
+// ── PASTE YOUR GOOGLE CLIENT ID HERE ────────────────────────────────────────
+var GOOGLE_CLIENT_ID = '';
+// ────────────────────────────────────────────────────────────────────────────
 
-// ── PASTE YOUR FIREBASE CONFIG HERE (optional — removes need to configure on each device) ──
-// Replace null with your config object to embed it permanently in this file.
-// Example: var EMBEDDED_FIREBASE_CONFIG = { apiKey:"AIza...", authDomain:"...", projectId:"...", storageBucket:"...", messagingSenderId:"...", appId:"..." };
-var EMBEDDED_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCwEvlQaT5IbqvZnN9LPwHIWYAUzYkAhb0",
-  authDomain: "finance-tracker-6f4c9.firebaseapp.com",
-  projectId: "finance-tracker-6f4c9",
-  storageBucket: "finance-tracker-6f4c9.firebasestorage.app",
-  messagingSenderId: "539027449082",
-  appId: "1:539027449082:web:6090ab1d16a9a563ac5543"
-};
-// ────────────────────────────────────────────────────────────────────────────────────────────
+var currentUser = null;
+var gAccessToken = null;
+var gDriveFileId = null; // cached Drive file ID for ft_backup.json
+var emailAuthMode = 'login';
+var GIS_LOADED = false;
+var GAPI_LOADED = false;
+var TOKEN_SCOPES = 'https://www.googleapis.com/auth/drive.appdata email profile';
 
-function getFirebaseConfig(){
-  // Priority: 1. Embedded in file (works on all devices instantly)
-  //           2. Saved in app state (synced from cloud)
-  //           3. localStorage (set via setup form)
-  try{
-    if(EMBEDDED_FIREBASE_CONFIG && EMBEDDED_FIREBASE_CONFIG.apiKey) return EMBEDDED_FIREBASE_CONFIG;
-    if(state.fbConfig && state.fbConfig.apiKey) return state.fbConfig;
-    return JSON.parse(localStorage.getItem('ft_firebase_config')||'null');
-  }catch(e){return null;}
+function getClientId(){
+  if(GOOGLE_CLIENT_ID) return GOOGLE_CLIENT_ID;
+  if(state.gClientId) return state.gClientId;
+  try{ return JSON.parse(localStorage.getItem('ft_gclient_id')||'null'); }catch(e){ return null; }
 }
 
+// ── Load Google SDKs ─────────────────────────────────────────────────────────
+function initGoogleDrive(){
+  var cid = getClientId();
+  updateAuthUI();
+  if(!cid) return; // will show "Setup" state
+  loadGoogleSDKs();
+}
+
+function loadGoogleSDKs(){
+  if(GIS_LOADED && GAPI_LOADED) return;
+  // Load GIS (token client)
+  if(!GIS_LOADED){
+    var s1=document.createElement('script');
+    s1.src='https://accounts.google.com/gsi/client';
+    s1.onload=function(){ GIS_LOADED=true; tryBootGoogle(); };
+    s1.onerror=function(){ showToast('Failed to load Google SDK','red'); };
+    document.head.appendChild(s1);
+  }
+  // Load GAPI
+  if(!GAPI_LOADED){
+    var s2=document.createElement('script');
+    s2.src='https://apis.google.com/js/api.js';
+    s2.onload=function(){
+      gapi.load('client', function(){
+        gapi.client.init({}).then(function(){
+          GAPI_LOADED=true; tryBootGoogle();
+        });
+      });
+    };
+    s2.onerror=function(){ showToast('Failed to load GAPI','red'); };
+    document.head.appendChild(s2);
+  }
+}
+
+function tryBootGoogle(){
+  if(!GIS_LOADED||!GAPI_LOADED) return;
+  // Restore saved session
+  var saved=localStorage.getItem('ft_gsession');
+  if(saved){
+    try{
+      var sess=JSON.parse(saved);
+      if(sess && sess.access_token && sess.expiry > Date.now()){
+        gAccessToken=sess.access_token;
+        currentUser={name:sess.name, email:sess.email, photo:sess.photo, id:sess.id};
+        state.isLoggedIn=true; state.userName=sess.name; state.userEmail=sess.email;
+        saveState(); updateAuthUI();
+        return;
+      }
+    }catch(e){}
+    localStorage.removeItem('ft_gsession');
+  }
+  updateAuthUI();
+}
+
+// ── Google Sign In ────────────────────────────────────────────────────────────
+function doGoogleSignIn(){
+  var cid=getClientId();
+  if(!cid){ showModal('gdriveSetupModal'); return; }
+  if(!GIS_LOADED||!GAPI_LOADED){ loadGoogleSDKs(); showToast('Loading Google SDK...','blue'); return; }
+  if(location.protocol==='file:'){
+    showToast('Google sign-in needs https://. Host on GitHub Pages first.','yellow'); return;
+  }
+  try{
+    var tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id: cid,
+      scope: TOKEN_SCOPES,
+      callback: function(resp){
+        if(resp.error){ showToast('Sign-in error: '+resp.error,'red'); return; }
+        gAccessToken=resp.access_token;
+        // Save expiry (tokens last 1 hour)
+        fetchGoogleProfile(resp.access_token, resp.expires_in||3600);
+      }
+    });
+    tokenClient.requestAccessToken({prompt:''});
+  }catch(e){
+    showToast('Sign-in error: '+e.message,'red');
+  }
+}
+
+function fetchGoogleProfile(token, expiresIn){
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo',{
+    headers:{Authorization:'Bearer '+token}
+  }).then(function(r){ return r.json(); }).then(function(profile){
+    currentUser={
+      name: profile.name||profile.email.split('@')[0],
+      email: profile.email,
+      photo: profile.picture||'',
+      id: profile.sub
+    };
+    state.isLoggedIn=true; state.userName=currentUser.name; state.userEmail=currentUser.email;
+    // Save session to localStorage (expires in 1hr)
+    localStorage.setItem('ft_gsession', JSON.stringify({
+      access_token:token, name:currentUser.name,
+      email:currentUser.email, photo:currentUser.photo,
+      id:currentUser.id, expiry:Date.now()+(expiresIn*1000)
+    }));
+    saveState(); updateAuthUI();
+    setTimeout(loadFromCloud, 1000);
+  }).catch(function(e){ showToast('Profile fetch error: '+e.message,'red'); });
+}
+
+function signOutGoogle(){
+  gAccessToken=null; currentUser=null; gDriveFileId=null;
+  localStorage.removeItem('ft_gsession');
+  state.isLoggedIn=false; state.userName=''; state.userEmail='';
+  saveState(); updateAuthUI();
+  // Revoke token silently
+  if(typeof google!=='undefined'&&google.accounts&&google.accounts.oauth2){
+    var cid=getClientId();
+    if(cid) try{ google.accounts.oauth2.revoke(gAccessToken,function(){}); }catch(e){}
+  }
+}
+
+function googleSignIn(){ doGoogleSignIn(); }
+function googleSignOut(){ signOutGoogle(); }
+
+// ── Save Client ID ────────────────────────────────────────────────────────────
+function saveGdriveConfig(){
+  var cid=(document.getElementById('gClientIdInput')||{}).value.trim();
+  var errEl=document.getElementById('gdriveSetupError');
+  if(!cid||!cid.includes('.apps.googleusercontent.com')){
+    errEl.textContent='Enter a valid Client ID ending in .apps.googleusercontent.com';
+    errEl.style.display='block'; return;
+  }
+  errEl.style.display='none';
+  state.gClientId=cid;
+  saveState();
+  localStorage.setItem('ft_gclient_id',JSON.stringify(cid));
+  closeModal('gdriveSetupModal');
+  loadGoogleSDKs();
+  showToast('Client ID saved! Tap Sign in with Google.','blue');
+  updateAuthUI();
+}
+
+function prefillGdriveForm(){
+  var cid=getClientId(); if(!cid) return;
+  var el=document.getElementById('gClientIdInput'); if(el) el.value=cid;
+}
+
+// ── Update UI ─────────────────────────────────────────────────────────────────
 function updateAuthUI(){
-  var cfg = getFirebaseConfig();
-  var s1 = document.getElementById('stateNoConfig');
-  var s2 = document.getElementById('stateSignedOut');
-  var s3 = document.getElementById('stateSignedIn');
+  var cid=getClientId();
+  var s1=document.getElementById('stateNoConfig');
+  var s2=document.getElementById('stateSignedOut');
+  var s3=document.getElementById('stateSignedIn');
   if(!s1||!s2||!s3) return;
   if(currentUser){
     s1.style.display='none'; s2.style.display='none'; s3.style.display='block';
@@ -1940,318 +2030,110 @@ function updateAuthUI(){
     var emailEl=document.getElementById('userEmailDisplay');
     var photoEl=document.getElementById('userPhoto');
     var fallEl=document.getElementById('userPhotoFallback');
-    var avEl=document.getElementById('avatar');
-    if(nameEl) nameEl.textContent=currentUser.displayName||currentUser.email.split('@')[0];
+    var avatarImg=document.getElementById('avatarImg');
+    var avatarLetter=document.getElementById('avatarLetter');
+    var displayName=currentUser.name||currentUser.email.split('@')[0];
+    var photoUrl=state.localProfilePhoto||currentUser.photo||'';
+    if(nameEl) nameEl.textContent=displayName;
     if(emailEl) emailEl.textContent=currentUser.email;
-    if(avEl) avEl.textContent=(currentUser.displayName||currentUser.email)[0].toUpperCase();
-    if(avEl){
-      var avatarImg=document.getElementById('avatarImg');
-      var avatarLetter=document.getElementById('avatarLetter');
-      var photoToUse=state.localProfilePhoto||(currentUser.photoURL)||null;
-      if(photoToUse){
-        if(avatarImg){avatarImg.src=photoToUse;avatarImg.style.display='block';}
-        if(avatarLetter)avatarLetter.style.display='none';
-      } else {
-        avEl.textContent=(currentUser.displayName||currentUser.email)[0].toUpperCase();
-        if(avatarImg)avatarImg.style.display='none';
-        if(avatarLetter)avatarLetter.style.display='';
-      }
+    if(avatarImg&&avatarLetter){
+      if(photoUrl){avatarImg.src=photoUrl;avatarImg.style.display='block';avatarLetter.style.display='none';}
+      else{avatarLetter.textContent=displayName[0].toUpperCase();avatarLetter.style.display='';avatarImg.style.display='none';}
     }
-    if(state.localProfilePhoto||currentUser.photoURL){
-      if(photoEl){photoEl.src=state.localProfilePhoto||currentUser.photoURL;photoEl.style.display='block';}
-      if(fallEl)fallEl.style.display='none';
-    } else {
-      if(photoEl)photoEl.style.display='none';
-      if(fallEl){fallEl.textContent=(currentUser.displayName||currentUser.email)[0].toUpperCase();fallEl.style.display='flex';}
-    }
+    if(photoUrl){if(photoEl){photoEl.src=photoUrl;photoEl.style.display='block';}if(fallEl)fallEl.style.display='none';}
+    else{if(photoEl)photoEl.style.display='none';if(fallEl){fallEl.textContent=displayName[0].toUpperCase();fallEl.style.display='flex';}}
     updateCloudSyncStatus();
-  } else if(cfg){
+  } else if(cid){
     s1.style.display='none'; s2.style.display='block'; s3.style.display='none';
   } else {
     s1.style.display='block'; s2.style.display='none'; s3.style.display='none';
   }
 }
-
-// Keep old function names for compat
 function renderAuthSignedIn(u){ updateAuthUI(); }
 function renderAuthSignedOut(){ updateAuthUI(); }
 function renderGoogleAccount(){ updateAuthUI(); }
-function googleSignIn(){ doGoogleSignIn(); }
-function googleSignOut(){ signOutGoogle(); }
 
-function initFirebase(){
-  var cfg=getFirebaseConfig();
-  if(!cfg){ updateAuthUI(); return; }
-  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
-    bootFirebase(cfg); return;
-  }
-  var sdks=[
-    'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
-    'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
-    'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js'
-  ];
-  var loaded=0;
-  sdks.forEach(function(src){
-    var el=document.createElement('script');
-    el.src=src;
-    el.onload=function(){ loaded++; if(loaded===sdks.length) bootFirebase(cfg); };
-    el.onerror=function(){ showToast('Failed to load Firebase SDK — check internet','red'); };
-    document.head.appendChild(el);
+// ── Drive Sync ────────────────────────────────────────────────────────────────
+var DRIVE_FILE_NAME = 'ft_backup.json';
+
+function getDriveHeaders(){
+  return { Authorization:'Bearer '+gAccessToken, 'Content-Type':'application/json' };
+}
+
+function findDriveFile(){
+  return fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D%22'+DRIVE_FILE_NAME+'%22&fields=files(id,name,modifiedTime)',{
+    headers:{Authorization:'Bearer '+gAccessToken}
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res.files && res.files.length>0){ gDriveFileId=res.files[0].id; return res.files[0]; }
+    return null;
   });
-}
-
-function bootFirebase(cfg){
-  try{
-    if(!firebase.apps||!firebase.apps.length) firebaseApp=firebase.initializeApp(cfg);
-    else firebaseApp=firebase.apps[0];
-    firebaseAuth=firebase.auth();
-    firebaseDb=firebase.firestore();
-    firebaseAuth.onAuthStateChanged(function(user){
-      currentUser=user;
-      if(user){
-        state.isLoggedIn=true;
-        state.userName=user.displayName||user.email.split('@')[0];
-        state.userEmail=user.email;
-        saveState();
-        updateAuthUI();
-        setTimeout(loadFromCloud,1500);
-      } else {
-        state.isLoggedIn=false;
-        updateAuthUI();
-      }
-    });
-    updateAuthUI();
-    // Handle email link sign-in return
-    if(firebaseAuth.isSignInWithEmailLink&&firebaseAuth.isSignInWithEmailLink(window.location.href)){
-      var email=localStorage.getItem('ft_email_link')||prompt('Enter your email to complete sign-in:');
-      if(email){
-        firebaseAuth.signInWithEmailLink(email,window.location.href).then(function(){
-          localStorage.removeItem('ft_email_link');
-          window.history.replaceState(null,'',window.location.pathname);
-        }).catch(function(e){ showToast('Link sign-in error: '+e.message,'red'); });
-      }
-    }
-  }catch(e){
-    showToast('Firebase error: '+e.message,'red');
-    console.error('Firebase error:',e);
-  }
-}
-
-function saveFirebaseConfig(){
-  var fields=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
-  var cfg={};
-  fields.forEach(function(k){ cfg[k]=(document.getElementById('fb_'+k)||{}).value||''; });
-  var errEl=document.getElementById('fbSetupError');
-  if(!cfg.apiKey||!cfg.authDomain||!cfg.projectId){
-    errEl.textContent='API Key, Auth Domain and Project ID are required.';
-    errEl.style.display='block'; return;
-  }
-  errEl.style.display='none';
-  // Save to state (syncs to cloud → other devices auto-get it) AND localStorage (fast local load)
-  state.fbConfig=cfg;
-  saveState();
-  localStorage.setItem('ft_firebase_config',JSON.stringify(cfg));
-  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
-    try{ firebase.apps.forEach(function(a){a.delete();}); }catch(ex){}
-  }
-  firebaseApp=null; firebaseAuth=null; firebaseDb=null; currentUser=null;
-  closeModal('firebaseSetupModal');
-  initFirebase();
-  // Show the embed-and-download modal
-  setTimeout(function(){ showModal('embedConfigModal'); }, 800);
-}
-
-function downloadWithEmbeddedConfig(){
-  var cfg=getFirebaseConfig();
-  if(!cfg){ showToast('No config to embed','red'); return; }
-  // Fetch this page's HTML, embed config, offer download
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET', location.href, true);
-  xhr.onload=function(){
-    if(xhr.status===200){
-      var html=xhr.responseText;
-      // Replace config block using regex — works regardless of current config value
-      html=html.replace(
-        /var EMBEDDED_FIREBASE_CONFIG = [{][\s\S]*?[}];/,
-        'var EMBEDDED_FIREBASE_CONFIG = '+JSON.stringify(cfg)+';'
-      );
-      var blob=new Blob([html],{type:'text/html'});
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');
-      a.href=url; a.download='index.html'; a.click();
-      URL.revokeObjectURL(url);
-      closeModal('embedConfigModal');
-      showToast('Downloaded! Upload this new index.html to Netlify. All devices will connect automatically.','green');
-    } else {
-      showToast('Download failed. Try the manual method below.','red');
-    }
-  };
-  xhr.onerror=function(){
-    showToast('Cannot fetch on file://. Upload to Netlify first, then use this feature.','yellow');
-  };
-  xhr.send();
-}
-
-function doGoogleSignIn(){
-  if(!firebaseAuth){ showToast('Firebase not ready. Save config first.','red'); return; }
-  if(location.protocol==='file:'){
-    showToast('Google sign-in needs https://. Use Email sign-in instead, or host on Netlify.','yellow');
-    showModal('emailAuthModal');
-    return;
-  }
-  var provider=new firebase.auth.GoogleAuthProvider();
-  provider.addScope('email');
-  provider.addScope('profile');
-  firebaseAuth.signInWithPopup(provider).catch(function(e){
-    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'){
-      showToast('Popup blocked. Trying redirect...','yellow');
-      firebaseAuth.signInWithRedirect(provider);
-    } else {
-      showToast('Sign-in error: '+e.message,'red');
-      console.error(e);
-    }
-  });
-}
-
-function setEmailTab(mode){
-  emailAuthMode=mode;
-  document.getElementById('tabLoginBtn').classList.toggle('on',mode==='login');
-  document.getElementById('tabRegisterBtn').classList.toggle('on',mode==='register');
-  document.getElementById('authSubmitBtn').textContent=mode==='register'?'✅ Create Account':'✅ Sign In';
-  document.getElementById('authError').style.display='none';
-}
-
-function submitEmailAuth(){
-  var email=(document.getElementById('authEmail')||{}).value||'';
-  var pass=(document.getElementById('authPassword')||{}).value||'';
-  var errEl=document.getElementById('authError');
-  errEl.style.display='none';
-  if(!email||!pass){ errEl.textContent='Enter email and password.'; errEl.style.display='block'; return; }
-  if(!firebaseAuth){ errEl.textContent='Firebase not ready. Save config first.'; errEl.style.display='block'; return; }
-  var fn=emailAuthMode==='register'
-    ? firebaseAuth.createUserWithEmailAndPassword.bind(firebaseAuth)
-    : firebaseAuth.signInWithEmailAndPassword.bind(firebaseAuth);
-  fn(email,pass).then(function(cred){
-    if(emailAuthMode==='register') return cred.user.updateProfile({displayName:email.split('@')[0]});
-  }).then(function(){
-    closeModal('emailAuthModal');
-  }).catch(function(e){
-    var msgs={
-      'auth/email-already-in-use':'Email already registered. Use Sign In.',
-      'auth/wrong-password':'Wrong password.',
-      'auth/user-not-found':'No account found. Use Create Account.',
-      'auth/invalid-email':'Invalid email address.',
-      'auth/weak-password':'Password must be at least 6 characters.',
-      'auth/too-many-requests':'Too many attempts. Wait and try again.',
-      'auth/invalid-credential':'Wrong email or password.'
-    };
-    errEl.textContent=msgs[e.code]||e.message;
-    errEl.style.display='block';
-  });
-}
-
-function doPasswordReset(){
-  var email=(document.getElementById('authEmail')||{}).value||'';
-  if(!email){ email=prompt('Enter your email address:'); }
-  if(!email||!firebaseAuth) return;
-  firebaseAuth.sendPasswordResetEmail(email).then(function(){
-    showToast('Password reset email sent to '+email,'green');
-  }).catch(function(e){ showToast('Error: '+e.message,'red'); });
-}
-
-function signOutGoogle(){
-  if(firebaseAuth){
-    firebaseAuth.signOut().then(function(){
-      currentUser=null; state.isLoggedIn=false; state.userName=''; state.userEmail='';
-      saveState(); updateAuthUI();
-      document.getElementById('avatar').textContent='F';
-    });
-  } else {
-    currentUser=null; state.isLoggedIn=false;
-    saveState(); updateAuthUI();
-    document.getElementById('avatar').textContent='F';
-  }
-}
-
-function prefillFirebaseForm(){
-  var cfg=getFirebaseConfig(); if(!cfg) return;
-  ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].forEach(function(k){
-    var el=document.getElementById('fb_'+k); if(el&&cfg[k]) el.value=cfg[k];
-  });
-}
-
-// ======== FIRESTORE SYNC ========
-function getCloudDocRef(){
-  if(!currentUser||!firebaseDb) return null;
-  return firebaseDb.collection('ft_users').doc(currentUser.uid);
 }
 
 function syncToCloud(){
-  var ref=getCloudDocRef();
-  if(!ref){ return; }
+  if(!currentUser||!gAccessToken){ return; }
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Syncing...';
 
-  // Split data to stay under Firestore 1MB doc limit
   var safeState=JSON.parse(JSON.stringify(state));
-  // Remove large binary/base64 fields if any
-  delete safeState.drivePassword; // don't sync password
-  var fullJson=JSON.stringify(safeState);
-  var sizeKB=Math.round(fullJson.length/1024);
+  delete safeState.gClientId;
+  var payload=JSON.stringify({
+    updatedAt:new Date().toISOString(),
+    device:navigator.userAgent.substring(0,60),
+    data:JSON.stringify(safeState)
+  });
 
-  // Warn if very large
-  if(fullJson.length > 900000){
-    safeState.transactions=safeState.transactions.slice(0,500);
-    fullJson=JSON.stringify(safeState);
-  }
-
-  // Set a manual timeout — Firestore sometimes hangs silently
   var timedOut=false;
   var timer=setTimeout(function(){
     timedOut=true;
-    if(el) el.textContent='Timed out — check Firestore rules';
-    if(el2) el2.textContent='Sync timed out';
-    showToast('⚠️ Sync timed out. Check Firestore security rules — set to test mode.','red');
-  }, 10000);
+    if(el) el.textContent='Timed out';
+    showToast('⚠️ Sync timed out. Check internet connection.','red');
+  },15000);
 
-  var payload={
-    updatedAt:(typeof firebase!=='undefined'&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():null,
-    updatedAtISO:new Date().toISOString(),
-    uid:currentUser.uid,
-    email:currentUser.email,
-    sizeKB:sizeKB,
-    data:fullJson
-  };
-
-  ref.set(payload,{merge:true}).then(function(){
-    clearTimeout(timer);
-    if(timedOut) return;
-    state.lastSync=new Date().toISOString();
-    saveState();
-    updateCloudSyncStatus();
+  findDriveFile().then(function(existing){
+    var url, method, body;
+    if(existing){
+      // Update existing file
+      url='https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=media';
+      method='PATCH';
+    } else {
+      // Create new file in appDataFolder
+      url='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+      method='POST';
+      // Use multipart for creation
+      var meta=JSON.stringify({name:DRIVE_FILE_NAME, parents:['appDataFolder']});
+      var boundary='ftboundary';
+      var CRLF='\r\n';
+      var multipart='--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
+      return fetch(url,{
+        method:method,
+        headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'multipart/related; boundary='+boundary},
+        body:multipart
+      }).then(function(r){ return r.json(); }).then(function(res){
+        clearTimeout(timer); if(timedOut) return;
+        if(res.error){ showToast('❌ Sync failed: '+res.error.message,'red'); if(el)el.textContent='Sync failed'; return; }
+        gDriveFileId=res.id;
+        state.lastSync=new Date().toISOString(); saveState(); updateCloudSyncStatus();
+      });
+    }
+    return fetch(url,{
+      method:method,
+      headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'application/json'},
+      body:payload
+    }).then(function(r){ return r.json(); }).then(function(res){
+      clearTimeout(timer); if(timedOut) return;
+      if(res.error){ showToast('❌ Sync failed: '+res.error.message,'red'); if(el)el.textContent='Sync failed'; return; }
+      state.lastSync=new Date().toISOString(); saveState(); updateCloudSyncStatus();
+    });
   }).catch(function(e){
     clearTimeout(timer);
-    if(timedOut) return;
+    showToast('❌ Sync error: '+e.message,'red');
     if(el) el.textContent='Sync failed';
-    if(el2) el2.textContent='Sync failed';
-    var msg=e.message||e.code||'Unknown error';
-    if(e.code==='permission-denied'||msg.includes('permission')){
-      showToast('❌ Permission denied. Go to Firebase → Firestore → Rules → set to test mode.','red');
-    } else if(e.code==='unavailable'||msg.includes('network')){
-      showToast('❌ No internet. Check your connection.','red');
-    } else if(e.code==='resource-exhausted'){
-      showToast('❌ Data too large. Try exporting backup instead.','red');
-    } else {
-      showToast('❌ Sync failed: '+msg,'red');
-    }
-    console.error('Firestore sync error:',e);
   });
 }
 
 function loadFromCloud(){
-  var ref=getCloudDocRef();
-  if(!ref){ return; }
+  if(!currentUser||!gAccessToken){ return; }
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Loading...';
@@ -2259,69 +2141,60 @@ function loadFromCloud(){
   var timedOut=false;
   var timer=setTimeout(function(){
     timedOut=true;
-    if(el) el.textContent='Timed out — check Firestore rules';
-    showToast('⚠️ Load timed out. Check Firestore security rules.','red');
-  }, 10000);
+    if(el) el.textContent='Timed out';
+    showToast('⚠️ Load timed out.','red');
+  },15000);
 
-  ref.get().then(function(doc){
-    clearTimeout(timer);
-    if(timedOut) return;
-    if(!doc.exists){
-      if(el) el.textContent='No cloud data yet';
-      if(el2) el2.textContent='No cloud data yet';
-      return;
-    }
-    try{
-      var payload=doc.data();
-      if(!payload||!payload.data){ if(el)el.textContent='No data'; return; }
+  findDriveFile().then(function(existing){
+    if(!existing){ clearTimeout(timer); if(el)el.textContent='No backup found'; return; }
+    return fetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media',{
+      headers:{Authorization:'Bearer '+gAccessToken}
+    }).then(function(r){ return r.json(); }).then(function(payload){
+      clearTimeout(timer); if(timedOut) return;
       var imported=JSON.parse(payload.data);
-      var cloudDate=new Date(payload.updatedAtISO||0);
+      var cloudDate=new Date(payload.updatedAt||0);
       var localDate=new Date(state.lastSync||0);
-      if(state.lastSync && cloudDate<=localDate){
-        updateCloudSyncStatus(); return;
-      }
-      // Preserve local auth + drive settings
-      var keep={
-        isLoggedIn:state.isLoggedIn, userName:state.userName, userEmail:state.userEmail,
-        lastSync:payload.updatedAtISO||new Date().toISOString(),
-        driveConnected:state.driveConnected, driveEmail:state.driveEmail, drivePassword:state.drivePassword,
-        pin:state.pin, fpEnabled:state.fpEnabled
-      };
+      if(state.lastSync&&cloudDate<=localDate){ updateCloudSyncStatus(); return; }
+      var keep={isLoggedIn:state.isLoggedIn,userName:state.userName,userEmail:state.userEmail,
+        lastSync:payload.updatedAt, gClientId:state.gClientId,
+        localProfilePhoto:state.localProfilePhoto, pin:state.pin, fpEnabled:state.fpEnabled};
       Object.assign(state,imported,keep);
-      // Restore Firebase config to localStorage so it works on this device
-      if(state.fbConfig&&state.fbConfig.apiKey){
-        localStorage.setItem('ft_firebase_config',JSON.stringify(state.fbConfig));
-      }
-      ['liabilities','bills','accounts','recurring','assets','transactions','goals'].forEach(function(k){
-        if(!Array.isArray(state[k])) state[k]=[];
-      });
-      if(!state.budgets) state.budgets={};
+      ['liabilities','bills','accounts','recurring','assets','transactions','goals'].forEach(function(k){ if(!Array.isArray(state[k]))state[k]=[]; });
+      if(!state.budgets)state.budgets={};
       saveState(); applyTheme(state.theme); applyFont(state.font); updateCurrSymbols(); initApp();
-    }catch(e){
-      showToast('❌ Could not read cloud data: '+e.message,'red');
-      console.error('Load parse error:',e);
-    }
+    });
   }).catch(function(e){
     clearTimeout(timer);
-    if(timedOut) return;
+    showToast('❌ Load error: '+e.message,'red');
     if(el) el.textContent='Load failed';
-    var msg=e.message||e.code||'Unknown';
-    if(e.code==='permission-denied'||msg.includes('permission')){
-      showToast('❌ Permission denied. Fix Firestore Rules → set to test mode.','red');
-    } else {
-      showToast('❌ Load failed: '+msg,'red');
-    }
-    console.error('Firestore load error:',e);
   });
 }
 
 function updateCloudSyncStatus(){
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
-  var txt=state.lastSync?'Last sync: '+new Date(state.lastSync).toLocaleString():'Never synced — tap to sync';
+  var txt=state.lastSync?'Last sync: '+new Date(state.lastSync).toLocaleString():'Never synced';
   if(el) el.textContent=txt;
   if(el2) el2.textContent=txt;
 }
+
+function syncNow(){ syncToCloud(); }
+
+// ── Email auth stubs (kept for modal UI compatibility) ────────────────────────
+function setEmailTab(mode){
+  emailAuthMode=mode;
+  var l=document.getElementById('tabLoginBtn'); if(l)l.classList.toggle('on',mode==='login');
+  var r=document.getElementById('tabRegisterBtn'); if(r)r.classList.toggle('on',mode==='register');
+  var b=document.getElementById('authSubmitBtn'); if(b)b.textContent=mode==='register'?'✅ Create Account':'✅ Sign In';
+  var e=document.getElementById('authError'); if(e)e.style.display='none';
+}
+function submitEmailAuth(){
+  var errEl=document.getElementById('authError');
+  errEl.textContent='Email sign-in not available with Google Drive sync. Use Sign in with Google.';
+  errEl.style.display='block';
+}
+function doPasswordReset(){ showToast('Use Google sign-in — no password needed.','yellow'); }
+function signInWithGoogleDirect(){ doGoogleSignIn(); }
 
 // ======== EXPORT / IMPORT / BACKUP ========
 
@@ -2820,7 +2693,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
 // ======== BOOT ========
 loadState();
 initFpButton();
-initFirebase();
+initGoogleDrive();
 if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
 </script>
 </body>
