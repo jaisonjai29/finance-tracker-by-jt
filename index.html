@@ -306,7 +306,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <div class="top-btn" onclick="showModal('txModal')">➕</div>
       <div class="top-btn" onclick="showPage('bills')" id="billsBtn" title="Bills">🔔<div class="notif-badge" id="billsBadge" style="display:none">0</div></div>
       <div class="top-btn" onclick="lockApp()">🔒</div>
-      <div class="avatar" id="avatar" onclick="showPage('settings')" style="overflow:hidden"><img id="avatarImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%"><span id="avatarLetter">F</span></div>
+      <div class="avatar" id="avatar" onclick="showPage('settings')" style="overflow:hidden"><img id="avatarImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%"><span id="avatarLetter">👤</span></div>
     </div>
   </div>
 
@@ -413,7 +413,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 
     <!-- LIABILITIES -->
     <div class="page" id="page-liabilities">
-      <div class="sec-head"><div class="sec-title">🏧 Debts & Loans</div><button class="sec-btn" onclick="showModal('liabModal')">➕ Add</button></div>
+      <div class="sec-head"><div class="sec-title">💸 Debts & Loans</div><button class="sec-btn" onclick="showModal('liabModal')">➕ Add</button></div>
       <div class="stat-grid-3">
         <div class="stat-box sr"><span class="stat-emoji">💳</span><div class="stat-lbl">Total Debt</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="totalDebt">0</span></div></div>
         <div class="stat-box sy"><span class="stat-emoji">📅</span><div class="stat-lbl">Monthly EMI</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="totalEMI">0</span></div></div>
@@ -490,7 +490,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <!-- 3-col summary -->
       <div class="stat-grid-3" style="margin-bottom:14px">
         <div class="stat-box sg"><span class="stat-emoji">📈</span><div class="stat-lbl" id="wLblAssets">Total Assets</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalAssets">0</span></div></div>
-        <div class="stat-box sr"><span class="stat-emoji">🏧</span><div class="stat-lbl" id="wLblDebts">Total Debts</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalDebts">0</span></div></div>
+        <div class="stat-box sr"><span class="stat-emoji">💸</span><div class="stat-lbl" id="wLblDebts">Total Debts</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalDebts">0</span></div></div>
         <div class="stat-box sb"><span class="stat-emoji">🏦</span><div class="stat-lbl" id="wLblAccts">Cash & Bank</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalAccts">0</span></div></div>
       </div>
 
@@ -513,7 +513,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <!-- LIABILITIES section -->
       <div class="box">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:12px;display:flex;justify-content:space-between">
-          <span>🏧 LIABILITIES</span><span style="font-family:var(--font)" id="wealthLiabTotal">₹0</span>
+          <span>💸 LIABILITIES</span><span style="font-family:var(--font)" id="wealthLiabTotal">₹0</span>
         </div>
         <div id="wealthLiabRows"><div class="empty" style="padding:10px"><div class="empty-desc">No liabilities added</div></div></div>
       </div>
@@ -729,7 +729,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
     <div class="nav-btn" id="nav-analytics" onclick="showPage('analytics')"><span class="nav-emoji">📊</span><span class="nav-lbl">Charts</span></div>
     <div class="nav-btn" id="nav-goals" onclick="showPage('goals')"><span class="nav-emoji">🎯</span><span class="nav-lbl">Goals</span></div>
     <div class="nav-btn" id="nav-assets" onclick="showPage('assets')"><span class="nav-emoji">💼</span><span class="nav-lbl">Assets</span></div>
-    <div class="nav-btn" id="nav-liabilities" onclick="showPage('liabilities')"><span class="nav-emoji">🏧</span><span class="nav-lbl">Debts</span></div>
+    <div class="nav-btn" id="nav-liabilities" onclick="showPage('liabilities')"><span class="nav-emoji">💸</span><span class="nav-lbl">Debts</span></div>
     <div class="nav-btn" id="nav-accounts" onclick="showPage('accounts')"><span class="nav-emoji">🏦</span><span class="nav-lbl">Accounts</span></div>
     <div class="nav-btn" id="nav-wealth" onclick="showPage('wealth')"><span class="nav-emoji">📋</span><span class="nav-lbl">Wealth</span></div>
     <div class="nav-btn" id="nav-history" onclick="showPage('history')"><span class="nav-emoji">📝</span><span class="nav-lbl">History</span></div>
@@ -789,7 +789,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
     <div class="modal-title">🎯 New Goal</div>
     <div class="field"><div class="field-label">📝 Goal Name</div><input type="text" class="field-input" id="goalName" placeholder="e.g. Buy a Car"></div>
     <div class="field"><div class="field-label">💰 Target Amount</div><input type="number" class="field-input" id="goalTarget" placeholder="0"></div>
-    <div class="field"><div class="field-label">🐷 Already Saved</div><input type="number" class="field-input" id="goalCurrent" placeholder="0"></div>
+    <div class="field"><div class="field-label">🐷 Already Saved <span style="font-size:10px;color:var(--green);font-weight:900;cursor:pointer" onclick="autoFillGoalSaved()">(Auto-calculate from your data)</span></div><input type="number" class="field-input" id="goalCurrent" placeholder="0 — or tap Auto-calculate above"></div>
     <div class="field"><div class="field-label">📅 Target Date</div><input type="date" class="field-input" id="goalDate"></div>
     <div class="field"><div class="field-label">🎨 Icon</div><div class="chips"><div class="chip on" onclick="selGoalIcon(this,'🏠')">🏠</div><div class="chip" onclick="selGoalIcon(this,'🚗')">🚗</div><div class="chip" onclick="selGoalIcon(this,'✈️')">✈️</div><div class="chip" onclick="selGoalIcon(this,'🎓')">🎓</div><div class="chip" onclick="selGoalIcon(this,'💍')">💍</div><div class="chip" onclick="selGoalIcon(this,'🏦')">🏦</div><div class="chip" onclick="selGoalIcon(this,'💊')">💊</div><div class="chip" onclick="selGoalIcon(this,'📱')">📱</div></div></div>
     <button class="btn-go" onclick="saveGoal()">✅ Add Goal</button>
@@ -844,7 +844,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 <div class="modal-bg" id="liabModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">🏧 Add Debt / Loan</div>
+    <div class="modal-title">💸 Add Debt / Loan</div>
     <div class="field"><div class="field-label">📝 Loan Name</div><input type="text" class="field-input" id="liabName" placeholder="e.g. Home Loan"></div>
     <div class="field"><div class="field-label">🏷️ Type</div><select class="field-input" id="liabType"><option>Home Loan</option><option>Car Loan</option><option>Personal Loan</option><option>Education Loan</option><option>Credit Card</option><option>Business Loan</option><option>Gold Loan</option><option>Other</option></select></div>
     <div class="field-row">
@@ -1234,7 +1234,7 @@ function applyTranslations(){
   renderHistory();
   renderLiabilities();
 }
-const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Other':{emoji:'🏧',desc:'Other borrowings',color:'#94a3b8'}};
+const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#94a3b8'}};
 const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI / GPay':{emoji:'📱',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💳',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
 // ======== STATE ========
@@ -1322,14 +1322,20 @@ function initApp(){
   renderAuthSignedOut();
   if(state.isLoggedIn&&currentUser) renderAuthSignedIn(currentUser);
   if(state.isLoggedIn)renderGoogleAccount();
-  if(state.userName)document.getElementById('avatar').textContent=state.userName[0].toUpperCase();
+  // Update avatar letter from username or email
+  var avatarLetter=document.getElementById('avatarLetter');
+  if(avatarLetter){
+    var displayName=state.userName||state.userEmail||'';
+    if(displayName) avatarLetter.textContent=displayName[0].toUpperCase();
+    else avatarLetter.textContent='👤';
+  }
   updateTxAccountSelect();
 }
 function setTodayDate(){document.getElementById('txDate').value=new Date().toISOString().split('T')[0];}
 function initFpButton(){var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';}
 
 // ======== NAVIGATION ========
-const PAGE_TITLES={home:'🏠 Home',analytics:'📊 Analytics',goals:'🎯 Goals',assets:'💼 Assets',liabilities:'🏧 Debts',history:'📋 History',budget:'🎯 Budget',bills:'🔔 Bills',accounts:'🏦 Accounts',wealth:'💎 Wealth Statement',insights:'🤖 AI Insights',recurring:'📅 Recurring',scanner:'📷 Scanner',settings:'⚙️ Settings'};
+const PAGE_TITLES={home:'🏠 Home',analytics:'📊 Analytics',goals:'🎯 Goals',assets:'💼 Assets',liabilities:'💸 Debts',history:'📋 History',budget:'🎯 Budget',bills:'🔔 Bills',accounts:'🏦 Accounts',wealth:'💎 Wealth Statement',insights:'🤖 AI Insights',recurring:'📅 Recurring',scanner:'📷 Scanner',settings:'⚙️ Settings'};
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('on'));
@@ -1356,7 +1362,7 @@ function showModal(id){
   if(id==='billModal')renderBillCatChips();
   if(id==='recurModal')renderRecurCatChips();
 }
-function closeModal(id){document.getElementById(id).classList.remove('on');if(id==='txModal')resetTxForm();}
+function closeModal(id){document.getElementById(id).classList.remove('on');if(id==='txModal')resetTxForm();if(id==='goalModal'){document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';}if(id==='liabModal'){document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}if(id==='assetModal'){var m=document.getElementById('assetModal');m.dataset.editId='';m.dataset.invested='0';m.dataset.value='0';document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';}}
 document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});});
 
 // ======== TRANSACTIONS ========
@@ -1449,17 +1455,39 @@ function filterHistory(){renderHistory();}
 
 // ======== GOALS ========
 function selGoalIcon(el,icon){document.querySelectorAll('#goalModal .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');goalIcon=icon;}
-function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseFloat(document.getElementById('goalTarget').value);const current=parseFloat(document.getElementById('goalCurrent').value||'0');const date=document.getElementById('goalDate').value;if(!name||!target){alert('Fill goal name and target amount');return;}state.goals.push({id:Date.now(),name,target,current,date,icon:goalIcon});saveState();closeModal('goalModal');renderGoals();['goalName','goalTarget','goalCurrent'].forEach(id=>document.getElementById(id).value='');}
-function renderGoals(){const c=document.getElementById('goalsList');if(!state.goals.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎯</div><div class="empty-title">${tr('noGoals')}</div><div class="empty-desc">${tr('noGoalsDesc')}</div></div>`;return;}c.innerHTML=state.goals.map(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));const rem=g.target-g.current;return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon">${g.icon}</div><div><div class="goal-name">${g.name}</div><div class="goal-amt">${state.currSymbol}${fmt(g.current)} of ${state.currSymbol}${fmt(g.target)}${g.date?' · '+formatDate(g.date):''}</div></div></div><div style="display:flex;align-items:center;gap:10px"><div class="goal-pct">${pct}%</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteGoal(${g.id})">✕</div></div></div><div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div><div class="goal-foot"><span>${pct<100?state.currSymbol+fmt(rem)+' '+tr('toGo'):tr('goalReached')}</span><span onclick="addToGoal(${g.id})" style="color:var(--green);cursor:pointer;font-weight:900">➕ Add</span></div></div>`;}).join('');}
+function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseFloat(document.getElementById('goalTarget').value);const current=parseFloat(document.getElementById('goalCurrent').value||'0');const date=document.getElementById('goalDate').value;if(!name||!target){alert('Fill goal name and target amount');return;}const editId=document.getElementById('goalModal').dataset.editId;if(editId){const g=state.goals.find(g=>g.id===parseInt(editId));if(g){g.name=name;g.target=target;g.current=current;g.date=date;g.icon=goalIcon;}}else{state.goals.push({id:Date.now(),name,target,current,date,icon:goalIcon});}saveState();closeModal('goalModal');renderGoals();['goalName','goalTarget','goalCurrent'].forEach(id=>document.getElementById(id).value='');document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';}
+function renderGoals(){const c=document.getElementById('goalsList');if(!state.goals.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎯</div><div class="empty-title">${tr('noGoals')}</div><div class="empty-desc">${tr('noGoalsDesc')}</div></div>`;return;}c.innerHTML=state.goals.map(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));const rem=g.target-g.current;return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon">${g.icon}</div><div><div class="goal-name">${g.name}</div><div class="goal-amt">${state.currSymbol}${fmt(g.current)} of ${state.currSymbol}${fmt(g.target)}${g.date?' · '+formatDate(g.date):''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div class="goal-pct">${pct}%</div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editGoal(${g.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteGoal(${g.id})">✕</div></div></div><div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div><div class="goal-foot"><span>${pct<100?state.currSymbol+fmt(rem)+' '+tr('toGo'):tr('goalReached')}</span><span onclick="addToGoal(${g.id})" style="color:var(--green);cursor:pointer;font-weight:900">➕ Add</span></div></div>`;}).join('');}
 function deleteGoal(id){customConfirm('🎯','Delete Goal','This cannot be undone.',function(){state.goals=state.goals.filter(g=>g.id!==id);saveState();renderGoals();});}
+function editGoal(id){
+  const g=state.goals.find(g=>g.id===id);
+  if(!g)return;
+  document.getElementById('goalName').value=g.name;
+  document.getElementById('goalTarget').value=g.target;
+  document.getElementById('goalCurrent').value=g.current;
+  document.getElementById('goalDate').value=g.date||'';
+  goalIcon=g.icon;
+  document.querySelectorAll('#goalModal .chip').forEach(c=>{c.classList.toggle('on',c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+g.icon+"'"));});
+  // Store edit id
+  document.getElementById('goalModal').dataset.editId=id;
+  document.querySelector('#goalModal .btn-go').textContent='✅ Update Goal';
+  showModal('goalModal');
+}
 function addToGoal(id){const amt=parseFloat(prompt('Amount to add:'));if(!amt)return;const g=state.goals.find(g=>g.id===id);if(g){g.current=Math.min(g.target,g.current+amt);saveState();renderGoals();}}
+function autoFillGoalSaved(){
+  const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
+  const totalAccts=state.accounts.reduce((s,a)=>s+(a.balance>0?a.balance:0),0);
+  const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
+  const netAvailable=totalAssets+totalAccts-totalLiab;
+  document.getElementById('goalCurrent').value=Math.max(0,Math.round(netAvailable));
+  showToast('Auto-filled: Assets '+state.currSymbol+fmt(totalAssets)+' + Savings '+state.currSymbol+fmt(totalAccts)+' - Debts '+state.currSymbol+fmt(totalLiab),'blue');
+}
 
 // ======== ASSETS ========
 // ======== SMART ASSET FIELDS ========
 var ASSET_FIELD_CONFIGS = {
-  Stocks:        [{id:'qty',lbl:'Quantity (Shares)',ph:'e.g. 50',t:'number'},{id:'buyPrice',lbl:'Buy Price/Share',ph:'e.g. 2400',t:'number'},{id:'currentPrice',lbl:'Current Price/Share (CMP)',ph:'e.g. 2850',t:'number'},{id:'exchange',lbl:'Exchange',ph:'NSE / BSE',t:'text'}],
+  Stocks:        [{id:'qty',lbl:'Quantity (Shares)',ph:'e.g. 50',t:'number'},{id:'buyPrice',lbl:'Buy Price/Share',ph:'e.g. 2400',t:'number'},{id:'currentPrice',lbl:'Current Price/Share (CMP)',ph:'e.g. 2850',t:'number'},{id:'exchange',lbl:'Exchange',ph:'NSE / BSE',t:'select',opts:['NSE','BSE','NSE & BSE']}],
   'Mutual Fund': [{id:'units',lbl:'Units Held',ph:'e.g. 245.678',t:'number',step:'0.001'},{id:'buyNav',lbl:'Buy NAV',ph:'e.g. 42.50',t:'number',step:'0.01'},{id:'currentNav',lbl:'Current NAV',ph:'e.g. 51.20',t:'number',step:'0.01'},{id:'fundHouse',lbl:'Fund House',ph:'e.g. HDFC, SBI',t:'text'}],
-  ETF:           [{id:'qty',lbl:'Units Held',ph:'e.g. 30',t:'number'},{id:'buyPrice',lbl:'Buy Price/Unit',ph:'e.g. 480',t:'number'},{id:'currentPrice',lbl:'Current Price/Unit',ph:'e.g. 524',t:'number'},{id:'exchange',lbl:'Exchange',ph:'NSE / BSE',t:'text'}],
+  ETF:           [{id:'qty',lbl:'Units Held',ph:'e.g. 30',t:'number'},{id:'buyPrice',lbl:'Buy Price/Unit',ph:'e.g. 480',t:'number'},{id:'currentPrice',lbl:'Current Price/Unit',ph:'e.g. 524',t:'number'},{id:'exchange',lbl:'Exchange',ph:'NSE / BSE',t:'select',opts:['NSE','BSE','NSE & BSE']}],
   Cryptocurrency:[{id:'qty',lbl:'Quantity (Coins)',ph:'e.g. 0.05',t:'number',step:'0.00000001'},{id:'buyPrice',lbl:'Buy Price/Coin',ph:'e.g. 3200000',t:'number'},{id:'currentPrice',lbl:'Current Price/Coin',ph:'e.g. 4100000',t:'number'},{id:'exchange',lbl:'Exchange/Wallet',ph:'e.g. WazirX',t:'text'}],
   Gold:          [{id:'qty',lbl:'Quantity (grams)',ph:'e.g. 10',t:'number',step:'0.001'},{id:'buyPrice',lbl:'Buy Price/gram',ph:'e.g. 5200',t:'number'},{id:'currentPrice',lbl:'Current Price/gram',ph:'e.g. 6100',t:'number'},{id:'goldType',lbl:'Gold Type',ph:'Physical / SGB / Digital',t:'text'}],
   'Fixed Deposit':[{id:'principal',lbl:'Principal Amount',ph:'e.g. 100000',t:'number'},{id:'interestRate',lbl:'Interest Rate %',ph:'e.g. 7.5',t:'number',step:'0.01'},{id:'tenure',lbl:'Tenure (months)',ph:'e.g. 12',t:'number'},{id:'maturityDate',lbl:'Maturity Date',ph:'',t:'date'},{id:'bankName',lbl:'Bank Name',ph:'e.g. SBI, HDFC',t:'text'}],
@@ -1478,18 +1506,23 @@ function updateAssetFields(){
   var config = ASSET_FIELD_CONFIGS[scheme] || ASSET_FIELD_CONFIGS['Other'];
   var container = document.getElementById('assetDynamicFields');
   var html = '';
+  function renderField(f){
+    if(f.t==='select'){
+      return '<div class="field"><div class="field-label">'+f.lbl+'</div><select class="field-input asset-dynamic" id="af_'+f.id+'">'+f.opts.map(function(o){return'<option>'+o+'</option>';}).join('')+'</select></div>';
+    }
+    return '<div class="field"><div class="field-label">'+f.lbl+'</div><input type="'+(f.t==='select'?'text':f.t)+'" class="field-input asset-dynamic" id="af_'+f.id+'" placeholder="'+(f.t==='date'?'':f.ph)+'" '+(f.step?'step="'+f.step+'"':'')+' oninput="calcAssetPreview()"></div>';
+  }
   var i = 0;
   while(i < config.length){
-    if(i + 1 < config.length && config[i+1].t !== 'text' && config[i].t !== 'date' && config[i+1].t !== 'date'){
+    if(i + 1 < config.length && config[i+1].t !== 'text' && config[i+1].t !== 'select' && config[i].t !== 'date' && config[i+1].t !== 'date' && config[i].t !== 'select'){
       var f1 = config[i], f2 = config[i+1];
       html += '<div class="field-row">';
-      html += '<div class="field"><div class="field-label">' + f1.lbl + '</div><input type="' + f1.t + '" class="field-input asset-dynamic" id="af_' + f1.id + '" placeholder="' + (f1.t==='date'?'':f1.ph) + '" ' + (f1.step?'step="'+f1.step+'"':'') + ' oninput="calcAssetPreview()"></div>';
-      html += '<div class="field"><div class="field-label">' + f2.lbl + '</div><input type="' + f2.t + '" class="field-input asset-dynamic" id="af_' + f2.id + '" placeholder="' + (f2.t==='date'?'':f2.ph) + '" ' + (f2.step?'step="'+f2.step+'"':'') + ' oninput="calcAssetPreview()"></div>';
+      html += renderField(f1);
+      html += renderField(f2);
       html += '</div>';
       i += 2;
     } else {
-      var f = config[i];
-      html += '<div class="field"><div class="field-label">' + f.lbl + '</div><input type="' + f.t + '" class="field-input asset-dynamic" id="af_' + f.id + '" placeholder="' + (f.t==='date'?'':f.ph) + '" ' + (f.step?'step="'+f.step+'"':'') + ' oninput="calcAssetPreview()"></div>';
+      html += renderField(config[i]);
       i += 1;
     }
   }
@@ -1591,10 +1624,16 @@ function saveAsset(){
   var value=parseFloat(modal.dataset.value||'0')||details.currentValue||details.currentPrice||invested;
   if(!value&&!invested){alert('Enter price/value details');return;}
   var existingTotal=state.assets.reduce(function(s,a){return s+(a.alloc||0);},0);
+  var editId=modal.dataset.editId;
+  if(editId){var editAssetObj=state.assets.find(function(a){return a.id===parseInt(editId);});if(editAssetObj)existingTotal-=(editAssetObj.alloc||0);}
   var newTotal=existingTotal+alloc;
   if(newTotal>100.009){alert('Over 100%! Enter '+(100-existingTotal).toFixed(1)+'% or less.');return;}
-  // alloc check done silently
-  state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,alloc:alloc,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
+  if(editId){
+    var idx=state.assets.findIndex(function(a){return a.id===parseInt(editId);});
+    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:invested,value:value,alloc:alloc,details:details});}
+  } else {
+    state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,alloc:alloc,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
+  }
   saveState();closeModal('assetModal');renderAssets();
   if(curPage==='assets')renderAssetChart();
   updateDashboard();
@@ -1603,7 +1642,8 @@ function saveAsset(){
   document.getElementById('allocBar').style.display='none';
   document.getElementById('assetCalcPreview').style.display='none';
   document.getElementById('assetDynamicFields').innerHTML='';
-  modal.dataset.invested='0';modal.dataset.value='0';
+  modal.dataset.invested='0';modal.dataset.value='0';modal.dataset.editId='';
+  document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';
 }
 
 function getAllocStatus(scheme,pct){const t=IDEAL_ALLOC[scheme];if(!t)return null;if(pct<t.min-THRESHOLD)return{type:'low',msg:`⬇️ Under-allocated (ideal ${t.ideal}%)`};if(pct>t.max+THRESHOLD)return{type:'high',msg:`⬆️ Over-allocated (ideal ${t.ideal}%)`};if(pct<t.ideal-THRESHOLD)return{type:'low',msg:`↙ Slightly low (ideal ${t.ideal}%)`};if(pct>t.ideal+THRESHOLD)return{type:'high',msg:`↗ Slightly high (ideal ${t.ideal}%)`};return{type:'ok',msg:'✅ Well balanced'};}
@@ -1632,16 +1672,50 @@ function renderAssets(){
   let warningHTML='';
   if(warnings.length){const critical=warnings.filter(w=>w.status.type!=='ok');const col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';const bcol=critical.length?'rgba(239,68,68,0.4)':'rgba(234,179,8,0.4)';warningHTML=`<div style="background:${col};border:2px solid ${bcol};border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:14px;font-weight:900;margin-bottom:10px">${critical.length?'🚨':'⚠️'} Allocation Warnings</div>${warnings.map(w=>{const wc=w.status.type==='high'?'var(--orange)':'var(--yellow)';return`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><div><div style="font-size:13px;font-weight:900">${SCHEME_INFO[w.scheme]?.emoji||'💼'} ${w.scheme}</div><div style="font-size:11px;color:${wc};font-weight:700">${w.status.msg}</div></div><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${wc}">${w.pct}%</div></div>`;}).join('')}</div>`;
   }else if(state.assets.length>=3){warningHTML=`<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio Well Balanced!</div></div>`;}
-  c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const idealPct=IDEAL_ALLOC[a.scheme]?.ideal||0;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(a.value)+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAsset('+a.id+')">Remove</div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>Ideal: '+idealPct+'% (+-'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
+  c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const idealPct=IDEAL_ALLOC[a.scheme]?.ideal||0;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(a.value)+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editAsset('+a.id+')">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteAsset('+a.id+')">✕ Remove</span></div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>Ideal: '+idealPct+'% (+-'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
   renderSchemeList();
 }
 function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
+function editAsset(id){
+  var a=state.assets.find(a=>a.id===id);
+  if(!a)return;
+  var modal=document.getElementById('assetModal');
+  document.getElementById('assetScheme').value=a.scheme;
+  document.getElementById('assetName').value=a.name;
+  document.getElementById('assetAlloc').value=a.alloc||'';
+  setTimeout(function(){
+    updateAssetFields();
+    if(a.details){
+      Object.entries(a.details).forEach(function([k,v]){
+        var el=document.getElementById('af_'+k);
+        if(el&&v) el.value=v;
+      });
+    }
+  },60);
+  modal.dataset.editId=id;
+  modal.dataset.invested=a.invested||0;
+  modal.dataset.value=a.value||0;
+  document.querySelector('#assetModal .btn-go').textContent='✅ Update Asset';
+  showModal('assetModal');
+}
 function renderSchemeList(){document.getElementById('schemeList').innerHTML=Object.entries(SCHEME_INFO).map(([name,info])=>{const ideal=IDEAL_ALLOC[name];return`<div class="scheme-row"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">${info.emoji}</span><div><div class="scheme-name">${name}</div><div class="scheme-desc">${info.desc}</div></div></div><div style="text-align:right;flex-shrink:0;margin-left:10px"><div class="risk-badge" style="background:${RISK_BG[info.risk]};color:${RISK_COLOR[info.risk]}">${info.risk}</div><div style="font-size:11px;color:var(--text3);font-weight:800;margin-top:3px">${info.returns}</div>${ideal?`<div style="font-size:10px;color:var(--blue);font-weight:900;margin-top:2px">🎯 ${ideal.ideal}% ideal</div>`:''}</div></div>`;}).join('');}
 
 // ======== LIABILITIES ========
-function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){alert('Fill name and remaining amount');return;}state.liabilities.push({id:Date.now(),name,type,total,remaining,emi,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});saveState();closeModal('liabModal');renderLiabilities();updateDashboard();['liabName','liabTotal','liabRemaining','liabEMI','liabRate'].forEach(id=>document.getElementById(id).value='');}
-function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(totalDebt);document.getElementById('totalEMI').textContent=fmt(totalEMI);document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:10px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(l.total)} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(l.emi)}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
-function deleteLiab(id){customConfirm('🏧','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();});}
+function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){alert('Fill name and remaining amount');return;}const editId=document.getElementById('liabModal').dataset.editId;if(editId){const l=state.liabilities.find(l=>l.id===parseInt(editId));if(l){l.name=name;l.type=type;l.total=total;l.remaining=remaining;l.emi=emi;l.rate=rate;l.color=LIAB_TYPES[type]?.color||'#ef4444';}}else{state.liabilities.push({id:Date.now(),name,type,total,remaining,emi,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});}saveState();closeModal('liabModal');renderLiabilities();updateDashboard();['liabName','liabTotal','liabRemaining','liabEMI','liabRate'].forEach(id=>document.getElementById(id).value='');document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
+function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(totalDebt);document.getElementById('totalEMI').textContent=fmt(totalEMI);document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editLiab(${l.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(l.total)} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(l.emi)}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
+function deleteLiab(id){customConfirm('💸','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();});}
+function editLiab(id){
+  const l=state.liabilities.find(l=>l.id===id);if(!l)return;
+  document.getElementById('liabName').value=l.name;
+  document.getElementById('liabType').value=l.type;
+  document.getElementById('liabTotal').value=l.total||'';
+  document.getElementById('liabRemaining').value=l.remaining||'';
+  document.getElementById('liabEMI').value=l.emi||'';
+  document.getElementById('liabRate').value=l.rate||'';
+  document.getElementById('liabModal').dataset.editId=id;
+  document.querySelector('#liabModal .btn-go').textContent='✅ Update Debt';
+  showModal('liabModal');
+}
 function renderLiabTypes(){document.getElementById('liabTypeList').innerHTML=Object.entries(LIAB_TYPES).map(([name,info])=>`<div class="scheme-row"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">${info.emoji}</span><div><div class="scheme-name">${name}</div><div class="scheme-desc">${info.desc}</div></div></div><div style="width:10px;height:10px;border-radius:50%;background:${info.color}"></div></div>`).join('');}
 
 // ======== BUDGET PLANNER ========
@@ -2303,19 +2377,43 @@ function buildBackupPayload(){
   return JSON.stringify(payload,null,2);
 }
 
+function triggerDownload(blob, filename){
+  // Try standard anchor download first
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
+    return true;
+  }catch(e){return false;}
+}
 function exportData(){
-  const payload=buildBackupPayload();
-  const encKey=state.drivePassword||'ft_default';
-  const encrypted=xorEncrypt(payload,encKey);
-  const wrapper={ft_encrypted:true,version:'ft-v5',date:new Date().toISOString(),payload:encrypted};
-  const blob=new Blob([JSON.stringify(wrapper,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='finance-tracker-backup-'+new Date().toISOString().split('T')[0]+'.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('✅ Backup exported successfully!','green');
+  try{
+    const payload=buildBackupPayload();
+    const encKey=state.drivePassword||'ft_default';
+    const encrypted=xorEncrypt(payload,encKey);
+    const wrapper={ft_encrypted:true,version:'ft-v5',date:new Date().toISOString(),payload:encrypted};
+    const json=JSON.stringify(wrapper,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const filename='finance-tracker-backup-'+new Date().toISOString().split('T')[0]+'.json';
+    const ok=triggerDownload(blob,filename);
+    if(ok){
+      showToast('✅ Backup exported! Check your Downloads folder.','green');
+    } else {
+      // Fallback: open as data URL in new tab (works on iOS)
+      const reader=new FileReader();
+      reader.onload=function(e){
+        const win=window.open('','_blank');
+        if(win){win.document.write('<pre style="word-break:break-all;font-size:11px">'+json.replace(/</g,'&lt;')+'</pre>');win.document.title=filename;showToast('Backup opened in new tab — long-press to save','yellow');}
+        else{showToast('Allow pop-ups and try again, or use Share to save','red');}
+      };
+      reader.readAsDataURL(blob);
+    }
+  }catch(e){showToast('❌ Export failed: '+e.message,'red');}
 }
 
 function doImport(){
@@ -2455,8 +2553,7 @@ function backupToDrive(){
     saveState();
     // Also offer download
     const blob=new Blob([JSON.stringify(wrapper,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='ft-drive-backup-'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);
+    triggerDownload(blob,'ft-drive-backup-'+new Date().toISOString().split('T')[0]+'.json');
     updateDriveUI();
     showToast('✅ Backed up! Encrypted file downloaded. Upload to your Google Drive folder.','green');
   }catch(e){showToast('❌ Backup failed: '+e.message,'red');}
@@ -2585,17 +2682,17 @@ function renderWealth(){
   // Asset rows
   const ar=document.getElementById('wealthAssetRows');
   if(!state.assets.length){ar.innerHTML=`<div class="empty" style="padding:10px"><div class="empty-desc">${tr('noAssets')}</div></div>`;}
-  else{ar.innerHTML=state.assets.map(a=>{const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const gainColor=gain&&parseFloat(gain)>=0?'var(--green)':'var(--red)';return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:4px;height:36px;border-radius:2px;background:${a.color};flex-shrink:0"></div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${SCHEME_INFO[a.scheme]?.emoji||'💼'} ${a.scheme}${a.alloc?` · ${a.alloc}% alloc`:''}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.color}">${state.currSymbol}${fmt(a.value)}</div>${gain?`<div style="font-size:10px;font-weight:900;color:${gainColor}">${parseFloat(gain)>=0?'📈 +':'📉 '}${gain}%</div>`:''}</div></div>`;}).join('')+'<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">'+tr('totalAssetsLbl')+'</span><span style="font-family:var(--font);color:var(--green)">${state.currSymbol}${fmt(totalAssets)}</span></div>';}
+  else{ar.innerHTML=state.assets.map(a=>{const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const gainColor=gain&&parseFloat(gain)>=0?'var(--green)':'var(--red)';return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:4px;height:36px;border-radius:2px;background:${a.color};flex-shrink:0"></div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${SCHEME_INFO[a.scheme]?.emoji||'💼'} ${a.scheme}${a.alloc?` · ${a.alloc}% alloc`:''}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.color}">${state.currSymbol}${fmt(a.value)}</div>${gain?`<div style="font-size:10px;font-weight:900;color:${gainColor}">${parseFloat(gain)>=0?'📈 +':'📉 '}${gain}%</div>`:''}</div></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalAssetsLbl')}</span><span style="font-family:var(--font);color:var(--green)">${state.currSymbol}${fmt(totalAssets)}</span></div>`;}
 
   // Account rows
   const acr=document.getElementById('wealthAcctRows');
   if(!state.accounts.length){acr.innerHTML=`<div class="empty" style="padding:10px"><div class="empty-desc">${tr('noAccounts')}</div></div>`;}
-  else{acr.innerHTML=state.accounts.map(a=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${a.color}22;border:2px solid ${a.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${a.type}</div></div><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(Math.abs(a.balance))}</div></div>`;}).join('')+'<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">'+tr('totalBalanceLbl')+'</span><span style="font-family:var(--font);color:var(--blue)">${state.currSymbol}${fmt(totalAccts)}</span></div>';}
+  else{acr.innerHTML=state.accounts.map(a=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${a.color}22;border:2px solid ${a.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${a.type}</div></div><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(Math.abs(a.balance))}</div></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalBalanceLbl')}</span><span style="font-family:var(--font);color:var(--blue)">${state.currSymbol}${fmt(totalAccts)}</span></div>`;}
 
   // Liability rows
   const lr=document.getElementById('wealthLiabRows');
   if(!state.liabilities.length){lr.innerHTML=`<div class="empty" style="padding:10px"><div class="empty-title">${tr('debtFree')}</div></div>`;}
-  else{lr.innerHTML=state.liabilities.map(l=>{const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${l.color}22;border:2px solid ${l.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${l.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${l.type}${l.rate?' · '+l.rate+'%':''} ${paidPct>0?'· '+paidPct+'% paid':''}</div>${l.emi>0?`<div style="font-size:10px;color:var(--yellow);font-weight:900">EMI: ${state.currSymbol}${fmt(l.emi)}/mo</div>`:''}</div><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;color:var(--text3);font-weight:700">remaining</div></div></div>`;}).join('')+'<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">'+tr('totalLiabLbl')+'</span><span style="font-family:var(--font);color:var(--red)">${state.currSymbol}${fmt(totalLiab)}</span></div>';}
+  else{lr.innerHTML=state.liabilities.map(l=>{const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${l.color}22;border:2px solid ${l.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${l.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${l.type}${l.rate?' · '+l.rate+'%':''} ${paidPct>0?'· '+paidPct+'% paid':''}</div>${l.emi>0?`<div style="font-size:10px;color:var(--yellow);font-weight:900">EMI: ${state.currSymbol}${fmt(l.emi)}/mo</div>`:''}</div><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;color:var(--text3);font-weight:700">remaining</div></div></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalLiabLbl')}</span><span style="font-family:var(--font);color:var(--red)">${state.currSymbol}${fmt(totalLiab)}</span></div>`;}
 
   // Goal rows
   const gr=document.getElementById('wealthGoalRows');
@@ -2652,7 +2749,14 @@ function exportWealth(){
   state.liabilities.forEach(l=>{txt+=`  ${l.name} (${l.type}): ${state.currSymbol}${fmt(l.remaining)} remaining${l.emi?' | EMI: '+state.currSymbol+fmt(l.emi)+'/mo':''}\n`;});
   txt+=`\nGOALS\n${'-'.repeat(30)}\n`;
   state.goals.forEach(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));txt+=`  ${g.icon} ${g.name}: ${state.currSymbol}${fmt(g.current)} / ${state.currSymbol}${fmt(g.target)} (${pct}%)\n`;});
-  const blob=new Blob([txt],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='assert-statement-'+new Date().toISOString().split('T')[0]+'.txt';a.click();URL.revokeObjectURL(url);
+  const blob=new Blob([txt],{type:'text/plain'});
+  const filename='wealth-statement-'+new Date().toISOString().split('T')[0]+'.txt';
+  const ok=triggerDownload(blob,filename);
+  if(!ok){
+    const win=window.open('','_blank');
+    if(win){win.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap">'+txt.replace(/</g,'&lt;')+'</pre>');win.document.title=filename;}
+    else showToast('Allow pop-ups and try again','red');
+  } else showToast('✅ Wealth statement exported!','green');
 }
 function fmt(n){if(!n||isNaN(n))return'0';const abs=Math.abs(n);if(abs>=10000000)return(abs/10000000).toFixed(2)+'Cr';if(abs>=100000)return(abs/100000).toFixed(2)+'L';if(abs>=1000)return(abs/1000).toFixed(1)+'K';return Math.round(abs).toLocaleString();}
 function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
