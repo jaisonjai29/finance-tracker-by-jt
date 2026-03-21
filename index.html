@@ -56,6 +56,81 @@
 [data-theme="aurora"] .set-row{background:rgba(4,28,44,0.7);backdrop-filter:blur(8px);}
 [data-theme="aurora"] .field-input{background:rgba(7,54,82,0.5);}
 [data-theme="aurora"] .bg3,.pin-pad [data-theme="aurora"]{background:rgba(7,54,82,0.6);}
+
+/* ══ SUNSET — warm amber dusk, coral and gold ══ */
+[data-theme="sunset"]{
+  --accent:#fb923c;--accent-text:#1a0800;
+  --bg:#0f0600;--bg2:#1c0d02;--bg3:#2d1606;
+  --card:#1c0d02;--card2:#251203;
+  --border:rgba(251,146,60,0.12);
+  --text:#fff7ed;--text2:#fed7aa;--text3:#c2693a;
+  --green:#a3e635;--red:#f87171;--blue:#60a5fa;
+  --yellow:#fbbf24;--purple:#d8b4fe;--orange:#fb923c;--teal:#34d399;
+}
+[data-theme="sunset"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 100% 60% at 50% 0%,rgba(251,146,60,0.12) 0%,transparent 55%),radial-gradient(ellipse 70% 50% at 0% 80%,rgba(239,68,68,0.07) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 100% 60%,rgba(251,191,36,0.06) 0%,transparent 55%);pointer-events:none;z-index:0;}
+[data-theme="sunset"] #app{position:relative;z-index:1;}
+[data-theme="sunset"] .topbar,[data-theme="sunset"] .nav{background:rgba(28,13,2,0.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(251,146,60,0.1);}
+[data-theme="sunset"] .hero{background:linear-gradient(135deg,rgba(45,22,6,0.95),rgba(28,13,2,0.9));border-color:rgba(251,146,60,0.25);}
+[data-theme="sunset"] .hero::before{background:radial-gradient(circle,rgba(251,146,60,0.18),transparent 70%);}
+[data-theme="sunset"] .box,[data-theme="sunset"] .goal-box{background:rgba(28,13,2,0.85);backdrop-filter:blur(10px);border-color:rgba(251,146,60,0.1);}
+[data-theme="sunset"] .modal{background:rgba(28,13,2,0.97);}
+[data-theme="sunset"] .stat-box.sg{background:rgba(163,230,53,0.08);border-color:rgba(163,230,53,0.2);}
+[data-theme="sunset"] .stat-box.sr{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2);}
+[data-theme="sunset"] .stat-box.sb{background:rgba(251,146,60,0.08);border-color:rgba(251,146,60,0.2);}
+[data-theme="sunset"] .nav-btn.on{background:rgba(251,146,60,0.12);}
+[data-theme="sunset"] .field-input{background:rgba(45,22,6,0.8);}
+[data-theme="sunset"] .pin-btn{background:rgba(28,13,2,0.9);border-color:rgba(251,146,60,0.15);}
+[data-theme="sunset"] .set-row{background:rgba(28,13,2,0.8);}
+
+/* ══ FOREST — deep earthy greens, natural and calm ══ */
+[data-theme="forest"]{
+  --accent:#4ade80;--accent-text:#052010;
+  --bg:#030f07;--bg2:#071a0d;--bg3:#0d2e18;
+  --card:#071a0d;--card2:#0a2214;
+  --border:rgba(74,222,128,0.1);
+  --text:#f0fdf4;--text2:#a7f3b8;--text3:#3d7a55;
+  --green:#4ade80;--red:#f87171;--blue:#67e8f9;
+  --yellow:#fde68a;--purple:#c4b5fd;--orange:#fdba74;--teal:#6ee7b7;
+}
+[data-theme="forest"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 15% 0%,rgba(74,222,128,0.06) 0%,transparent 55%),radial-gradient(ellipse 60% 80% at 85% 100%,rgba(52,211,153,0.05) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(34,197,94,0.03) 0%,transparent 60%);pointer-events:none;z-index:0;}
+[data-theme="forest"] #app{position:relative;z-index:1;}
+[data-theme="forest"] .topbar,[data-theme="forest"] .nav{background:rgba(7,26,13,0.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(74,222,128,0.08);}
+[data-theme="forest"] .hero{background:linear-gradient(135deg,rgba(13,46,24,0.97),rgba(7,26,13,0.92));border-color:rgba(74,222,128,0.2);}
+[data-theme="forest"] .hero::before{background:radial-gradient(circle,rgba(74,222,128,0.12),transparent 70%);}
+[data-theme="forest"] .box,[data-theme="forest"] .goal-box{background:rgba(7,26,13,0.88);backdrop-filter:blur(10px);border-color:rgba(74,222,128,0.08);}
+[data-theme="forest"] .modal{background:rgba(7,26,13,0.98);}
+[data-theme="forest"] .stat-box.sg{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.2);}
+[data-theme="forest"] .stat-box.sr{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2);}
+[data-theme="forest"] .stat-box.sb{background:rgba(103,232,249,0.07);border-color:rgba(103,232,249,0.18);}
+[data-theme="forest"] .nav-btn.on{background:rgba(74,222,128,0.1);}
+[data-theme="forest"] .field-input{background:rgba(13,46,24,0.8);}
+[data-theme="forest"] .pin-btn{background:rgba(7,26,13,0.9);border-color:rgba(74,222,128,0.12);}
+[data-theme="forest"] .set-row{background:rgba(7,26,13,0.85);}
+
+/* ══ ROSE — midnight rose, deep dark with blush pink elegance ══ */
+[data-theme="rose"]{
+  --accent:#fb7185;--accent-text:#1a030a;
+  --bg:#0c0308;--bg2:#1a0610;--bg3:#2d0d1d;
+  --card:#1a0610;--card2:#210b15;
+  --border:rgba(251,113,133,0.12);
+  --text:#fff1f2;--text2:#fecdd3;--text3:#9f3654;
+  --green:#86efac;--red:#fb7185;--blue:#a5b4fc;
+  --yellow:#fde68a;--purple:#e879f9;--orange:#fdba74;--teal:#5eead4;
+}
+[data-theme="rose"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 80% 0%,rgba(251,113,133,0.1) 0%,transparent 55%),radial-gradient(ellipse 60% 50% at 10% 90%,rgba(232,121,249,0.06) 0%,transparent 55%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(251,113,133,0.04) 0%,transparent 60%);pointer-events:none;z-index:0;}
+[data-theme="rose"] #app{position:relative;z-index:1;}
+[data-theme="rose"] .topbar,[data-theme="rose"] .nav{background:rgba(26,6,16,0.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(251,113,133,0.1);}
+[data-theme="rose"] .hero{background:linear-gradient(135deg,rgba(45,13,29,0.97),rgba(26,6,16,0.92));border-color:rgba(251,113,133,0.22);}
+[data-theme="rose"] .hero::before{background:radial-gradient(circle,rgba(251,113,133,0.15),transparent 70%);}
+[data-theme="rose"] .box,[data-theme="rose"] .goal-box{background:rgba(26,6,16,0.88);backdrop-filter:blur(10px);border-color:rgba(251,113,133,0.09);}
+[data-theme="rose"] .modal{background:rgba(26,6,16,0.98);}
+[data-theme="rose"] .stat-box.sg{background:rgba(134,239,172,0.07);border-color:rgba(134,239,172,0.18);}
+[data-theme="rose"] .stat-box.sr{background:rgba(251,113,133,0.08);border-color:rgba(251,113,133,0.22);}
+[data-theme="rose"] .stat-box.sb{background:rgba(165,180,252,0.07);border-color:rgba(165,180,252,0.18);}
+[data-theme="rose"] .nav-btn.on{background:rgba(251,113,133,0.12);}
+[data-theme="rose"] .field-input{background:rgba(45,13,29,0.8);}
+[data-theme="rose"] .pin-btn{background:rgba(26,6,16,0.9);border-color:rgba(251,113,133,0.14);}
+[data-theme="rose"] .set-row{background:rgba(26,6,16,0.85);}
 [data-font="inter"]{--font:'Inter',sans-serif;}
 [data-font="bebas"]{--font:'Bebas Neue',cursive;}
 [data-font="yellowtail"]{--font:'Yellowtail',cursive;}
@@ -329,8 +404,6 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
     </div>
     <div class="topbar-right">
       <div class="top-btn" onclick="showModal('txModal')">➕</div>
-      <div class="top-btn" onclick="shareApp()" title="Share App">🔗</div>
-      <div class="top-btn" onclick="location.reload()" title="Refresh">🔄</div>
       <div class="top-btn" onclick="showPage('bills')" id="billsBtn" title="Bills">🔔<div class="notif-badge" id="billsBadge" style="display:none">0</div></div>
       <div class="top-btn" onclick="lockApp()">🔒</div>
       <div class="avatar" id="avatar" onclick="showPage('settings')" style="overflow:hidden"><img id="avatarImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%"><span id="avatarLetter">👤</span></div>
@@ -658,13 +731,29 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <div class="set-sec">
         <div class="set-sec-title">🎨 Theme</div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px">
-          <div class="theme-sw on" style="background:linear-gradient(135deg,#0f172a,#334155)" onclick="setTheme('dark',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">DARK</span></div>
-          <div class="theme-sw" style="background:linear-gradient(135deg,#f1f5f9,#cbd5e1)" onclick="setTheme('light',this)"><span style="font-size:9px;font-weight:900;color:rgba(0,0,0,0.6);letter-spacing:.5px">LIGHT</span></div>
-          <div class="theme-sw" style="background:linear-gradient(135deg,#1a0533,#6b21a8)" onclick="setTheme('purple',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">PURPLE</span></div>
-          <div class="theme-sw" style="background:linear-gradient(135deg,#0a0f1e,#1e293b)" onclick="setTheme('slate',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">SLATE</span></div>
-          <div class="theme-sw" style="background:linear-gradient(135deg,#020d14 0%,#073652 50%,#0e4f52 100%);border:2px solid rgba(45,212,191,0.4);grid-column:1/-1;position:relative;overflow:hidden" onclick="setTheme('aurora',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 30% 50%,rgba(45,212,191,0.25),transparent),radial-gradient(ellipse 50% 60% at 75% 30%,rgba(56,189,248,0.18),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:900;color:rgba(45,212,191,0.95);letter-spacing:1.5px;text-shadow:0 0 12px rgba(45,212,191,0.6);position:relative">✦ AURORA</span>
+          <div class="theme-sw on" style="background:linear-gradient(135deg,#0f172a,#334155)" onclick="setTheme('dark',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">🌑 DARK</span></div>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#f1f5f9,#cbd5e1)" onclick="setTheme('light',this)"><span style="font-size:9px;font-weight:900;color:rgba(0,0,0,0.6);letter-spacing:.5px">☀️ LIGHT</span></div>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#1a0533,#6b21a8)" onclick="setTheme('purple',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">💜 PURPLE</span></div>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#0a0f1e,#1e293b)" onclick="setTheme('slate',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">🪨 SLATE</span></div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#020d14 0%,#073652 50%,#0e4f52 100%);border:2px solid rgba(45,212,191,0.35);position:relative;overflow:hidden" onclick="setTheme('aurora',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 30% 50%,rgba(45,212,191,0.22),transparent),radial-gradient(ellipse 50% 60% at 75% 30%,rgba(56,189,248,0.15),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(45,212,191,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(45,212,191,0.5);position:relative">✦ AURORA</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#0f0600,#2d1606 50%,#3d1e08 100%);border:2px solid rgba(251,146,60,0.3);position:relative;overflow:hidden" onclick="setTheme('sunset',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(251,146,60,0.2),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(239,68,68,0.12),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(254,215,170,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(251,146,60,0.6);position:relative">🌅 SUNSET</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#030f07,#0d2e18 50%,#0f3d1f 100%);border:2px solid rgba(74,222,128,0.25);position:relative;overflow:hidden" onclick="setTheme('forest',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(74,222,128,0.1),transparent),radial-gradient(ellipse 60% 70% at 80% 100%,rgba(52,211,153,0.08),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(167,243,184,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(74,222,128,0.5);position:relative">🌿 FOREST</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#0c0308,#2d0d1d 50%,#3d0d24 100%);border:2px solid rgba(251,113,133,0.3);position:relative;overflow:hidden" onclick="setTheme('rose',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 80% 0%,rgba(251,113,133,0.15),transparent),radial-gradient(ellipse 60% 50% at 10% 90%,rgba(232,121,249,0.1),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(254,205,211,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(251,113,133,0.5);position:relative">🌹 ROSE</span>
           </div>
         </div>
       </div>
@@ -704,8 +793,12 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <div class="set-sec">
         <div class="set-sec-title">📲 Install App</div>
         <div class="set-row" onclick="shareApp()">
-          <div class="set-row-left"><span class="set-row-icon">🔗</span><div><div class="set-row-label">Share App Link</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Send link to others — opens & installs in browser</div></div></div>
+          <div class="set-row-left"><span class="set-row-icon">🔗</span><div><div class="set-row-label">Share App Link</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Send link to others — opens &amp; installs in browser</div></div></div>
           <div class="set-row-right" style="color:var(--accent)">Share ▶</div>
+        </div>
+        <div class="set-row" onclick="location.reload()">
+          <div class="set-row-left"><span class="set-row-icon">🔄</span><div><div class="set-row-label">Refresh App</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Reload to check for the latest version</div></div></div>
+          <div class="set-row-right">Reload ▶</div>
         </div>
         <div class="set-row" id="installRow" onclick="installApp()" style="display:none">
           <div class="set-row-left"><span class="set-row-icon">📲</span><div><div class="set-row-label">Install on Home Screen</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Works offline · Fast · No app store needed</div></div></div>
@@ -717,6 +810,10 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
         </div>
         <div class="set-row" id="installManualRow" style="cursor:default">
           <div class="set-row-left"><span class="set-row-icon">📖</span><div><div class="set-row-label">Manual Install Guide</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Android: Menu → Add to Home Screen · iOS: Share → Add to Home Screen</div></div></div>
+        </div>
+        <div class="set-row" onclick="clearSWCache()" style="border-color:rgba(56,189,248,0.25)">
+          <div class="set-row-left"><span class="set-row-icon">⚡</span><div><div class="set-row-label" style="color:var(--blue)">Clear Cache & Update App</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Force-load latest version on mobile</div></div></div>
+          <div class="set-row-right" style="color:var(--blue)">Update ▶</div>
         </div>
       </div>
 
@@ -753,7 +850,8 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
           <div class="set-row-right" style="color:var(--red)">⚠️</div>
         </div>
       </div>
-      <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 16px">💰 Finance Tracker · Made with ❤️</div>
+      <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
+      <div style="text-align:center;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;padding-bottom:16px;opacity:0.6">Build 20250321-v9 · <span style="color:var(--accent)">Latest</span></div>
     </div>
 
   </div><!-- /content -->
@@ -2020,7 +2118,7 @@ function copyShareLink(){
 }
 function setTheme(t,el){state.theme=t;saveState();applyTheme(t);document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');setTimeout(()=>{renderMiniChart();if(curPage==='analytics')renderAnalytics();if(curPage==='assets')renderAssetChart();},300);}
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t||'dark');}
-function syncThemeBtn(){document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));const t=state.theme||'dark';const map={'dark':0,'light':1,'purple':2,'slate':3,'aurora':4};const idx=map[t];if(idx!=null){const btns=document.querySelectorAll('.theme-sw');if(btns[idx])btns[idx].classList.add('on');}}
+function syncThemeBtn(){document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));const t=state.theme||'dark';const map={'dark':0,'light':1,'purple':2,'slate':3,'aurora':4,'sunset':5,'forest':6,'rose':7};const idx=map[t];if(idx!=null){const btns=document.querySelectorAll('.theme-sw');if(btns[idx])btns[idx].classList.add('on');}}
 function setFont(f,el){state.font=f;saveState();applyFont(f);document.querySelectorAll('#fontGrid .font-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
 function applyFont(f){document.documentElement.setAttribute('data-font',f);}
 function setLocalProfilePhoto(event){
@@ -2981,49 +3079,145 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   });
 })();
 
-// ======== SERVICE WORKER ========
-// Use base64 data URL — works on all browsers including those that block blob: for SW
+// ======== SERVICE WORKER — Network-first, versioned cache ========
 (function(){
   if(!('serviceWorker' in navigator)) return;
+
+  // ── Version stamp: change this string on every release to force SW update ──
+  var BUILD = 'ft-build-20250321-v9';
+
   var swCode = [
-    "var CACHE='ft-v5';",
-    "self.addEventListener('install',function(e){",
+    "var CACHE_NAME = '" + BUILD + "';",
+    "var SKIP_URLS = ['firestore','googleapis','firebase','anthropic','api.anthropic'];",
+
+    // Install: skip waiting immediately so new SW activates without delay
+    "self.addEventListener('install', function(e){",
+    "  console.log('[SW] Installing', CACHE_NAME);",
     "  self.skipWaiting();",
     "});",
-    "self.addEventListener('activate',function(e){",
-    "  e.waitUntil(self.clients.claim());",
+
+    // Activate: DELETE all old caches, claim all clients immediately
+    "self.addEventListener('activate', function(e){",
+    "  console.log('[SW] Activating, clearing old caches');",
+    "  e.waitUntil(",
+    "    caches.keys().then(function(keys){",
+    "      return Promise.all(",
+    "        keys.filter(function(k){ return k !== CACHE_NAME; })",
+    "          .map(function(k){ console.log('[SW] Deleting old cache:', k); return caches.delete(k); })",
+    "      );",
+    "    }).then(function(){ return self.clients.claim(); })",
+    "  );",
     "});",
-    "self.addEventListener('fetch',function(e){",
-    "  if(e.request.method!=='GET') return;",
-    "  var url=e.request.url;",
-    "  if(url.indexOf('firestore')>-1||url.indexOf('googleapis')>-1||url.indexOf('firebase')>-1) return;",
+
+    // Fetch: NETWORK-FIRST strategy
+    // — try network, cache success responses, fall back to cache only on failure
+    // — never serve stale cache when network is available
+    "self.addEventListener('fetch', function(e){",
+    "  if(e.request.method !== 'GET') return;",
+    "  var url = e.request.url;",
+    "  for(var i=0; i<SKIP_URLS.length; i++){",
+    "    if(url.indexOf(SKIP_URLS[i]) > -1) return;",  // skip API calls entirely
+    "  }",
     "  e.respondWith(",
-    "    caches.match(e.request).then(function(cached){",
-    "      var fetchPromise=fetch(e.request).then(function(resp){",
-    "        if(resp&&resp.status===200&&resp.type!=='opaque'){",
-    "          var clone=resp.clone();",
-    "          caches.open(CACHE).then(function(c){c.put(e.request,clone);});",
-    "        }",
-    "        return resp;",
-    "      }).catch(function(){return cached;});",
-    "      return cached||fetchPromise;",
+    "    fetch(e.request).then(function(resp){",
+    "      if(resp && resp.status === 200 && resp.type !== 'opaque'){",
+    "        var clone = resp.clone();",
+    "        caches.open(CACHE_NAME).then(function(c){ c.put(e.request, clone); });",
+    "      }",
+    "      return resp;",
+    "    }).catch(function(){",
+    "      return caches.match(e.request);",  // offline fallback only
     "    })",
     "  );",
+    "});",
+
+    // Message: allow page to force-clear cache and reload
+    "self.addEventListener('message', function(e){",
+    "  if(e.data === 'SKIP_WAITING') self.skipWaiting();",
+    "  if(e.data === 'CLEAR_CACHE'){",
+    "    caches.keys().then(function(keys){",
+    "      return Promise.all(keys.map(function(k){ return caches.delete(k); }));",
+    "    });",
+    "  }",
     "});"
   ].join('\n');
-  
-  // Convert to base64 data URL — universally supported for SW registration
-  var b64 = btoa(unescape(encodeURIComponent(swCode)));
-  var swDataUrl = 'data:application/javascript;base64,' + b64;
-  
-  navigator.serviceWorker.register(swDataUrl, {scope: './'}).then(function(){
-    console.log('SW registered via data URL');
+
+  // Encode SW code safely using TextEncoder (handles all Unicode)
+  function encodeSW(code){
+    try{
+      var bytes = new TextEncoder().encode(code);
+      var binary = '';
+      for(var i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary);
+    }catch(ex){
+      // Fallback for very old browsers
+      return btoa(unescape(encodeURIComponent(code)));
+    }
+  }
+
+  var swDataUrl = 'data:application/javascript;base64,' + encodeSW(swCode);
+
+  // Check for existing SW and force update if BUILD changed
+  navigator.serviceWorker.getRegistration('./').then(function(reg){
+    if(reg){
+      // Tell existing SW to update
+      reg.update();
+      if(reg.active){
+        reg.active.postMessage('SKIP_WAITING');
+      }
+    }
+  }).catch(function(){});
+
+  navigator.serviceWorker.register(swDataUrl, {scope: './'}).then(function(reg){
+    console.log('[SW] Registered:', BUILD);
+
+    // When a new SW is waiting, activate it immediately
+    reg.addEventListener('updatefound', function(){
+      var newSW = reg.installing;
+      if(!newSW) return;
+      newSW.addEventListener('statechange', function(){
+        if(newSW.state === 'installed' && navigator.serviceWorker.controller){
+          console.log('[SW] New version ready — activating');
+          newSW.postMessage('SKIP_WAITING');
+        }
+      });
+    });
+
+    // Reload page once new SW has taken control (only if page already had a SW)
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(refreshing) return;
+      refreshing = true;
+      console.log('[SW] Controller changed — new version active');
+      // Don't auto-reload — just log. User gets new version on next natural reload.
+    });
   }).catch(function(e){
-    // data: URL also blocked on some browsers (Firefox) — skip silently
-    // App still works perfectly without SW, just no offline caching
-    console.log('SW not available in this environment (app still works online)');
+    console.log('[SW] Not available:', e.message);
   });
 })();
+
+// ── Force-clear SW cache helper (called from Settings) ──────────────────────
+function clearSWCache(){
+  // Tell SW to clear caches
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage('CLEAR_CACHE');
+  }
+  // Also clear from page side
+  if('caches' in window){
+    caches.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){ return caches.delete(k); }));
+    }).then(function(){
+      showToast('✅ Cache cleared! Reloading…','green');
+      setTimeout(function(){ location.reload(true); }, 800);
+    }).catch(function(){
+      showToast('✅ Reloading with fresh version…','green');
+      setTimeout(function(){ location.reload(true); }, 800);
+    });
+  } else {
+    showToast('✅ Reloading…','green');
+    setTimeout(function(){ location.reload(true); }, 500);
+  }
+}
 
 
 // ======== BOOT ========
