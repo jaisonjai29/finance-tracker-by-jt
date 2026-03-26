@@ -14,7 +14,7 @@
 <link rel="manifest" id="pwaManifest">
 <link rel="apple-touch-icon" id="appleTouchIcon">
 <title>Finance Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Inter:wght@400;600;700&family=Oswald:wght@400;600;700&family=Bebas+Neue&family=Pacifico&family=Satisfy&family=Great+Vibes&family=Staatliches&family=Yellowtail&family=Kaushan+Script&family=Allura&family=Playwrite+NZ:wght@100;400&family=Oregano:ital,wght@0,400;1,400&family=Hind+Madurai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Inter:wght@400;600;700&family=Oswald:wght@400;600;700&family=Pacifico&family=Satisfy&family=Great+Vibes&family=Staatliches&family=Kaushan+Script&family=Allura&family=Oregano:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -54,50 +54,6 @@
 [data-theme="aurora"] .set-row{background:rgba(4,28,44,0.7);backdrop-filter:blur(8px);}
 [data-theme="aurora"] .field-input{background:rgba(7,54,82,0.5);}
 
-/* ══ NEON — electric neon cyberpunk ══ */
-[data-theme="neon"]{
-  --accent:#39ff14;--accent-text:#000a00;
-  --bg:#05000f;--bg2:#0d0520;--bg3:#1a0a35;
-  --card:#0d0520;--card2:#170840;
-  --border:rgba(57,255,20,0.12);
-  --text:#f0fff0;--text2:#a0f0a0;--text3:#3a7a3a;
-  --green:#39ff14;--red:#ff2d55;--blue:#00d4ff;
-  --yellow:#ffff00;--purple:#bf5fff;--orange:#ff6600;
-}
-[data-theme="neon"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 30%,rgba(57,255,20,0.08) 0%,transparent 60%),radial-gradient(ellipse 50% 35% at 80% 70%,rgba(0,212,255,0.06) 0%,transparent 55%),radial-gradient(ellipse 40% 30% at 50% 100%,rgba(191,95,255,0.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
-[data-theme="neon"] #app{position:relative;z-index:1;}
-[data-theme="neon"] .topbar,[data-theme="neon"] .nav{background:rgba(5,0,15,0.95);backdrop-filter:blur(20px);border-color:rgba(57,255,20,0.12);}
-[data-theme="neon"] .hero{background:linear-gradient(135deg,rgba(13,5,32,0.97),rgba(26,10,53,0.92));border-color:rgba(57,255,20,0.25);}
-[data-theme="neon"] .hero::before{background:radial-gradient(circle,rgba(57,255,20,0.12),transparent 70%);}
-[data-theme="neon"] .box,[data-theme="neon"] .goal-box,[data-theme="neon"] .set-row{background:rgba(13,5,32,0.85);backdrop-filter:blur(10px);}
-[data-theme="neon"] .modal{background:rgba(5,0,15,0.98);}
-[data-theme="neon"] .nav-btn.on{background:rgba(57,255,20,0.1);}
-[data-theme="neon"] .stat-box.sg{background:rgba(57,255,20,0.07);border-color:rgba(57,255,20,0.2);}
-[data-theme="neon"] .stat-box.sr{background:rgba(255,45,85,0.08);border-color:rgba(255,45,85,0.2);}
-[data-theme="neon"] .stat-box.sb{background:rgba(0,212,255,0.07);border-color:rgba(0,212,255,0.2);}
-
-/* ══ SOLAR — warm golden premium ══ */
-[data-theme="solar"]{
-  --accent:#f5a623;--accent-text:#1a0a00;
-  --bg:#0a0500;--bg2:#180e00;--bg3:#2a1900;
-  --card:#180e00;--card2:#221200;
-  --border:rgba(245,166,35,0.12);
-  --text:#fff8ee;--text2:#d4a96a;--text3:#7a5a30;
-  --green:#a3e635;--red:#ff6b6b;--blue:#60a5fa;
-  --yellow:#f5a623;--purple:#c084fc;--orange:#fb923c;
-}
-[data-theme="solar"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 100% 50% at 50% -10%,rgba(245,166,35,0.12) 0%,transparent 55%),radial-gradient(ellipse 60% 40% at 0% 80%,rgba(251,146,60,0.07) 0%,transparent 55%),radial-gradient(ellipse 50% 35% at 100% 50%,rgba(245,200,35,0.05) 0%,transparent 55%);pointer-events:none;z-index:0;}
-[data-theme="solar"] #app{position:relative;z-index:1;}
-[data-theme="solar"] .topbar,[data-theme="solar"] .nav{background:rgba(10,5,0,0.95);backdrop-filter:blur(20px);border-color:rgba(245,166,35,0.1);}
-[data-theme="solar"] .hero{background:linear-gradient(135deg,rgba(24,14,0,0.97),rgba(42,25,0,0.92));border-color:rgba(245,166,35,0.28);}
-[data-theme="solar"] .hero::before{background:radial-gradient(circle,rgba(245,166,35,0.14),transparent 70%);}
-[data-theme="solar"] .box,[data-theme="solar"] .goal-box,[data-theme="solar"] .set-row{background:rgba(18,10,0,0.85);backdrop-filter:blur(10px);}
-[data-theme="solar"] .modal{background:rgba(10,5,0,0.98);}
-[data-theme="solar"] .nav-btn.on{background:rgba(245,166,35,0.12);}
-[data-theme="solar"] .stat-box.sg{background:rgba(163,230,53,0.07);border-color:rgba(163,230,53,0.2);}
-[data-theme="solar"] .stat-box.sr{background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);}
-[data-theme="solar"] .stat-box.sb{background:rgba(96,165,250,0.07);border-color:rgba(96,165,250,0.2);}
-
 /* ══ OCEAN — deep ocean blue ══ */
 [data-theme="ocean"]{
   --accent:#06b6d4;--accent-text:#001a1f;
@@ -121,80 +77,6 @@
 [data-theme="ocean"] .stat-box.sb{background:rgba(56,189,248,0.07);border-color:rgba(56,189,248,0.2);}
 
 [data-theme="aurora"] .bg3,.pin-pad [data-theme="aurora"]{background:rgba(7,54,82,0.6);}
-
-/* ══ SUNSET — warm amber dusk, coral and gold ══ */
-[data-theme="sunset"]{
-  --accent:#fb923c;--accent-text:#1a0800;
-  --bg:#0f0600;--bg2:#1c0d02;--bg3:#2d1606;
-  --card:#1c0d02;--card2:#251203;
-  --border:rgba(251,146,60,0.12);
-  --text:#fff7ed;--text2:#fed7aa;--text3:#c2693a;
-  --green:#a3e635;--red:#f87171;--blue:#60a5fa;
-  --yellow:#fbbf24;--purple:#d8b4fe;--orange:#fb923c;--teal:#34d399;
-}
-[data-theme="sunset"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 100% 60% at 50% 0%,rgba(251,146,60,0.12) 0%,transparent 55%),radial-gradient(ellipse 70% 50% at 0% 80%,rgba(239,68,68,0.07) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 100% 60%,rgba(251,191,36,0.06) 0%,transparent 55%);pointer-events:none;z-index:0;}
-[data-theme="sunset"] #app{position:relative;z-index:1;}
-[data-theme="sunset"] .topbar,[data-theme="sunset"] .nav{background:rgba(28,13,2,0.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(251,146,60,0.1);}
-[data-theme="sunset"] .hero{background:linear-gradient(135deg,rgba(45,22,6,0.95),rgba(28,13,2,0.9));border-color:rgba(251,146,60,0.25);}
-[data-theme="sunset"] .hero::before{background:radial-gradient(circle,rgba(251,146,60,0.18),transparent 70%);}
-[data-theme="sunset"] .box,[data-theme="sunset"] .goal-box{background:rgba(28,13,2,0.85);backdrop-filter:blur(10px);border-color:rgba(251,146,60,0.1);}
-[data-theme="sunset"] .modal{background:rgba(28,13,2,0.97);}
-[data-theme="sunset"] .stat-box.sg{background:rgba(163,230,53,0.08);border-color:rgba(163,230,53,0.2);}
-[data-theme="sunset"] .stat-box.sr{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2);}
-[data-theme="sunset"] .stat-box.sb{background:rgba(251,146,60,0.08);border-color:rgba(251,146,60,0.2);}
-[data-theme="sunset"] .nav-btn.on{background:rgba(251,146,60,0.12);}
-[data-theme="sunset"] .field-input{background:rgba(45,22,6,0.8);}
-[data-theme="sunset"] .pin-btn{background:rgba(28,13,2,0.9);border-color:rgba(251,146,60,0.15);}
-[data-theme="sunset"] .set-row{background:rgba(28,13,2,0.8);}
-
-/* ══ FOREST — deep earthy greens, natural and calm ══ */
-[data-theme="forest"]{
-  --accent:#4ade80;--accent-text:#052010;
-  --bg:#030f07;--bg2:#071a0d;--bg3:#0d2e18;
-  --card:#071a0d;--card2:#0a2214;
-  --border:rgba(74,222,128,0.1);
-  --text:#f0fdf4;--text2:#a7f3b8;--text3:#3d7a55;
-  --green:#4ade80;--red:#f87171;--blue:#67e8f9;
-  --yellow:#fde68a;--purple:#c4b5fd;--orange:#fdba74;--teal:#6ee7b7;
-}
-[data-theme="forest"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 15% 0%,rgba(74,222,128,0.06) 0%,transparent 55%),radial-gradient(ellipse 60% 80% at 85% 100%,rgba(52,211,153,0.05) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(34,197,94,0.03) 0%,transparent 60%);pointer-events:none;z-index:0;}
-[data-theme="forest"] #app{position:relative;z-index:1;}
-[data-theme="forest"] .topbar,[data-theme="forest"] .nav{background:rgba(7,26,13,0.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(74,222,128,0.08);}
-[data-theme="forest"] .hero{background:linear-gradient(135deg,rgba(13,46,24,0.97),rgba(7,26,13,0.92));border-color:rgba(74,222,128,0.2);}
-[data-theme="forest"] .hero::before{background:radial-gradient(circle,rgba(74,222,128,0.12),transparent 70%);}
-[data-theme="forest"] .box,[data-theme="forest"] .goal-box{background:rgba(7,26,13,0.88);backdrop-filter:blur(10px);border-color:rgba(74,222,128,0.08);}
-[data-theme="forest"] .modal{background:rgba(7,26,13,0.98);}
-[data-theme="forest"] .stat-box.sg{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.2);}
-[data-theme="forest"] .stat-box.sr{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2);}
-[data-theme="forest"] .stat-box.sb{background:rgba(103,232,249,0.07);border-color:rgba(103,232,249,0.18);}
-[data-theme="forest"] .nav-btn.on{background:rgba(74,222,128,0.1);}
-[data-theme="forest"] .field-input{background:rgba(13,46,24,0.8);}
-[data-theme="forest"] .pin-btn{background:rgba(7,26,13,0.9);border-color:rgba(74,222,128,0.12);}
-[data-theme="forest"] .set-row{background:rgba(7,26,13,0.85);}
-
-[data-theme="forest"]{
-  --accent:#4ade80;--accent-text:#052010;
-  --bg:#030f07;--bg2:#071a0d;--bg3:#0d2e18;
-  --card:#071a0d;--card2:#0a2214;
-  --border:rgba(74,222,128,0.1);
-  --text:#f0fdf4;--text2:#a7f3b8;--text3:#3d7a55;
-  --green:#4ade80;--red:#f87171;--blue:#67e8f9;
-  --yellow:#fde68a;--purple:#c4b5fd;--orange:#fdba74;--teal:#6ee7b7;
-}
-[data-theme="forest"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 15% 0%,rgba(74,222,128,0.06) 0%,transparent 55%),radial-gradient(ellipse 60% 80% at 85% 100%,rgba(52,211,153,0.05) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(34,197,94,0.03) 0%,transparent 60%);pointer-events:none;z-index:0;}
-[data-theme="forest"] #app{position:relative;z-index:1;}
-[data-theme="forest"] .topbar,[data-theme="forest"] .nav{background:rgba(7,26,13,0.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(74,222,128,0.08);}
-[data-theme="forest"] .hero{background:linear-gradient(135deg,rgba(13,46,24,0.97),rgba(7,26,13,0.92));border-color:rgba(74,222,128,0.2);}
-[data-theme="forest"] .hero::before{background:radial-gradient(circle,rgba(74,222,128,0.12),transparent 70%);}
-[data-theme="forest"] .box,[data-theme="forest"] .goal-box{background:rgba(7,26,13,0.88);backdrop-filter:blur(10px);border-color:rgba(74,222,128,0.08);}
-[data-theme="forest"] .modal{background:rgba(7,26,13,0.98);}
-[data-theme="forest"] .stat-box.sg{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.2);}
-[data-theme="forest"] .stat-box.sr{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2);}
-[data-theme="forest"] .stat-box.sb{background:rgba(103,232,249,0.07);border-color:rgba(103,232,249,0.18);}
-[data-theme="forest"] .nav-btn.on{background:rgba(74,222,128,0.1);}
-[data-theme="forest"] .field-input{background:rgba(13,46,24,0.8);}
-[data-theme="forest"] .pin-btn{background:rgba(7,26,13,0.9);border-color:rgba(74,222,128,0.12);}
-[data-theme="forest"] .set-row{background:rgba(7,26,13,0.85);}
 
 /* ══ ROSE — midnight rose, deep dark with blush pink elegance ══ */
 [data-theme="rose"]{
@@ -222,10 +104,7 @@
 [data-theme="rose"] .set-row{background:rgba(26,6,16,0.85);}
 [data-font="system"]{--font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
 [data-font="inter"]{--font:'Inter',sans-serif;}
-[data-font="bebas"]{--font:'Bebas Neue',cursive;}
-[data-font="yellowtail"]{--font:'Yellowtail',cursive;}
 [data-font="kaushan"]{--font:'Kaushan Script',cursive;}
-[data-font="playwrite"]{--font:'Playwrite NZ',cursive;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;font-family:var(--font)}
 body{background:var(--bg);color:var(--text);font-size:14px;transition:background .4s,color .3s}
@@ -451,7 +330,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 .ver-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
 .ver-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:900;letter-spacing:.5px}
 
-[data-lang="ta"],[data-lang="ta"] *:not(.lock-icon):not(.nav-emoji):not(.stat-emoji):not(.hero-emoji):not(.empty-big){font-family:'Hind Madurai',sans-serif !important;}
+
 </style>
 </head>
 <body>
@@ -851,23 +730,11 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px">
           <div class="theme-sw on" style="background:linear-gradient(135deg,#0f172a,#334155)" onclick="setTheme('dark',this)"><span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:.5px">🌑 DARK</span></div>
           <div class="theme-sw" style="background:linear-gradient(135deg,#f1f5f9,#cbd5e1)" onclick="setTheme('light',this)"><span style="font-size:9px;font-weight:900;color:rgba(0,0,0,0.6);letter-spacing:.5px">☀️ LIGHT</span></div>
-          <div class="theme-sw" style="background:linear-gradient(135deg,#05000f,#1a0a35);border:1px solid rgba(57,255,20,0.3)" onclick="setTheme('neon',this)"><span style="font-size:9px;font-weight:900;color:#39ff14;letter-spacing:.5px;text-shadow:0 0 8px #39ff14">⚡ NEON</span></div>
-          <div class="theme-sw" style="background:linear-gradient(135deg,#0a0500,#2a1900)" onclick="setTheme('solar',this)"><span style="font-size:9px;font-weight:900;color:#f5a623;letter-spacing:.5px">☀️ SOLAR</span></div>
           <div class="theme-sw" style="background:linear-gradient(135deg,#000d14,#003048)" onclick="setTheme('ocean',this)"><span style="font-size:9px;font-weight:900;color:#06b6d4;letter-spacing:.5px">🌊 OCEAN</span></div>
 
           <div class="theme-sw" style="background:linear-gradient(135deg,#020d14 0%,#073652 50%,#0e4f52 100%);border:2px solid rgba(45,212,191,0.35);position:relative;overflow:hidden" onclick="setTheme('aurora',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 30% 50%,rgba(45,212,191,0.22),transparent),radial-gradient(ellipse 50% 60% at 75% 30%,rgba(56,189,248,0.15),transparent);pointer-events:none"></div>
             <span style="font-size:9px;font-weight:900;color:rgba(45,212,191,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(45,212,191,0.5);position:relative">✦ AURORA</span>
-          </div>
-
-          <div class="theme-sw" style="background:linear-gradient(135deg,#0f0600,#2d1606 50%,#3d1e08 100%);border:2px solid rgba(251,146,60,0.3);position:relative;overflow:hidden" onclick="setTheme('sunset',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(251,146,60,0.2),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(239,68,68,0.12),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:900;color:rgba(254,215,170,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(251,146,60,0.6);position:relative">🌅 SUNSET</span>
-          </div>
-
-          <div class="theme-sw" style="background:linear-gradient(135deg,#030f07,#0d2e18 50%,#0f3d1f 100%);border:2px solid rgba(74,222,128,0.25);position:relative;overflow:hidden" onclick="setTheme('forest',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(74,222,128,0.1),transparent),radial-gradient(ellipse 60% 70% at 80% 100%,rgba(52,211,153,0.08),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:900;color:rgba(167,243,184,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(74,222,128,0.5);position:relative">🌿 FOREST</span>
           </div>
 
 
@@ -889,17 +756,13 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
         <div class="font-grid" id="fontGrid">
           <div class="font-btn on" onclick="setFont('system',this)" style="font-family:system-ui">System</div>
           <div class="font-btn" onclick="setFont('inter',this)" style="font-family:'Inter',sans-serif">Inter</div>
-          <div class="font-btn" onclick="setFont('bebas',this)" style="font-family:'Bebas Neue',cursive;font-size:15px">Bebas Neue</div>
-          <div class="font-btn" onclick="setFont('yellowtail',this)" style="font-family:'Yellowtail',cursive;font-size:13px">Yellowtail</div>
           <div class="font-btn" onclick="setFont('kaushan',this)" style="font-family:'Kaushan Script',cursive;font-size:13px">Kaushan Script</div>
-          <div class="font-btn" onclick="setFont('playwrite',this)" style="font-family:'Playwrite NZ',cursive;font-size:12px">Playwrite NZ</div>
         </div>
       </div>
       <div class="set-sec">
         <div class="set-sec-title">🌐 Language</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="langGrid">
+        <div style="display:grid;grid-template-columns:1fr;gap:8px" id="langGrid">
           <div class="font-btn on" id="lang-en" onclick="setLang('en',this)">🇬🇧 English</div>
-          <div class="font-btn" id="lang-ta" onclick="setLang('ta',this)" style="font-family:'Hind Madurai',sans-serif">🇮🇳 தமிழ்</div>
         </div>
       </div>
       <div class="set-sec">
@@ -1083,6 +946,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
         <option>Gold</option>
         <option>Fixed Deposit</option>
         <option>PPF</option>
+        <option>EPFO</option>
         <option>NPS</option>
         <option>Real Estate</option>
         <option>Bonds</option>
@@ -1095,12 +959,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
     <!-- Dynamic fields container -->
     <div id="assetDynamicFields"></div>
 
-    <div class="field"><div class="field-label">📊 Allocation %</div><input type="number" class="field-input" id="assetAlloc" placeholder="e.g. 20" min="0.1" max="100" step="0.1" oninput="updateAllocPreview()"></div>
-    <div id="allocBar" style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:8px;display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;font-weight:900">Portfolio Total</span><span style="font-family:var(--font);font-size:16px;font-weight:700" id="allocTotalLabel">0%</span></div>
-      <div style="height:10px;background:var(--bg2);border-radius:6px;overflow:hidden"><div id="allocTotalBar" style="height:100%;width:0%;border-radius:6px;transition:width .3s,background .3s"></div></div>
-      <div id="allocMsg" style="font-size:11px;font-weight:800;margin-top:6px;text-align:center"></div>
-    </div>
+    <input type="hidden" id="assetAlloc">
     <!-- Live calc preview -->
     <div id="assetCalcPreview" style="display:none;background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:8px">
       <div style="font-size:12px;font-weight:900;color:var(--text3);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">📊 Calculated Values</div>
@@ -1406,12 +1265,11 @@ const CAT_COLOR={Food:'#ef4444',Transport:'#22c55e',Shopping:'#eab308',Bills:'#8
 const RISK_BG={'Very Low':'rgba(34,197,94,.15)','Low':'rgba(34,197,94,.1)','Medium':'rgba(234,179,8,.15)','High':'rgba(249,115,22,.15)','Very High':'rgba(239,68,68,.15)','None':'rgba(148,163,184,.1)','Varies':'rgba(148,163,184,.1)'};
 const RISK_COLOR={'Very Low':'#22c55e','Low':'#86efac','Medium':'#eab308','High':'#f97316','Very High':'#ef4444','None':'#94a3b8','Varies':'#94a3b8'};
 const ASSET_COLORS=['#22c55e','#ef4444','#3b82f6','#eab308','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#f59e0b'];
-const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium',returns:'10-15%',emoji:'📈'},'Stocks':{desc:'Direct equity investments',risk:'High',returns:'12-20%',emoji:'📊'},'Cryptocurrency':{desc:'Digital assets & DeFi',risk:'Very High',returns:'Variable',emoji:'₿'},'Gold':{desc:'Gold & precious metals',risk:'Low',returns:'6-10%',emoji:'🥇'},'Real Estate':{desc:'Property & REITs',risk:'Medium',returns:'8-14%',emoji:'🏠'},'ETF':{desc:'Exchange traded funds',risk:'Medium',returns:'10-14%',emoji:'📉'},'PPF':{desc:'Public Provident Fund',risk:'Very Low',returns:'7.1%',emoji:'🏛️'},'NPS':{desc:'National Pension System',risk:'Low',returns:'8-10%',emoji:'👴'},'Fixed Deposit':{desc:'Bank fixed deposits',risk:'Very Low',returns:'6-7.5%',emoji:'🏦'},'Bonds':{desc:'Govt & corporate bonds',risk:'Low',returns:'6-8%',emoji:'📜'},'Cash':{desc:'Liquid savings',risk:'None',returns:'3-4%',emoji:'💵'},'Other':{desc:'Other investments',risk:'Varies',returns:'Varies',emoji:'💼'}};
-const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
+const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium',returns:'10-15%',emoji:'📈'},'Stocks':{desc:'Direct equity investments',risk:'High',returns:'12-20%',emoji:'📊'},'Cryptocurrency':{desc:'Digital assets & DeFi',risk:'Very High',returns:'Variable',emoji:'₿'},'Gold':{desc:'Gold & precious metals',risk:'Low',returns:'6-10%',emoji:'🥇'},'Real Estate':{desc:'Property & REITs',risk:'Medium',returns:'8-14%',emoji:'🏠'},'ETF':{desc:'Exchange traded funds',risk:'Medium',returns:'10-14%',emoji:'📉'},'PPF':{desc:'Public Provident Fund',risk:'Very Low',returns:'7.1%',emoji:'🏛️'},'EPFO':{desc:'Employee Provident Fund',risk:'Very Low',returns:'8.1%',emoji:'🏢'},'NPS':{desc:'National Pension System',risk:'Low',returns:'8-10%',emoji:'👴'},'Fixed Deposit':{desc:'Bank fixed deposits',risk:'Very Low',returns:'6-7.5%',emoji:'🏦'},'Bonds':{desc:'Govt & corporate bonds',risk:'Low',returns:'6-8%',emoji:'📜'},'Cash':{desc:'Liquid savings',risk:'None',returns:'3-4%',emoji:'💵'},'Other':{desc:'Other investments',risk:'Varies',returns:'Varies',emoji:'💼'}};
+const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'EPFO':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
 const THRESHOLD=2;
 const INCOME_CATS=['Salary','Freelance','Business','Investment','Rental','Gift','Other'];
 const EXPENSE_CATS=['Food','Transport','Shopping','Bills','Health','Entertainment','Education','EMI','Insurance','Travel','Other'];
-const CAT_TA={Salary:'சம்பளம்',Freelance:'ஃப்ரீலான்ஸ்',Business:'வணிகம்',Investment:'முதலீடு',Rental:'வாடகை',Gift:'பரிசு',Other:'மற்றவை',Food:'உணவு',Transport:'போக்குவரத்து',Shopping:'கடை',Bills:'பில்கள்',Health:'உடல்நலம்',Entertainment:'பொழுதுபோக்கு',Education:'கல்வி',EMI:'EMI',Insurance:'காப்பீடு',Travel:'பயணம்'};
 
 // ── TRANSLATION STRINGS ──────────────────────────────────────────────────────
 const LANG = {
@@ -1457,52 +1315,9 @@ const LANG = {
     fairHealth:'Fair — focus on savings & debt', needsAttention:'Needs attention — review finances',
     savingsRateOk:'Savings rate', savingsRateAbove:'% ≥ 20% ✅', savingsRateBelow:'% — target 20% ⚠️',
     debtRatioOk:'Debt ratio', debtRatioLow:'% < 40% ✅', debtRatioHigh:'% — reduce liabilities ⚠️',
-  },
-  ta:{
-    home:'முகப்பு', analytics:'விளக்கப்படம்', goals:'இலக்குகள்', assets:'சொத்துகள்',
-    liabilities:'கடன்கள்', history:'வரலாறு', budget:'பட்ஜெட்', bills:'பில்கள்',
-    accounts:'கணக்குகள்', assert:'செல்வம்', insights:'AI', recurring:'தொடர்',
-    scanner:'ஸ்கேனர்', settings:'அமைப்புகள்',
-    netWorth:'மொத்த செல்வம்', moneyIn:'வரும் பணம்', moneyOut:'செலவு பணம்',
-    savingsRate:'🐷 சேமிப்பு விகிதம்', recent:'📋 சமீபத்தியவை', seeAll:'அனைத்தும் ▶',
-    noTx:'பரிவர்த்தனைகள் இல்லை', noTxDesc:'➕ அழுத்தி சேர்க்கவும்!',
-    noGoals:'இலக்குகள் இல்லை', noGoalsDesc:'சேமிப்பு இலக்கை அமைக்கவும்!',
-    toGo:'மீதமுள்ளது', goalReached:'🎉 இலக்கு அடைந்தது!',
-    addTx:'💸 பரிவர்த்தனை சேர்', income:'📥 வருமானம்', expense:'📤 செலவு',
-    amount:'💰 தொகை', whatFor:'📝 எதற்காக?', date:'📅 தேதி',
-    category:'🗂️ வகை', notes:'📌 குறிப்புகள்', save:'✅ சேமி', cancel:'ரத்து',
-    addGoal:'🎯 புதிய இலக்கு', goalName:'📝 இலக்கு பெயர்', target:'💰 இலக்கு தொகை',
-    saved:'🐷 ஏற்கனவே சேமித்தது', targetDate:'📅 இலக்கு தேதி',
-    type:'📁 வகை', add:'✅ சேர்', addDebt:'🏧 கடன் சேர்',
-    loanName:'📝 கடன் பெயர்', total:'💰 மொத்தம்', remaining:'🔴 மீதம்',
-    emi:'📅 மாத EMI', rate:'💹 வட்டி %',
-    totalDebt:'மொத்த கடன்', monthlyEMI:'மாத EMI', debtRatio:'கடன் விகிதம்',
-    noDebts:'கடன்கள் இல்லை!', noDebtsDesc:'நீங்கள் கடனில்லாதவர் 🙌',
-    surplus:'📈 மிச்சம்', deficit:'📉 பற்றாக்குறை',
-    search:'பரிவர்த்தனைகள் தேடு…', all:'🗂️ அனைத்தும்',
-    account:'👤 கணக்கு', theme:'🎨 தீம்', currency:'💱 நாணயம்',
-    font:'🔤 எழுத்துரு', language:'🌐 மொழி', security:'🔒 பாதுகாப்பு',
-    exportData:'தரவு ஏற்றுமதி', clearData:'அனைத்தும் நீக்கு',
-    paidOff:'செலுத்தப்பட்டது', original:'அசல்',
-    wealthStatement:'💎 செல்வ அறிக்கை', totalAssets:'மொத்த சொத்துகள்',
-    totalDebts:'மொத்த கடன்கள்', cashBank:'பணம் & வங்கி',
-    assetsExceed:'📈 சொத்துகள் கடனை விட அதிகம்', liabExceed:'📉 கடன்கள் சொத்தை விட அதிகம்',
-    myAssets:'📈 சொத்துகள்', myAccounts:'🏦 கணக்குகள் & பணம்', myLiab:'🏧 கடன்கள்',
-    myGoals:'🎯 சேமிப்பு இலக்குகள்', healthScore:'💯 நிதி ஆரோக்கிய மதிப்பெண்',
-    totalAssetsLbl:'மொத்த சொத்துகள்', totalBalanceLbl:'மொத்த இருப்பு', totalLiabLbl:'மொத்த கடன்கள்',
-    noAssets:'சொத்துகள் சேர்க்கப்படவில்லை', noAccounts:'கணக்குகள் சேர்க்கப்படவில்லை', noGoalsSet:'இலக்குகள் இல்லை',
-    debtFree:'🎉 கடனில்லாதவர்!', remaining:'மீதமுள்ளது', paid:'செலுத்தப்பட்டது',
-    positiveNetWorth:'நேர் செல்வ மதிப்பு ✅', negativeNetWorth:'எதிர் செல்வ மதிப்பு — கடனை குறைக்கவும் ❌',
-    emergencyOk:'அவசர நிதி ≥ 3 மாதங்கள் ✅', emergencyLow:'அவசர நிதி < 3 மாதங்கள் ⚠️',
-    goalsSet:'நிதி இலக்கு', goalsSetPlural:'நிதி இலக்குகள்', noGoalSet:'இலக்குகள் இல்லை ℹ️',
-    diversified:'போர்ட்ஃபோலியோ பல்வகைப்படுத்தல்', schemes:'திட்டங்கள் ✅', notDiversified:'3க்கும் குறைவான சொத்து வகைகள் ⚠️',
-    excellentHealth:'சிறந்த நிதி ஆரோக்கியம்!', goodHealth:'நல்லது, மேம்படலாம்',
-    fairHealth:'நடுத்தரம் — சேமிப்பு & கடனில் கவனம்', needsAttention:'கவனம் தேவை — நிதியை மதிப்பாய்வு செய்யவும்',
-    savingsRateOk:'சேமிப்பு விகிதம்', savingsRateAbove:'% ≥ 20% ✅', savingsRateBelow:'% — 20% இலக்கு ⚠️',
-    debtRatioOk:'கடன் விகிதம்', debtRatioLow:'% < 40% ✅', debtRatioHigh:'% — கடனை குறைக்கவும் ⚠️',
   }
 };
-function tr(key){ return (LANG[state.lang]||LANG.en)[key] || (LANG.en[key]) || key; }
+function tr(key){ return LANG.en[key] || key; }
 
 function applyTranslations(){
   var lang=state.lang||'en';
@@ -1690,12 +1505,12 @@ function showModal(id){
   if(id==='billModal')renderBillCatChips();
   if(id==='recurModal')renderRecurCatChips();
 }
-function closeModal(id){document.getElementById(id).classList.remove('on');if(id==='txModal')resetTxForm();if(id==='goalModal'){document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';}if(id==='liabModal'){document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}if(id==='assetModal'){var m=document.getElementById('assetModal');m.dataset.editId='';m.dataset.invested='0';m.dataset.value='0';document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';}}
+function closeModal(id){document.getElementById(id).classList.remove('on');if(id==='txModal')resetTxForm();if(id==='goalModal'){document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';}if(id==='liabModal'){document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}if(id==='assetModal'){var m=document.getElementById('assetModal');m.dataset.editId='';m.dataset.invested='0';m.dataset.value='0';document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';var cp=document.getElementById('assetCalcPreview');if(cp)cp.style.display='none';document.getElementById('assetDynamicFields').innerHTML='';document.getElementById('assetName').value='';document.getElementById('assetScheme').value=document.querySelector('#assetScheme option').value;}}
 document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});});
 
 // ======== TRANSACTIONS ========
 function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();}
-function renderCatChips(){const cats=txType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('catChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');const label=(state.lang==='ta'&&CAT_TA[cat])?CAT_TA[cat]:cat;ch.innerHTML=`${CAT_EMOJI[cat]||'🔮'} ${label}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
+function renderCatChips(){const cats=txType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('catChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🔮'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
 function getSelCat(){const c=document.querySelectorAll('#catChips .chip.on');return c.length?(c[0].dataset.cat||'Other'):'Other';}
 function saveTx(){
   const amt=parseFloat(document.getElementById('txAmt').value);
@@ -1744,10 +1559,9 @@ function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx
 function txHTML(tx){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
-  const catLabel=(state.lang==='ta'&&CAT_TA[tx.category])?CAT_TA[tx.category]:tx.category;
   const acct=tx.account?state.accounts.find(a=>a.id===tx.account):null;
   const acctBadge=acct?`<span style="margin-left:4px;background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${acct.name}</span>`:'';
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}</div><div class="tx-meta">${catLabel} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
 function customConfirm(icon, title, msg, onOk){
@@ -2002,29 +1816,11 @@ function calcAssetPreview(){
   }
 }
 
-function updateAllocPreview(){
-  var input=parseFloat(document.getElementById('assetAlloc').value||'0');
-  var existingTotal=state.assets.reduce(function(s,a){return s+(a.alloc||0);},0);
-  var newTotal=existingTotal+input;
-  var bar=document.getElementById('allocBar');
-  var label=document.getElementById('allocTotalLabel');
-  var fill=document.getElementById('allocTotalBar');
-  var msg=document.getElementById('allocMsg');
-  if(!input){bar.style.display='none';return;}
-  bar.style.display='block';
-  label.textContent=newTotal.toFixed(1)+'%';
-  fill.style.width=Math.min(100,newTotal)+'%';
-  if(Math.abs(newTotal-100)<0.01){fill.style.background='var(--green)';msg.style.color='var(--green)';msg.textContent='Perfect! Exactly 100%';}
-  else if(newTotal>100){fill.style.background='var(--red)';msg.style.color='var(--red)';msg.textContent='Over by '+(newTotal-100).toFixed(1)+'%';}
-  else{fill.style.background='var(--yellow)';msg.style.color='var(--yellow)';msg.textContent=(100-newTotal).toFixed(1)+'% still unallocated';}
-}
 
 function saveAsset(){
   var name=document.getElementById('assetName').value.trim();
   var scheme=document.getElementById('assetScheme').value;
-  var alloc=parseFloat(document.getElementById('assetAlloc').value||'0');
   if(!name){alert('Enter asset name');return;}
-  if(!alloc||alloc<=0){alert('Enter allocation %');return;}
   var details={};
   var dynInputs=document.querySelectorAll('.asset-dynamic');
   for(var i=0;i<dynInputs.length;i++){
@@ -2036,24 +1832,20 @@ function saveAsset(){
   var invested=parseFloat(modal.dataset.invested||'0')||details.principal||details.buyPrice||0;
   var value=parseFloat(modal.dataset.value||'0')||details.currentValue||details.currentPrice||invested;
   if(!value&&!invested){alert('Enter price/value details');return;}
-  var existingTotal=state.assets.reduce(function(s,a){return s+(a.alloc||0);},0);
   var editId=modal.dataset.editId;
-  if(editId){var editAssetObj=state.assets.find(function(a){return a.id===parseInt(editId);});if(editAssetObj)existingTotal-=(editAssetObj.alloc||0);}
-  var newTotal=existingTotal+alloc;
-  if(newTotal>100.009){alert('Over 100%! Enter '+(100-existingTotal).toFixed(1)+'% or less.');return;}
   if(editId){
     var idx=state.assets.findIndex(function(a){return a.id===parseInt(editId);});
-    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:invested,value:value,alloc:alloc,details:details});}
+    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:invested,value:value,details:details});}
   } else {
-    state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,alloc:alloc,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
+    state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
   }
+  // Auto-recalculate allocation % for ALL assets based on their values
+  var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
+  state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});
   saveState();closeModal('assetModal');renderAssets();
   if(curPage==='assets')renderAssetChart();
   updateDashboard();
   document.getElementById('assetName').value='';
-  document.getElementById('assetAlloc').value='';
-  document.getElementById('allocBar').style.display='none';
-  document.getElementById('assetCalcPreview').style.display='none';
   document.getElementById('assetDynamicFields').innerHTML='';
   modal.dataset.invested='0';modal.dataset.value='0';modal.dataset.editId='';
   document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';
@@ -2088,14 +1880,13 @@ function renderAssets(){
   c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const idealPct=IDEAL_ALLOC[a.scheme]?.ideal||0;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(a.value)+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editAsset('+a.id+')">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteAsset('+a.id+')">✕ Remove</span></div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>Ideal: '+idealPct+'% (+-'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
   renderSchemeList();
 }
-function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
+function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
 function editAsset(id){
   var a=state.assets.find(a=>a.id===id);
   if(!a)return;
   var modal=document.getElementById('assetModal');
   document.getElementById('assetScheme').value=a.scheme;
   document.getElementById('assetName').value=a.name;
-  document.getElementById('assetAlloc').value=a.alloc||'';
   setTimeout(function(){
     updateAssetFields();
     if(a.details){
@@ -2592,35 +2383,17 @@ function applyProfilePhoto(dataUrl){
 }
 
 function syncLangBtn(){
-  var el=document.getElementById('lang-'+state.lang);
+  var el=document.getElementById('lang-en');
   if(el){document.querySelectorAll('#langGrid .font-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
-  document.documentElement.setAttribute('data-lang',state.lang);
-  if(state.lang==='ta'){
-    document.documentElement.style.setProperty('--font',"'Hind Madurai',sans-serif");
-    document.body.style.fontFamily="'Hind Madurai',sans-serif";
-  }
-  // Apply translations after a short delay (DOM is ready)
-  setTimeout(applyTranslations,100);
+  state.lang='en';
 }
 function syncFontBtn(){document.querySelectorAll('#fontGrid .font-btn').forEach(b=>b.classList.remove('on'));const match=[...document.querySelectorAll('#fontGrid .font-btn')].find(b=>b.getAttribute('onclick')?.includes("'"+state.font+"'"));if(match)match.classList.add('on');}
 function setCurr(c,sym,el){state.currency=c;state.currSymbol=sym;saveState();updateCurrSymbols();document.querySelectorAll('#currGrid .curr-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');updateDashboard();renderGoals();renderAssets();renderLiabilities();}
 function updateCurrSymbols(){document.querySelectorAll('.curr').forEach(el=>el.textContent=state.currSymbol);}
 function setLang(lang,el){
-  state.lang=lang;saveState();
+  state.lang='en';saveState();
   document.querySelectorAll('#langGrid .font-btn').forEach(b=>b.classList.remove('on'));
-  if(el)el.classList.add('on');
-  document.documentElement.setAttribute('data-lang',lang);
-  if(lang==='ta'){
-    document.documentElement.style.fontFamily="'Hind Madurai',sans-serif";
-    document.body.style.fontFamily="'Hind Madurai',sans-serif";
-    document.documentElement.style.setProperty('--font',"'Hind Madurai',sans-serif");
-  }else{
-    document.documentElement.style.fontFamily='';
-    document.body.style.fontFamily='';
-    document.documentElement.style.removeProperty('--font');
-    applyFont(state.font);
-  }
-  applyTranslations();
+  var enBtn=document.getElementById('lang-en');if(enBtn)enBtn.classList.add('on');
 }
 function toggleFP(){state.fpEnabled=!state.fpEnabled;saveState();var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';showToast(state.fpEnabled?'Fingerprint unlock enabled':'Fingerprint unlock disabled',state.fpEnabled?'green':'yellow');}
 function savePin(){const np=document.getElementById('newPin').value;const cp=document.getElementById('confirmPin').value;if(np.length!==4||!/^\d{4}$/.test(np)){alert('PIN must be exactly 4 digits');return;}if(np!==cp){alert('PINs do not match');return;}state.pin=np;saveState();closeModal('pinModal');alert('✅ PIN updated!');}
