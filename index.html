@@ -102,6 +102,79 @@
 [data-theme="rose"] .field-input{background:rgba(45,13,29,0.8);}
 [data-theme="rose"] .pin-btn{background:rgba(26,6,16,0.9);border-color:rgba(251,113,133,0.14);}
 [data-theme="rose"] .set-row{background:rgba(26,6,16,0.85);}
+
+/* ══ NEON NOIR — deep black with electric violet & magenta ══ */
+[data-theme="neonnoir"]{
+  --accent:#d946ef;--accent-text:#0a0010;
+  --bg:#06000e;--bg2:#100020;--bg3:#1c0038;
+  --card:#100020;--card2:#180030;
+  --border:rgba(217,70,239,0.15);
+  --text:#fdf4ff;--text2:#e879f9;--text3:#7c3aed;
+  --green:#34d399;--red:#f87171;--blue:#818cf8;
+  --yellow:#fbbf24;--purple:#d946ef;--orange:#fb923c;--teal:#2dd4bf;
+}
+[data-theme="neonnoir"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 10%,rgba(217,70,239,0.12) 0%,transparent 55%),radial-gradient(ellipse 60% 40% at 85% 80%,rgba(129,140,248,0.1) 0%,transparent 55%),radial-gradient(ellipse 40% 60% at 50% 50%,rgba(217,70,239,0.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+[data-theme="neonnoir"] #app{position:relative;z-index:1;}
+[data-theme="neonnoir"] .topbar,[data-theme="neonnoir"] .nav{background:rgba(6,0,14,0.96);backdrop-filter:blur(20px);border-color:rgba(217,70,239,0.18);}
+[data-theme="neonnoir"] .hero{background:linear-gradient(135deg,rgba(16,0,32,0.97),rgba(28,0,56,0.92));border-color:rgba(217,70,239,0.35);}
+[data-theme="neonnoir"] .hero::before{background:radial-gradient(circle,rgba(217,70,239,0.18),transparent 70%);}
+[data-theme="neonnoir"] .box,[data-theme="neonnoir"] .goal-box,[data-theme="neonnoir"] .set-row{background:rgba(10,0,22,0.88);backdrop-filter:blur(12px);border-color:rgba(217,70,239,0.1);}
+[data-theme="neonnoir"] .modal{background:rgba(6,0,14,0.99);}
+[data-theme="neonnoir"] .nav-btn.on{background:rgba(217,70,239,0.14);}
+[data-theme="neonnoir"] .stat-box.sg{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.22);}
+[data-theme="neonnoir"] .stat-box.sr{background:rgba(217,70,239,0.1);border-color:rgba(217,70,239,0.25);}
+[data-theme="neonnoir"] .stat-box.sb{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.22);}
+[data-theme="neonnoir"] .field-input{background:rgba(28,0,56,0.7);}
+[data-theme="neonnoir"] .pin-btn{background:rgba(10,0,22,0.9);border-color:rgba(217,70,239,0.18);}
+
+/* ══ CYBER GOLD — black ops with electric gold & amber ══ */
+[data-theme="cybergold"]{
+  --accent:#fbbf24;--accent-text:#0a0500;
+  --bg:#080600;--bg2:#100c00;--bg3:#1e1600;
+  --card:#100c00;--card2:#181000;
+  --border:rgba(251,191,36,0.15);
+  --text:#fffbeb;--text2:#fde68a;--text3:#92400e;
+  --green:#4ade80;--red:#f87171;--blue:#60a5fa;
+  --yellow:#fbbf24;--purple:#c084fc;--orange:#fb923c;--teal:#34d399;
+}
+[data-theme="cybergold"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 45% at 50% 0%,rgba(251,191,36,0.1) 0%,transparent 55%),radial-gradient(ellipse 50% 40% at 0% 80%,rgba(251,146,60,0.07) 0%,transparent 55%),radial-gradient(ellipse 45% 35% at 100% 50%,rgba(251,191,36,0.06) 0%,transparent 55%);pointer-events:none;z-index:0;}
+[data-theme="cybergold"] #app{position:relative;z-index:1;}
+[data-theme="cybergold"] .topbar,[data-theme="cybergold"] .nav{background:rgba(8,6,0,0.96);backdrop-filter:blur(20px);border-color:rgba(251,191,36,0.15);}
+[data-theme="cybergold"] .hero{background:linear-gradient(135deg,rgba(16,12,0,0.98),rgba(30,22,0,0.93));border-color:rgba(251,191,36,0.4);}
+[data-theme="cybergold"] .hero::before{background:radial-gradient(circle,rgba(251,191,36,0.16),transparent 70%);}
+[data-theme="cybergold"] .box,[data-theme="cybergold"] .goal-box,[data-theme="cybergold"] .set-row{background:rgba(10,8,0,0.9);backdrop-filter:blur(12px);border-color:rgba(251,191,36,0.1);}
+[data-theme="cybergold"] .modal{background:rgba(8,6,0,0.99);}
+[data-theme="cybergold"] .nav-btn.on{background:rgba(251,191,36,0.12);}
+[data-theme="cybergold"] .stat-box.sg{background:rgba(74,222,128,0.07);border-color:rgba(74,222,128,0.2);}
+[data-theme="cybergold"] .stat-box.sr{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);}
+[data-theme="cybergold"] .stat-box.sb{background:rgba(96,165,250,0.07);border-color:rgba(96,165,250,0.2);}
+[data-theme="cybergold"] .field-input{background:rgba(22,16,0,0.75);}
+[data-theme="cybergold"] .pin-btn{background:rgba(10,8,0,0.9);border-color:rgba(251,191,36,0.18);}
+
+/* ══ CRIMSON — deep blood red, dark & intense ══ */
+[data-theme="crimson"]{
+  --accent:#ef4444;--accent-text:#0a0000;
+  --bg:#0a0000;--bg2:#1a0404;--bg3:#2e0808;
+  --card:#1a0404;--card2:#220606;
+  --border:rgba(239,68,68,0.15);
+  --text:#fff5f5;--text2:#fca5a5;--text3:#7f1d1d;
+  --green:#4ade80;--red:#ef4444;--blue:#60a5fa;
+  --yellow:#fbbf24;--purple:#c084fc;--orange:#fb923c;--teal:#2dd4bf;
+}
+[data-theme="crimson"] body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 75% 50% at 20% 0%,rgba(239,68,68,0.1) 0%,transparent 55%),radial-gradient(ellipse 55% 40% at 80% 80%,rgba(239,68,68,0.07) 0%,transparent 55%),radial-gradient(ellipse 40% 60% at 50% 50%,rgba(239,68,68,0.04) 0%,transparent 60%);pointer-events:none;z-index:0;}
+[data-theme="crimson"] #app{position:relative;z-index:1;}
+[data-theme="crimson"] .topbar,[data-theme="crimson"] .nav{background:rgba(10,0,0,0.96);backdrop-filter:blur(20px);border-color:rgba(239,68,68,0.15);}
+[data-theme="crimson"] .hero{background:linear-gradient(135deg,rgba(26,4,4,0.98),rgba(46,8,8,0.93));border-color:rgba(239,68,68,0.38);}
+[data-theme="crimson"] .hero::before{background:radial-gradient(circle,rgba(239,68,68,0.16),transparent 70%);}
+[data-theme="crimson"] .box,[data-theme="crimson"] .goal-box,[data-theme="crimson"] .set-row{background:rgba(14,2,2,0.9);backdrop-filter:blur(12px);border-color:rgba(239,68,68,0.1);}
+[data-theme="crimson"] .modal{background:rgba(10,0,0,0.99);}
+[data-theme="crimson"] .nav-btn.on{background:rgba(239,68,68,0.12);}
+[data-theme="crimson"] .stat-box.sg{background:rgba(74,222,128,0.07);border-color:rgba(74,222,128,0.2);}
+[data-theme="crimson"] .stat-box.sr{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.28);}
+[data-theme="crimson"] .stat-box.sb{background:rgba(96,165,250,0.07);border-color:rgba(96,165,250,0.2);}
+[data-theme="crimson"] .field-input{background:rgba(26,4,4,0.75);}
+[data-theme="crimson"] .pin-btn{background:rgba(14,2,2,0.9);border-color:rgba(239,68,68,0.18);}
+
 [data-font="system"]{--font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
 [data-font="inter"]{--font:'Inter',sans-serif;}
 [data-font="kaushan"]{--font:'Kaushan Script',cursive;}
@@ -737,6 +810,26 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
             <span style="font-size:9px;font-weight:900;color:rgba(45,212,191,0.95);letter-spacing:1px;text-shadow:0 0 10px rgba(45,212,191,0.5);position:relative">✦ AURORA</span>
           </div>
 
+          <div class="theme-sw" style="background:linear-gradient(135deg,#0c0308,#2d0d1d);border:2px solid rgba(251,113,133,0.35);position:relative;overflow:hidden" onclick="setTheme('rose',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 80% 0%,rgba(251,113,133,0.2),transparent),radial-gradient(ellipse 50% 50% at 10% 90%,rgba(232,121,249,0.1),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(253,164,175,0.98);letter-spacing:1px;text-shadow:0 0 10px rgba(251,113,133,0.6);position:relative">🌹 ROSE</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#06000e,#1c0038);border:2px solid rgba(217,70,239,0.4);position:relative;overflow:hidden" onclick="setTheme('neonnoir',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 20% 30%,rgba(217,70,239,0.25),transparent),radial-gradient(ellipse 50% 50% at 80% 70%,rgba(129,140,248,0.15),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(232,121,249,0.98);letter-spacing:1px;text-shadow:0 0 12px rgba(217,70,239,0.8);position:relative">⚡ NEON NOIR</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#080600,#1e1600);border:2px solid rgba(251,191,36,0.4);position:relative;overflow:hidden" onclick="setTheme('cybergold',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(251,191,36,0.2),transparent),radial-gradient(ellipse 50% 40% at 90% 80%,rgba(251,146,60,0.12),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(251,191,36,0.98);letter-spacing:1px;text-shadow:0 0 12px rgba(251,191,36,0.7);position:relative">★ CYBER GOLD</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#0a0000,#2e0808);border:2px solid rgba(239,68,68,0.4);position:relative;overflow:hidden" onclick="setTheme('crimson',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 20% 0%,rgba(239,68,68,0.2),transparent),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(239,68,68,0.12),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:900;color:rgba(252,165,165,0.98);letter-spacing:1px;text-shadow:0 0 12px rgba(239,68,68,0.7);position:relative">🔴 CRIMSON</span>
+          </div>
+
 
         </div>
       </div>
@@ -757,12 +850,6 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
           <div class="font-btn on" onclick="setFont('system',this)" style="font-family:system-ui">System</div>
           <div class="font-btn" onclick="setFont('inter',this)" style="font-family:'Inter',sans-serif">Inter</div>
           <div class="font-btn" onclick="setFont('kaushan',this)" style="font-family:'Kaushan Script',cursive;font-size:13px">Kaushan Script</div>
-        </div>
-      </div>
-      <div class="set-sec">
-        <div class="set-sec-title">🌐 Language</div>
-        <div style="display:grid;grid-template-columns:1fr;gap:8px" id="langGrid">
-          <div class="font-btn on" id="lang-en" onclick="setLang('en',this)">🇬🇧 English</div>
         </div>
       </div>
       <div class="set-sec">
@@ -910,6 +997,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
     </div>
     <div class="field"><div class="field-label">🗂️ Category</div><div class="chips" id="catChips"></div></div>
     <div class="field"><div class="field-label">🏦 Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
+    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="txNotes" placeholder="Optional"></div>
     <button class="btn-go" onclick="saveTx()">✅ Save</button>
     <button class="btn-cancel" onclick="closeModal('txModal')">Cancel</button>
@@ -1495,7 +1583,7 @@ function showPage(id){
 function showModal(id){
   closeAddMenu();
   document.getElementById(id).classList.add('on');
-  if(id==='txModal'){setTodayDate();updateTxAccountSelect();}
+  if(id==='txModal'){setTodayDate();updateTxAccountSelect();updateTxLiabSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(txType==='expense')?'block':'none';}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
@@ -1509,7 +1597,7 @@ function closeModal(id){document.getElementById(id).classList.remove('on');if(id
 document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});});
 
 // ======== TRANSACTIONS ========
-function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();}
+function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';}
 function renderCatChips(){const cats=txType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('catChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🔮'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
 function getSelCat(){const c=document.querySelectorAll('#catChips .chip.on');return c.length?(c[0].dataset.cat||'Other'):'Other';}
 function saveTx(){
@@ -1518,13 +1606,19 @@ function saveTx(){
   const date=document.getElementById('txDate').value;
   const notes=document.getElementById('txNotes').value.trim();
   const acct=document.getElementById('txAccount').value;
+  const liabLink=document.getElementById('txLiabLink')?.value||'';
   if(!amt||!desc||!date){alert('Fill amount, description and date');return;}
   const cat=getSelCat();
-  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct};
+  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct,liabLink:liabLink};
   state.transactions.unshift(tx);
   // Update account balance
   if(acct){const a=state.accounts.find(a=>a.id===acct);if(a){a.balance+=(txType==='income'?amt:-amt);}}
-  saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
+  // Auto-reduce linked liability remaining
+  if(liabLink&&txType==='expense'){
+    const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
+    if(l){l.remaining=Math.max(0,l.remaining-amt);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(amt),'green');}
+  }
+  saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
   // Ask if recurring
   askMakeRecurring(desc, amt, txType, cat);
@@ -1554,7 +1648,7 @@ function addAsRecurring(desc,amt,type,cat){
   document.getElementById('recurAskBar')?.remove();
   showToast('Added as monthly recurring on day '+today,'green');
 }
-function resetTxForm(){document.getElementById('txAmt').value='';document.getElementById('txDesc').value='';document.getElementById('txNotes').value='';setTxType('expense');}
+function resetTxForm(){document.getElementById('txAmt').value='';document.getElementById('txDesc').value='';document.getElementById('txNotes').value='';var ll=document.getElementById('txLiabLink');if(ll)ll.value='';setTxType('expense');}
 function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx.date);return d.getMonth()===state.currentMonth&&d.getFullYear()===state.currentYear;});}
 function txHTML(tx){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
@@ -2057,6 +2151,15 @@ function updateTxAccountSelect(){
   // Auto-select first account if nothing selected
   if(!curr && state.accounts.length>0) sel.value=state.accounts[0].id;
 }
+function updateTxLiabSelect(){
+  var sel=document.getElementById('txLiabLink');
+  if(!sel) return;
+  sel.innerHTML='<option value="">-- None --</option>'+
+    state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
+      var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
+      return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(l.remaining)+' left)</option>';
+    }).join('');
+}
 
 
 // ======== AI INSIGHTS ========
@@ -2351,7 +2454,7 @@ function copyShareLink(){
 }
 function setTheme(t,el){state.theme=t;saveState();applyTheme(t);document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');setTimeout(()=>{renderMiniChart();if(curPage==='analytics')renderAnalytics();if(curPage==='assets')renderAssetChart();},300);}
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t||'dark');}
-function syncThemeBtn(){document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));const t=state.theme||'dark';const map={'dark':0,'light':1,'purple':2,'slate':3,'aurora':4,'sunset':5,'forest':6,'rose':7};const idx=map[t];if(idx!=null){const btns=document.querySelectorAll('.theme-sw');if(btns[idx])btns[idx].classList.add('on');}}
+function syncThemeBtn(){document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));const t=state.theme||'dark';const match=[...document.querySelectorAll('.theme-sw')].find(s=>s.getAttribute('onclick')&&s.getAttribute('onclick').includes("'"+t+"'"));if(match)match.classList.add('on');}
 function setFont(f,el){state.font=f;saveState();applyFont(f);document.querySelectorAll('#fontGrid .font-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
 function applyFont(f){document.documentElement.setAttribute('data-font',f);}
 function setLocalProfilePhoto(event){
