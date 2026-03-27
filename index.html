@@ -230,7 +230,8 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 /* SECTION HEADER */
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
 .sec-title{font-size:20px;font-weight:900;color:var(--text);display:flex;align-items:center;gap:8px}
-.sec-btn{background:var(--accent);border:none;border-radius:10px;padding:8px 14px;font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--accent-text);transition:all .2s}
+.sec-btn{background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:8px 14px;font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--accent);transition:all .2s}
+.sec-btn:hover{border-color:var(--accent);background:rgba(var(--accent-rgb,34,197,94),.1)}
 /* MONTH NAV */
 .month-nav{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px}
 .month-arrow{background:var(--bg3);border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;font-weight:900;color:var(--text);transition:all .2s}
@@ -394,7 +395,12 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 .bill-due{font-size:11px;font-weight:700}
 .bill-amt{font-family:var(--font);font-size:14px;font-weight:700;text-align:right;flex-shrink:0}
 
-/* INSIGHTS */
+/* WEALTH ITEM ACTION MENU */
+.wealth-action-menu{position:fixed;z-index:600;background:var(--bg2);border:2px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 8px 32px rgba(0,0,0,.4);min-width:140px;animation:fadeUp .15s ease}
+.wealth-action-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:900;color:var(--text);transition:background .15s;white-space:nowrap}
+.wealth-action-btn:hover{background:var(--bg3)}
+.wealth-action-btn.del{color:var(--red)}
+
 .insight-card{background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue)}
 .insight-card.warn{border-left-color:var(--yellow)}
 .insight-card.good{border-left-color:var(--green)}
@@ -604,7 +610,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
       <div class="sec-head">
         <div class="sec-title">🎯 Budget Planner</div>
         <div style="display:flex;gap:8px">
-          <button class="sec-btn" onclick="saveInlineBudgets()" id="budgetSaveBtn" style="display:none;background:var(--green);color:#0f1f0a">💾 Save</button>
+          <button class="sec-btn" onclick="saveInlineBudgets()" id="budgetSaveBtn" style="display:none">💾 Save</button>
           <button class="sec-btn" onclick="toggleBudgetEdit()" id="budgetEditBtn">✏️ Edit</button>
         </div>
       </div>
@@ -647,15 +653,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
 
     <!-- WEALTH — Net Worth Statement -->
     <div class="page" id="page-wealth">
-      <div class="sec-head"><div class="sec-title">📋 Wealth Statement</div><button class="sec-btn" onclick="exportWealth()">📤 Export</button></div>
-
-      <!-- Net Worth Summary -->
-      <div class="hero" style="margin-bottom:14px">
-        <span class="hero-emoji">💎</span>
-        <div class="hero-label" id="wealthHeroLabel">Total Net Worth</div>
-        <div class="hero-amount"><span class="curr">₹</span><span id="wealthNetWorth">0</span></div>
-        <span class="hero-badge badge-up" id="wealthBadge">📈 Assets exceed Liabilities</span>
-      </div>
+      <div class="sec-head"><div class="sec-title">📋 Wealth Statement</div></div>
 
       <!-- 3-col summary -->
       <div class="stat-grid-3" style="margin-bottom:14px">
@@ -1229,6 +1227,22 @@ body{background:var(--bg);color:var(--text);font-size:14px;transition:background
     <div id="exportKeyError" style="display:none;color:var(--red);font-size:12px;font-weight:900;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:8px"></div>
     <button class="btn-go" id="exportKeySubmitBtn" onclick="handleExportKeySubmit()">📤 Export Backup</button>
     <button class="btn-cancel" onclick="closeModal('exportKeyModal');document.getElementById('exportKeyInput').value='';document.getElementById('exportKeyError').style.display='none';document.getElementById('exportKeyModal').dataset.mode='';document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';">Cancel</button>
+  </div>
+</div>
+
+<!-- DRIVE ENCRYPT MODAL -->
+<div class="modal-bg" id="driveEncryptModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="driveEncryptTitle">🔐 Set Drive Backup Key</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:700;margin-bottom:14px" id="driveEncryptDesc">Enter an encryption key for your Google Drive backup. You'll need this same key to restore.</div>
+    <div class="field">
+      <div class="field-label">🔑 Encryption Key</div>
+      <input type="password" class="field-input" id="driveEncryptKey" placeholder="Enter encryption key" autocomplete="off">
+    </div>
+    <div id="driveEncryptError" style="display:none;color:var(--red);font-size:12px;font-weight:900;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:8px"></div>
+    <button class="btn-go" id="driveEncryptSubmit" onclick="submitDriveEncrypt()">☁️ Backup to Drive</button>
+    <button class="btn-cancel" onclick="closeModal('driveEncryptModal')">Cancel</button>
   </div>
 </div>
 
@@ -1936,7 +1950,7 @@ function saveAsset(){
   // Auto-recalculate allocation % for ALL assets based on their values
   var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
   state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});
-  saveState();closeModal('assetModal');renderAssets();
+  saveState();closeModal('assetModal');renderAssets();renderWealth();
   if(curPage==='assets')renderAssetChart();
   updateDashboard();
   document.getElementById('assetName').value='';
@@ -2126,7 +2140,16 @@ function quickAddAcct(name, type, color){
   var dot=document.querySelector('.color-dot[data-color="'+color+'"]');
   if(dot)dot.classList.add('on');
 }
-function saveAcct(){const name=document.getElementById('acctName').value.trim();const type=document.getElementById('acctType').value;const balance=parseFloat(document.getElementById('acctBalance').value||'0');if(!name){showToast('Enter account name','yellow');return;}state.accounts.push({id:String(Date.now()),name,type,balance,color:acctColor});saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();['acctName','acctBalance'].forEach(id=>document.getElementById(id).value='');}
+function saveAcct(){const name=document.getElementById('acctName').value.trim();const type=document.getElementById('acctType').value;const balance=parseFloat(document.getElementById('acctBalance').value||'0');if(!name){showToast('Enter account name','yellow');return;}
+  if(_editingAcctIdx>-1){
+    const a=state.accounts[_editingAcctIdx];
+    if(a){a.name=name;a.type=type;a.balance=balance;a.color=acctColor;}
+    _editingAcctIdx=-1;
+    var titleEl=document.querySelector('#acctModal .modal-title');if(titleEl)titleEl.textContent='🏦 Add Account';
+  } else {
+    state.accounts.push({id:String(Date.now()),name,type,balance,color:acctColor});
+  }
+  saveState();closeModal('acctModal');renderAccounts();renderWealth();updateTxAccountSelect();['acctName','acctBalance'].forEach(id=>document.getElementById(id).value='');}
 function renderAccounts(){
   const totalBal=state.accounts.reduce((s,a)=>s+a.balance,0);
   const c=document.getElementById('acctSummary');
@@ -2721,6 +2744,11 @@ function syncToCloud(){
   if(!currentUser||!gAccessToken){
     showToast('Sign in first to sync','yellow'); return;
   }
+  // Prompt for encryption key
+  showDriveEncryptModal('backup');
+}
+
+function _doSyncToCloud(encKey){
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Syncing...';
@@ -2730,11 +2758,15 @@ function syncToCloud(){
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
 
-  var payload=JSON.stringify({
+  var plainPayload=JSON.stringify({
     v:'1',
     updatedAt:safeState.lastSync,
     data:safeState
   });
+
+  // Encrypt the payload
+  var encrypted=xorEncrypt(plainPayload,encKey);
+  var payload=JSON.stringify({ft_drive_encrypted:true,version:'ft-v5',date:safeState.lastSync,payload:encrypted});
 
   var timedOut=false;
   var timer=setTimeout(function(){
@@ -2745,14 +2777,12 @@ function syncToCloud(){
 
   findDriveFile().then(function(existing){
     if(existing){
-      // PATCH existing file content
       return fetch('https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=media',{
         method:'PATCH',
         headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'application/json'},
         body:payload
       }).then(function(r){ return r.json(); });
     } else {
-      // POST new file with metadata
       var boundary='ft_bound_'+Date.now();
       var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
       var CRLF='\r\n';
@@ -2775,19 +2805,17 @@ function syncToCloud(){
       var msg=(res&&res.error)?res.error.message:'Unknown error';
       showToast('❌ Sync failed: '+msg,'red');
       if(el) el.textContent='Sync failed';
-      console.error('Sync error:',res);
       return;
     }
     if(res.id) gDriveFileId=res.id;
     state.lastSync=safeState.lastSync;
     saveState();
     updateCloudSyncStatus();
-    showToast('✅ Synced to Google Drive!','green');
+    showToast('✅ Synced to Google Drive (encrypted)!','green');
   }).catch(function(e){
     clearTimeout(timer);
     showToast('❌ Sync error: '+e.message,'red');
     if(el) el.textContent='Sync failed';
-    console.error('Sync catch:',e);
   });
 }
 
@@ -2795,6 +2823,10 @@ function loadFromCloud(){
   if(!currentUser||!gAccessToken){
     showToast('Sign in first to load','yellow'); return;
   }
+  showDriveEncryptModal('restore');
+}
+
+function _doLoadFromCloud(encKey){
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Loading from Drive...';
@@ -2816,18 +2848,30 @@ function loadFromCloud(){
     return fetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media',{
       headers:{Authorization:'Bearer '+gAccessToken}
     }).then(function(r){ return r.json(); });
-  }).then(function(payload){
-    if(!payload) return;
+  }).then(function(raw){
+    if(!raw) return;
     clearTimeout(timer); if(timedOut) return;
-    if(payload.error){
-      showToast('❌ Load failed: '+payload.error.message,'red');
+    if(raw.error){
+      showToast('❌ Load failed: '+raw.error.message,'red');
       if(el) el.textContent='Load failed';
       return;
     }
-    // Handle both formats
+    var payload;
+    // Handle encrypted format
+    if(raw.ft_drive_encrypted){
+      try{
+        var decrypted=xorDecrypt(raw.payload,encKey);
+        payload=JSON.parse(decrypted);
+      }catch(decErr){
+        showToast('❌ Wrong encryption key. Cannot restore backup.','red');
+        if(el) el.textContent='Wrong key';
+        return;
+      }
+    } else {
+      payload=raw;
+    }
     var imported=payload.data||payload;
     if(typeof imported==='string') imported=JSON.parse(imported);
-    // Always restore — ignore timestamp comparison so "clear + load" always works
     var keep={
       isLoggedIn:state.isLoggedIn, userName:state.userName, userEmail:state.userEmail,
       lastSync:payload.updatedAt||new Date().toISOString(),
@@ -2850,7 +2894,6 @@ function loadFromCloud(){
     clearTimeout(timer);
     showToast('❌ Load error: '+e.message,'red');
     if(el) el.textContent='Load failed';
-    console.error('Load catch:',e);
   });
 }
 
@@ -2862,6 +2905,38 @@ function updateCloudSyncStatus(){
   if(el2) el2.textContent=txt;
 }
 
+function showDriveEncryptModal(mode){
+  // mode: 'backup' or 'restore'
+  var modal=document.getElementById('driveEncryptModal');
+  if(!modal) return;
+  modal.dataset.mode=mode;
+  var title=document.getElementById('driveEncryptTitle');
+  var desc=document.getElementById('driveEncryptDesc');
+  var btn=document.getElementById('driveEncryptSubmit');
+  if(mode==='backup'){
+    if(title)title.textContent='🔐 Set Drive Backup Key';
+    if(desc)desc.textContent='Enter an encryption key for your Google Drive backup. You\'ll need this same key to restore.';
+    if(btn)btn.textContent='☁️ Backup to Drive';
+  } else {
+    if(title)title.textContent='🔑 Enter Backup Key';
+    if(desc)desc.textContent='Enter the encryption key you used when backing up to Drive.';
+    if(btn)btn.textContent='📥 Restore from Drive';
+  }
+  var errEl=document.getElementById('driveEncryptError');if(errEl)errEl.style.display='none';
+  var keyEl=document.getElementById('driveEncryptKey');if(keyEl)keyEl.value='';
+  showModal('driveEncryptModal');
+}
+function submitDriveEncrypt(){
+  var modal=document.getElementById('driveEncryptModal');
+  var mode=modal.dataset.mode;
+  var key=(document.getElementById('driveEncryptKey').value||'').trim();
+  var errEl=document.getElementById('driveEncryptError');
+  if(key.length<4){errEl.textContent='Key must be at least 4 characters';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  closeModal('driveEncryptModal');
+  if(mode==='backup'){_doSyncToCloud(key);}
+  else{_doLoadFromCloud(key);}
+}
 function syncNow(){ syncToCloud(); }
 
 // ── Email auth stubs (kept for modal UI compatibility) ────────────────────────
@@ -3159,8 +3234,6 @@ function restoreFromDrive(){
   setTimeout(()=>doImport(),300);
 }
 
-function syncNow(){backupToDrive();}
-
 function updateDriveUI(){
   const connected=state.driveConnected;
   const driveStatus=document.getElementById('driveStatusText');
@@ -3242,33 +3315,58 @@ function renderWealth(){
   const totalAccts=state.accounts.reduce((s,a)=>s+a.balance,0);
   const netWorth=totalAssets+totalAccts-totalLiab;
 
-  document.getElementById('wealthNetWorth').textContent=fmt(Math.abs(netWorth));
-  document.getElementById('wealthTotalAssets').textContent=fmt(totalAssets);
-  document.getElementById('wealthTotalDebts').textContent=fmt(totalLiab);
-  document.getElementById('wealthTotalAccts').textContent=fmt(totalAccts);
-  document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(totalAssets);
-  document.getElementById('wealthAcctsTotal').textContent=state.currSymbol+fmt(totalAccts);
-  document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(totalLiab);
+  // Safely update elements (some may have been removed from DOM)
+  const _set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  _set('wealthNetWorth', fmt(Math.abs(netWorth)));
+  _set('wealthTotalAssets', fmt(totalAssets));
+  _set('wealthTotalDebts', fmt(totalLiab));
+  _set('wealthTotalAccts', fmt(totalAccts));
+  _set('wealthAssetsTotal', state.currSymbol+fmt(totalAssets));
+  _set('wealthAcctsTotal', state.currSymbol+fmt(totalAccts));
+  _set('wealthLiabTotal', state.currSymbol+fmt(totalLiab));
 
   const badge=document.getElementById('wealthBadge');
-  if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent=tr('assetsExceed');}
-  else{badge.className='hero-badge badge-dn';badge.textContent=tr('liabExceed');}
+  if(badge){
+    if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent=tr('assetsExceed');}
+    else{badge.className='hero-badge badge-dn';badge.textContent=tr('liabExceed');}
+  }
   updateCurrSymbols();
 
   // Asset rows
   const ar=document.getElementById('wealthAssetRows');
   if(!state.assets.length){ar.innerHTML=`<div class="empty" style="padding:10px"><div class="empty-desc">${tr('noAssets')}</div></div>`;}
-  else{ar.innerHTML=state.assets.map(a=>{const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const gainColor=gain&&parseFloat(gain)>=0?'var(--green)':'var(--red)';return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:4px;height:36px;border-radius:2px;background:${a.color};flex-shrink:0"></div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${SCHEME_INFO[a.scheme]?.emoji||'💼'} ${a.scheme}${a.alloc?` · ${a.alloc}% alloc`:''}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.color}">${state.currSymbol}${fmt(a.value)}</div>${gain?`<div style="font-size:10px;font-weight:900;color:${gainColor}">${parseFloat(gain)>=0?'📈 +':'📉 '}${gain}%</div>`:''}</div></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalAssetsLbl')}</span><span style="font-family:var(--font);color:var(--green)">${state.currSymbol}${fmt(totalAssets)}</span></div>`;}
+  else{
+    const visA=state._wealthAssetPage||0;
+    const perPage=3;const totalA=state.assets.length;
+    const pageAssets=state.assets.slice(visA*perPage,(visA+1)*perPage);
+    ar.innerHTML=pageAssets.map((a,i)=>{const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const gainColor=gain&&parseFloat(gain)>=0?'var(--green)':'var(--red)';const realIdx=visA*perPage+i;return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:4px;height:36px;border-radius:2px;background:${a.color};flex-shrink:0"></div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${SCHEME_INFO[a.scheme]?.emoji||'💼'} ${a.scheme}${a.alloc?` · ${a.alloc}% alloc`:''}</div></div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.color}">${state.currSymbol}${fmt(a.value)}</div>${gain?`<div style="font-size:10px;font-weight:900;color:${gainColor}">${parseFloat(gain)>=0?'📈 +':'📉 '}${gain}%</div>`:''}</div><button onclick="showWealthMenu(event,'asset',${realIdx})" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0">⋯</button></div></div>`;}).join('')
+    +(totalA>perPage?`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0"><button onclick="wealthNav('asset',-1)" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text)${visA===0?';opacity:.3;pointer-events:none':''}">◀ Prev</button><span style="font-size:11px;color:var(--text3);font-weight:700">${visA*perPage+1}–${Math.min((visA+1)*perPage,totalA)} of ${totalA}</span><button onclick="wealthNav('asset',1)" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text)${(visA+1)*perPage>=totalA?';opacity:.3;pointer-events:none':''}" >Next ▶</button></div>`:'')
+    +`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalAssetsLbl')}</span><span style="font-family:var(--font);color:var(--green)">${state.currSymbol}${fmt(totalAssets)}</span></div>`;
+  }
 
   // Account rows
   const acr=document.getElementById('wealthAcctRows');
   if(!state.accounts.length){acr.innerHTML=`<div class="empty" style="padding:10px"><div class="empty-desc">${tr('noAccounts')}</div></div>`;}
-  else{acr.innerHTML=state.accounts.map(a=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${a.color}22;border:2px solid ${a.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${a.type}</div></div><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(Math.abs(a.balance))}</div></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalBalanceLbl')}</span><span style="font-family:var(--font);color:var(--blue)">${state.currSymbol}${fmt(totalAccts)}</span></div>`;}
+  else{
+    const visAc=state._wealthAcctPage||0;
+    const perPage=3;const totalAc=state.accounts.length;
+    const pageAccts=state.accounts.slice(visAc*perPage,(visAc+1)*perPage);
+    acr.innerHTML=pageAccts.map((a,i)=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};const realIdx=visAc*perPage+i;return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${a.color}22;border:2px solid ${a.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${a.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${a.type}</div></div><div style="display:flex;align-items:center;gap:8px"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(Math.abs(a.balance))}</div><button onclick="showWealthMenu(event,'acct',${realIdx})" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0">⋯</button></div></div>`;}).join('')
+    +(totalAc>perPage?`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0"><button onclick="wealthNav('acct',-1)" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text)${visAc===0?';opacity:.3;pointer-events:none':''}">◀ Prev</button><span style="font-size:11px;color:var(--text3);font-weight:700">${visAc*perPage+1}–${Math.min((visAc+1)*perPage,totalAc)} of ${totalAc}</span><button onclick="wealthNav('acct',1)" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text)${(visAc+1)*perPage>=totalAc?';opacity:.3;pointer-events:none':''}" >Next ▶</button></div>`:'')
+    +`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalBalanceLbl')}</span><span style="font-family:var(--font);color:var(--blue)">${state.currSymbol}${fmt(totalAccts)}</span></div>`;
+  }
 
   // Liability rows
   const lr=document.getElementById('wealthLiabRows');
   if(!state.liabilities.length){lr.innerHTML=`<div class="empty" style="padding:10px"><div class="empty-title">${tr('debtFree')}</div></div>`;}
-  else{lr.innerHTML=state.liabilities.map(l=>{const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${l.color}22;border:2px solid ${l.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${l.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${l.type}${l.rate?' · '+l.rate+'%':''} ${paidPct>0?'· '+paidPct+'% paid':''}</div>${l.emi>0?`<div style="font-size:10px;color:var(--yellow);font-weight:900">EMI: ${state.currSymbol}${fmt(l.emi)}/mo</div>`:''}</div><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;color:var(--text3);font-weight:700">remaining</div></div></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalLiabLbl')}</span><span style="font-family:var(--font);color:var(--red)">${state.currSymbol}${fmt(totalLiab)}</span></div>`;}
+  else{
+    const visL=state._wealthLiabPage||0;
+    const perPage=3;const totalL=state.liabilities.length;
+    const pageLiab=state.liabilities.slice(visL*perPage,(visL+1)*perPage);
+    lr.innerHTML=pageLiab.map((l,i)=>{const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const realIdx=visL*perPage+i;return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border)"><div style="width:40px;height:40px;border-radius:12px;background:${l.color}22;border:2px solid ${l.color}44;display:flex;align-items:center;justify-content:center;font-size:18px">${info.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:900">${l.name}</div><div style="font-size:11px;color:var(--text3);font-weight:700">${l.type}${l.rate?' · '+l.rate+'%':''} ${paidPct>0?'· '+paidPct+'% paid':''}</div>${l.emi>0?`<div style="font-size:10px;color:var(--yellow);font-weight:900">EMI: ${state.currSymbol}${fmt(l.emi)}/mo</div>`:''}</div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;color:var(--text3);font-weight:700">remaining</div></div><button onclick="showWealthMenu(event,'liab',${realIdx})" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0">⋯</button></div></div>`;}).join('')
+    +(totalL>perPage?`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0"><button onclick="wealthNav('liab',-1)" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text)${visL===0?';opacity:.3;pointer-events:none':''}">◀ Prev</button><span style="font-size:11px;color:var(--text3);font-weight:700">${visL*perPage+1}–${Math.min((visL+1)*perPage,totalL)} of ${totalL}</span><button onclick="wealthNav('liab',1)" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text)${(visL+1)*perPage>=totalL?';opacity:.3;pointer-events:none':''}" >Next ▶</button></div>`:'')
+    +`<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:900"><span style="color:var(--text3)">${tr('totalLiabLbl')}</span><span style="font-family:var(--font);color:var(--red)">${state.currSymbol}${fmt(totalLiab)}</span></div>`;
+  }
 
   // Goal rows
   const gr=document.getElementById('wealthGoalRows');
@@ -3307,6 +3405,111 @@ function renderWealthHealth(netWorth,assets,liab,accts){
   const color=score>=80?'var(--green)':score>=50?'var(--yellow)':'var(--red)';
   const grade=score>=80?'A':score>=60?'B':score>=40?'C':'D';
   c.innerHTML=`<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px"><div style="text-align:center;width:70px;height:70px;border-radius:50%;border:4px solid ${color};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><div style="font-family:var(--font);font-size:22px;font-weight:700;color:${color}">${score}</div><div style="font-size:9px;font-weight:900;color:var(--text3)">/ 100</div></div><div><div style="font-size:20px;font-weight:900;color:${color}">Grade ${grade}</div><div style="font-size:12px;color:var(--text3);font-weight:700;margin-top:2px">${score>=80?tr('excellentHealth'):score>=60?tr('goodHealth'):score>=40?tr('fairHealth'):tr('needsAttention')}</div></div></div>${checks.map(ch=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:16px">${ch.ok?'✅':'⚠️'}</span><span style="font-size:12px;font-weight:700;color:${ch.ok?'var(--text2)':'var(--text3)'}">${ch.text}</span></div>`).join('')}`;
+}
+
+// ======== WEALTH STATEMENT — EDIT/DELETE MENUS & PAGINATION ========
+var _wMenuCleanup=null;
+function showWealthMenu(e,type,idx){
+  e.stopPropagation();
+  closeWealthMenu();
+  var menu=document.createElement('div');
+  menu.className='wealth-action-menu';
+  menu.id='wealthActionMenu';
+  var editBtn=document.createElement('div');
+  editBtn.className='wealth-action-btn';
+  editBtn.innerHTML='<span style="font-size:16px">✏️</span> Edit';
+  editBtn.onclick=function(ev){ev.stopPropagation();closeWealthMenu();openWealthEdit(type,idx);};
+  var delBtn=document.createElement('div');
+  delBtn.className='wealth-action-btn del';
+  delBtn.innerHTML='<span style="font-size:16px">🗑️</span> Delete';
+  delBtn.onclick=function(ev){ev.stopPropagation();closeWealthMenu();wealthDelete(type,idx);};
+  menu.appendChild(editBtn);
+  menu.appendChild(delBtn);
+  var rect=e.currentTarget.getBoundingClientRect();
+  menu.style.position='fixed';
+  menu.style.right=(window.innerWidth-rect.right)+'px';
+  menu.style.top=(rect.bottom+6)+'px';
+  document.body.appendChild(menu);
+  _wMenuCleanup=function(){closeWealthMenu();};
+  setTimeout(function(){document.addEventListener('click',_wMenuCleanup,{once:true});},10);
+}
+function closeWealthMenu(){
+  var m=document.getElementById('wealthActionMenu');
+  if(m)m.remove();
+  if(_wMenuCleanup){document.removeEventListener('click',_wMenuCleanup);_wMenuCleanup=null;}
+}
+function wealthNav(type,dir){
+  var perPage=3;
+  var max=0;
+  if(type==='asset'){
+    max=Math.ceil(state.assets.length/perPage)-1;
+    state._wealthAssetPage=Math.max(0,Math.min(max,(state._wealthAssetPage||0)+dir));
+  } else if(type==='acct'){
+    max=Math.ceil(state.accounts.length/perPage)-1;
+    state._wealthAcctPage=Math.max(0,Math.min(max,(state._wealthAcctPage||0)+dir));
+  } else if(type==='liab'){
+    max=Math.ceil(state.liabilities.length/perPage)-1;
+    state._wealthLiabPage=Math.max(0,Math.min(max,(state._wealthLiabPage||0)+dir));
+  }
+  renderWealth();
+}
+function wealthDelete(type,idx){
+  customConfirm('🗑️','Delete Item','This cannot be undone.',function(){
+    if(type==='asset'){state.assets.splice(idx,1);renderAssets&&renderAssets();}
+    else if(type==='acct'){state.accounts.splice(idx,1);renderAccounts&&renderAccounts();}
+    else if(type==='liab'){state.liabilities.splice(idx,1);renderLiabilities&&renderLiabilities();}
+    saveState();renderWealth();showToast('Deleted.','yellow');
+  });
+}
+var _editingAssetIdx=-1,_editingAcctIdx=-1,_editingLiabIdx=-1;
+function openWealthEdit(type,idx){
+  if(type==='asset'){
+    var a=state.assets[idx];if(!a)return;
+    _editingAssetIdx=idx;
+    document.getElementById('assetName').value=a.name||'';
+    document.getElementById('assetScheme').value=a.scheme||'Other';
+    var allocEl=document.getElementById('assetAlloc');if(allocEl)allocEl.value=a.alloc||'';
+    var titleEl=document.getElementById('assetModalTitle');if(titleEl)titleEl.textContent='✏️ Edit Asset';
+    var modal=document.getElementById('assetModal');
+    modal.dataset.editId=a.id;
+    modal.dataset.invested=a.invested||0;
+    modal.dataset.value=a.value||0;
+    updateAssetFields();
+    setTimeout(function(){
+      if(a.meta){Object.keys(a.meta).forEach(function(k){var el=document.getElementById('af_'+k);if(el)el.value=a.meta[k];});}
+      if(a.details){Object.keys(a.details).forEach(function(k){var el=document.getElementById('af_'+k);if(el)el.value=a.details[k];});}
+      calcAssetPreview();
+    },60);
+    var btnEl=document.querySelector('#assetModal .btn-go');if(btnEl)btnEl.textContent='💾 Save Changes';
+    showModal('assetModal');
+  } else if(type==='acct'){
+    var a=state.accounts[idx];if(!a)return;
+    _editingAcctIdx=idx;
+    document.getElementById('acctName').value=a.name||'';
+    document.getElementById('acctType').value=a.type||'Savings';
+    document.getElementById('acctBalance').value=a.balance!=null?a.balance:0;
+    acctColor=a.color||'#3b82f6';
+    document.querySelectorAll('#acctModal .chips .chip').forEach(function(c){c.classList.remove('on');});
+    var dot=document.querySelector('#acctModal .chips .chip[data-color="'+acctColor+'"]');
+    if(dot)dot.classList.add('on');
+    var titleEl=document.querySelector('#acctModal .modal-title');if(titleEl)titleEl.textContent='✏️ Edit Account';
+    showModal('acctModal');
+  } else if(type==='liab'){
+    var l=state.liabilities[idx];if(!l)return;
+    _editingLiabIdx=idx;
+    document.getElementById('liabName').value=l.name||'';
+    document.getElementById('liabType').value=l.type||'Personal Loan';
+    document.getElementById('liabTotal').value=l.total||0;
+    document.getElementById('liabRemaining').value=l.remaining||0;
+    document.getElementById('liabEmi').value=l.emi||0;
+    document.getElementById('liabRate').value=l.rate||0;
+    var ddEl=document.getElementById('liabDueDate');if(ddEl)ddEl.value=l.dueDate||'';
+    // use existing dataset.editId pattern
+    document.getElementById('liabModal').dataset.editId=l.id;
+    var titleEl=document.querySelector('#liabModal .modal-title');if(titleEl)titleEl.textContent='✏️ Edit Liability';
+    var btnEl=document.querySelector('#liabModal .btn-go');if(btnEl)btnEl.textContent='💾 Save Changes';
+    showModal('liabModal');
+  }
 }
 
 function exportWealth(){
