@@ -1507,6 +1507,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 </div>
 
 <!-- EXPORT KEY MODAL -->
+<!-- IMPORT PASSWORD MODAL -->
+<div class="modal-bg" id="importKeyModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔑 Restore Backup</div>
+    <div style="background:rgba(124,92,252,0.08);border:2px solid rgba(124,92,252,0.2);border-radius:12px;padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">🔒 Encrypted Backup Detected</div>
+      <div style="font-size:11px;color:var(--text3);font-weight:600;line-height:1.7">Enter the password you set when you exported this backup. This is case-sensitive.</div>
+    </div>
+    <div class="field">
+      <div class="field-label">🔑 Backup Password</div>
+      <div style="position:relative">
+        <input type="password" class="field-input" id="importKeyInput" placeholder="Enter backup password" autocomplete="current-password" style="padding-right:44px" onkeydown="if(event.key==='Enter')submitImportKey()">
+        <span onclick="var i=document.getElementById('importKeyInput');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none">👁</span>
+      </div>
+    </div>
+    <div id="importKeyError" style="display:none;color:var(--red);font-size:12px;font-weight:900;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:8px"></div>
+    <button class="btn-go" onclick="submitImportKey()">🔓 Restore Data</button>
+    <button class="btn-cancel" onclick="closeModal('importKeyModal');document.getElementById('importKeyInput').value='';document.getElementById('importKeyError').style.display='none';_pendingImportData=null;">Cancel</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="exportKeyModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -1647,7 +1669,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
 <script>
 // ======== CONSTANTS ========
-const CAT_EMOJI={Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Food:'🍔',Transport:'🚌',Shopping:'🛍️',Bills:'💡',Health:'💊',Entertainment:'🎬',Education:'📚',EMI:'🏦',Insurance:'🛡️',Travel:'✈️',Other:'🔮'};
+const CAT_EMOJI={
+  // Income
+  Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Bonus:'🎉',Dividend:'💰',Commission:'🤝',Pension:'👴',
+  // Home & Utilities
+  Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🔥',Internet:'📶',Mobile:'📱',
+  // Food
+  Grocery:'🛒',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',
+  // Transport
+  Fuel:'⛽',Train:'🚆',Bus:'🚌',Flight:'✈️',Cab:'🚕',Metro:'🚇',Parking:'🅿️',
+  // Health
+  'Doctor/Hospital':'🏥',Medicine:'💊',Insurance:'🛡️','Health Checkup':'🩺',
+  // Education
+  'School Fees':'🏫','College Fees':'🎓',Books:'📚',Tuition:'✏️','Online Course':'💡',
+  // Finance
+  EMI:'🏦','Loan Repayment':'💳','Credit Card':'💳',Investment:'📈',Tax:'📋',
+  // Shopping & Lifestyle
+  Shopping:'🛍️',Clothing:'👗',Electronics:'📱',Furniture:'🛋️',
+  // Entertainment
+  OTT:'📺',Movies:'🎬',Games:'🎮',Sports:'⚽',Events:'🎪',
+  // Other
+  'Personal Care':'💆',Travel:'🗺️',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚌',Health:'💊',Entertainment:'🎬',Other:'🔮'
+};
 const CAT_COLOR={Food:'#ef4444',Transport:'#22c55e',Shopping:'#eab308',Bills:'#8b5cf6',Health:'#f97316',Entertainment:'#3b82f6',Education:'#a855f7',EMI:'#06b6d4',Insurance:'#ec4899',Travel:'#84cc16',Salary:'#22c55e',Freelance:'#60a5fa',Business:'#eab308',Investment:'#a78bfa',Rental:'#34d399',Gift:'#f472b6',Other:'#94a3b8'};
 const RISK_BG={'Very Low':'rgba(34,197,94,.15)','Low':'rgba(34,197,94,.1)','Medium':'rgba(234,179,8,.15)','High':'rgba(249,115,22,.15)','Very High':'rgba(239,68,68,.15)','None':'rgba(148,163,184,.1)','Varies':'rgba(148,163,184,.1)'};
 const RISK_COLOR={'Very Low':'#22c55e','Low':'#86efac','Medium':'#eab308','High':'#f97316','Very High':'#ef4444','None':'#94a3b8','Varies':'#94a3b8'};
@@ -1655,8 +1698,19 @@ const ASSET_COLORS=['#22c55e','#ef4444','#3b82f6','#eab308','#a855f7','#f97316',
 const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium',returns:'10-15%',emoji:'📈'},'Stocks':{desc:'Direct equity investments',risk:'High',returns:'12-20%',emoji:'📊'},'Cryptocurrency':{desc:'Digital assets & DeFi',risk:'Very High',returns:'Variable',emoji:'₿'},'Gold':{desc:'Gold & precious metals',risk:'Low',returns:'6-10%',emoji:'🥇'},'Real Estate':{desc:'Property & REITs',risk:'Medium',returns:'8-14%',emoji:'🏠'},'ETF':{desc:'Exchange traded funds',risk:'Medium',returns:'10-14%',emoji:'📉'},'PPF':{desc:'Public Provident Fund',risk:'Very Low',returns:'7.1%',emoji:'🏛️'},'EPFO':{desc:'Employee Provident Fund',risk:'Very Low',returns:'8.1%',emoji:'🏢'},'NPS':{desc:'National Pension System',risk:'Low',returns:'8-10%',emoji:'👴'},'Fixed Deposit':{desc:'Bank fixed deposits',risk:'Very Low',returns:'6-7.5%',emoji:'🏦'},'Bonds':{desc:'Govt & corporate bonds',risk:'Low',returns:'6-8%',emoji:'📜'},'Cash':{desc:'Liquid savings',risk:'None',returns:'3-4%',emoji:'💵'},'Other':{desc:'Other investments',risk:'Varies',returns:'Varies',emoji:'💼'}};
 const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'EPFO':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
 const THRESHOLD=2;
-const INCOME_CATS=['Salary','Freelance','Business','Investment','Rental','Gift','Other'];
-const EXPENSE_CATS=['Food','Transport','Shopping','Bills','Health','Entertainment','Education','EMI','Insurance','Travel','Other'];
+const INCOME_CATS=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Gift','Other'];
+const EXPENSE_CATS_GROUPED={
+  'Home':['Rent','Electricity','Water','LPG/Gas','Internet','Mobile'],
+  'Food':['Grocery','Fruits','Restaurant','Food Delivery'],
+  'Transport':['Fuel','Train','Bus','Flight','Cab','Metro','Parking'],
+  'Health':['Doctor/Hospital','Medicine','Insurance','Health Checkup'],
+  'Education':['School Fees','College Fees','Books','Tuition','Online Course'],
+  'Finance':['EMI','Loan Repayment','Credit Card','Tax'],
+  'Shopping':['Shopping','Clothing','Electronics','Furniture'],
+  'Entertainment':['OTT','Movies','Games','Sports','Events'],
+  'Other':['Personal Care','Travel','Other']
+};
+const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat();
 
 // ── TRANSLATION STRINGS ──────────────────────────────────────────────────────
 const LANG = {
@@ -1910,7 +1964,37 @@ document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=
 
 // ======== TRANSACTIONS ========
 function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';}
-function renderCatChips(){const cats=txType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('catChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🔮'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
+function renderCatChips(){
+  const c=document.getElementById('catChips');
+  c.innerHTML='';
+  if(txType==='income'){
+    INCOME_CATS.forEach((cat,i)=>{
+      const ch=document.createElement('div');
+      ch.className='chip'+(i===0?' on':'');
+      ch.innerHTML=(CAT_EMOJI[cat]||'🔮')+' '+cat;
+      ch.dataset.cat=cat;
+      ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};
+      c.appendChild(ch);
+    });
+  } else {
+    var firstSet=false;
+    Object.entries(EXPENSE_CATS_GROUPED).forEach(([group,cats])=>{
+      const lbl=document.createElement('div');
+      lbl.style.cssText='font-size:9px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);width:100%;margin:8px 0 4px;padding-left:2px';
+      lbl.textContent=group;
+      c.appendChild(lbl);
+      cats.forEach(cat=>{
+        const ch=document.createElement('div');
+        ch.className='chip'+(!firstSet?' on':'');
+        if(!firstSet)firstSet=true;
+        ch.innerHTML=(CAT_EMOJI[cat]||'🔮')+' '+cat;
+        ch.dataset.cat=cat;
+        ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};
+        c.appendChild(ch);
+      });
+    });
+  }
+}
 function getSelCat(){const c=document.querySelectorAll('#catChips .chip.on');return c.length?(c[0].dataset.cat||'Other'):'Other';}
 function saveTx(){
   const amt=parseFloat(document.getElementById('txAmt').value);
@@ -3209,12 +3293,14 @@ function loadGoogleSDKs(){
 
 function tryBootGoogle(){
   if(!GIS_LOADED||!GAPI_LOADED) return;
-  // Restore saved session
+  // Only restore UI from saved session — never auto-request a new token
+  // User must explicitly tap "Sign In" to get a new token
   var saved=localStorage.getItem('ft_gsession');
   if(saved){
     try{
       var sess=JSON.parse(saved);
       if(sess && sess.access_token && sess.expiry > Date.now()){
+        // Session still valid — restore UI only, no new token request
         gAccessToken=sess.access_token;
         currentUser={name:sess.name, email:sess.email, photo:sess.photo, id:sess.id};
         state.isLoggedIn=true; state.userName=sess.name; state.userEmail=sess.email;
@@ -3222,7 +3308,10 @@ function tryBootGoogle(){
         return;
       }
     }catch(e){}
+    // Expired or corrupt — clear silently, do NOT auto re-auth
     localStorage.removeItem('ft_gsession');
+    state.isLoggedIn=false; state.userName=''; state.userEmail='';
+    saveState();
   }
   updateAuthUI();
 }
@@ -3246,7 +3335,7 @@ function doGoogleSignIn(){
         fetchGoogleProfile(resp.access_token, resp.expires_in||3600);
       }
     });
-    tokenClient.requestAccessToken({prompt:''});
+    tokenClient.requestAccessToken({prompt:'select_account'});
   }catch(e){
     showToast('Sign-in error: '+e.message,'red');
   }
@@ -3275,15 +3364,36 @@ function fetchGoogleProfile(token, expiresIn){
 }
 
 function signOutGoogle(){
-  gAccessToken=null; currentUser=null; gDriveFileId=null;
-  localStorage.removeItem('ft_gsession');
-  state.isLoggedIn=false; state.userName=''; state.userEmail='';
-  saveState(); updateAuthUI();
-  // Revoke token silently
+  // Show data summary and backup warning before deleting
+  document.getElementById('signoutTxCount').textContent=state.transactions.length;
+  document.getElementById('signoutAssetCount').textContent=state.assets.length;
+  document.getElementById('signoutGoalCount').textContent=state.goals.length;
+  document.getElementById('signoutWarnModal').classList.add('on');
+}
+
+function _doSignoutAndClear(){
+  // Revoke Google token
   if(typeof google!=='undefined'&&google.accounts&&google.accounts.oauth2){
     var cid=getClientId();
-    if(cid) try{ google.accounts.oauth2.revoke(gAccessToken,function(){}); }catch(e){}
+    var tok=gAccessToken;
+    if(cid&&tok) try{google.accounts.oauth2.revoke(tok,function(){});}catch(e){}
   }
+  gAccessToken=null; currentUser=null; gDriveFileId=null;
+  localStorage.removeItem('ft_gsession');
+  // Wipe all user data
+  var pin=state.pin;
+  Object.assign(state,{
+    transactions:[],goals:[],assets:[],liabilities:[],bills:[],accounts:[],
+    recurring:[],budgets:{},allocTargets:{},
+    isLoggedIn:false,userName:'',userEmail:'',
+    driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',
+    pin:pin
+  });
+  try{localStorage.removeItem('ft_allocSeeded');}catch(e){}
+  saveState();
+  updateAuthUI();
+  initApp();
+  showToast('Signed out. All data cleared.','yellow');
 }
 
 function googleSignIn(){ doGoogleSignIn(); }
@@ -3672,6 +3782,8 @@ function doImport(){
   inp.click();
 }
 
+var _pendingImportData=null;
+
 function handleImport(event){
   const file=event.target.files[0];
   if(!file)return;
@@ -3679,52 +3791,62 @@ function handleImport(event){
   reader.onload=function(e){
     try{
       const raw=JSON.parse(e.target.result);
-      let imported;
-      // Handle encrypted format
       if(raw.ft_encrypted){
-        const key=prompt('🔑 Enter the backup password you set when exporting:\n(Leave blank only if you used the old default backup)','');
-        if(key===null)return; // user cancelled
-        try{
-          const decrypted=xorDecrypt(raw.payload,key||'ft_default');
-          const wrapper=JSON.parse(decrypted);
-          imported=wrapper.data||wrapper;
-        }catch(decErr){
-          showToast('Wrong password or corrupted backup file','red'); //exact password used during export (case-sensitive, including numbers and special characters).');
-          return;
-        }
-      } else if(raw.data){
-        // Wrapped unencrypted
-        imported=raw.data;
+        // Stash raw and show password modal
+        _pendingImportData=raw;
+        document.getElementById('importKeyInput').value='';
+        document.getElementById('importKeyError').style.display='none';
+        document.getElementById('importKeyModal').classList.add('on');
       } else {
-        // Legacy plain format
-        imported=raw;
+        const imported=raw.data||raw;
+        _applyImport(imported);
       }
-      // Validate
-      if(typeof imported!=='object'||Array.isArray(imported)){
-        showToast('Invalid backup file format','red');
-        return;
-      }
-      // Apply with defaults for missing fields
-      Object.assign(state,imported);
-      if(!state.liabilities)state.liabilities=[];
-      if(!state.bills)state.bills=[];
-      if(!state.accounts)state.accounts=[];
-      if(!state.recurring)state.recurring=[];
-      if(!state.budgets)state.budgets={};
-      if(!state.assets)state.assets=[];
-      if(!state.transactions)state.transactions=[];
-      if(!state.goals)state.goals=[];
-      saveState();
-      applyTheme(state.theme);
-      applyFont(state.font);
-      updateCurrSymbols();
-      initApp();
-      showToast('✅ Data imported successfully! '+state.transactions.length+' transactions restored.','green');
     }catch(err){
-      showToast('Could not read backup file. Is it a valid backup?','red'); //Error: '+err.message);
+      showToast('Could not read backup file. Is it a valid backup?','red');
     }
   };
   reader.readAsText(file);
+}
+
+function submitImportKey(){
+  const key=document.getElementById('importKeyInput').value;
+  const errEl=document.getElementById('importKeyError');
+  if(!key){errEl.textContent='Please enter the backup password';errEl.style.display='block';return;}
+  if(!_pendingImportData){closeModal('importKeyModal');return;}
+  try{
+    const decrypted=xorDecrypt(_pendingImportData.payload,key);
+    const wrapper=JSON.parse(decrypted);
+    const imported=wrapper.data||wrapper;
+    if(typeof imported!=='object'||Array.isArray(imported)){throw new Error('bad format');}
+    closeModal('importKeyModal');
+    document.getElementById('importKeyInput').value='';
+    _pendingImportData=null;
+    _applyImport(imported);
+  }catch(e){
+    errEl.textContent='Wrong password or corrupted file. Please try again.';
+    errEl.style.display='block';
+    document.getElementById('importKeyInput').value='';
+    document.getElementById('importKeyInput').focus();
+  }
+}
+
+function _applyImport(imported){
+  if(typeof imported!=='object'||Array.isArray(imported)){showToast('Invalid backup file format','red');return;}
+  Object.assign(state,imported);
+  if(!state.liabilities)state.liabilities=[];
+  if(!state.bills)state.bills=[];
+  if(!state.accounts)state.accounts=[];
+  if(!state.recurring)state.recurring=[];
+  if(!state.budgets)state.budgets={};
+  if(!state.assets)state.assets=[];
+  if(!state.transactions)state.transactions=[];
+  if(!state.goals)state.goals=[];
+  saveState();
+  applyTheme(state.theme);
+  applyFont(state.font);
+  updateCurrSymbols();
+  initApp();
+  showToast('✅ Restored! '+state.transactions.length+' transactions loaded.','green');
 }
 
 
@@ -4330,6 +4452,28 @@ initGoogleDrive();
 if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
 </script>
 <!-- ALLOCATION TARGET MODAL -->
+<!-- SIGNOUT BACKUP WARNING MODAL -->
+<div class="modal-bg" id="signoutWarnModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="font-size:40px;text-align:center;margin-bottom:8px">⚠️</div>
+    <div class="modal-title" style="text-align:center;justify-content:center;color:var(--red)">Before You Sign Out</div>
+    <div style="background:rgba(255,69,105,0.08);border:2px solid rgba(255,69,105,0.25);border-radius:14px;padding:14px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:900;color:var(--red);margin-bottom:8px">🗑️ All local data will be deleted on sign out</div>
+      <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.8">
+        • <b id="signoutTxCount">0</b> transactions<br>
+        • <b id="signoutAssetCount">0</b> assets<br>
+        • <b id="signoutGoalCount">0</b> goals<br>
+        • All settings and history
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--yellow);font-weight:700;text-align:center;margin-bottom:16px">💡 Export a backup first to restore your data later</div>
+    <button class="btn-go" onclick="closeModal('signoutWarnModal');exportData()" style="margin-bottom:8px">📤 Export Backup First</button>
+    <button class="btn-cancel" onclick="closeModal('signoutWarnModal');_doSignoutAndClear()" style="width:100%;margin-bottom:8px;color:var(--red);border-color:rgba(255,69,105,0.3)">🚪 Sign Out & Delete Data</button>
+    <button class="btn-cancel" onclick="closeModal('signoutWarnModal')" style="width:100%">✕ Cancel</button>
+  </div>
+</div>
+
 <!-- ASSET THRESHOLD WARNING MODAL -->
 <div class="modal-bg" id="allocWarnModal">
   <div class="modal">
