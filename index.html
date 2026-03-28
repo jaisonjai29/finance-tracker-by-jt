@@ -1295,7 +1295,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="txDate"></div>
     </div>
     <div class="field"><div class="field-label">🗂️ Category</div><div class="chips" id="catChips"></div></div>
-    <div class="field"><div class="field-label">🏦 Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
+    <div class="field" id="txAccountField"><div class="field-label">🏦 Deposit to Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
     <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="txNotes" placeholder="Optional"></div>
     <button class="btn-go" onclick="saveTx()">✅ Save</button>
@@ -1963,7 +1963,7 @@ function closeModal(id){document.getElementById(id).classList.remove('on');if(id
 document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});});
 
 // ======== TRANSACTIONS ========
-function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';}
+function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';}
 function renderCatChips(){
   const c=document.getElementById('catChips');
   c.innerHTML='';
@@ -2008,7 +2008,7 @@ function saveTx(){
   const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct,liabLink:liabLink};
   state.transactions.unshift(tx);
   // Update account balance
-  if(acct){const a=state.accounts.find(a=>a.id===acct);if(a){a.balance+=(txType==='income'?amt:-amt);}}
+  if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amt:-amt);}}
   // Auto-reduce linked liability remaining
   if(liabLink&&txType==='expense'){
     const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
@@ -2049,7 +2049,7 @@ function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx
 function txHTML(tx){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
-  const acct=tx.account?state.accounts.find(a=>a.id===tx.account):null;
+  const acct=tx.account?state.accounts.find(a=>String(a.id)===String(tx.account)):null;
   const acctBadge=acct?`<span style="margin-left:4px;background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${acct.name}</span>`:'';
   return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
 }
@@ -2077,7 +2077,7 @@ function editTx(id){
   document.getElementById('editTxOrigAcct').value=tx.account||'';
   // Populate account select
   const sel=document.getElementById('editTxAccount');
-  sel.innerHTML='<option value="">-- No Account --</option>'+state.accounts.map(a=>'<option value="'+a.id+'"'+(a.id===tx.account?' selected':'')+'>'+a.name+'</option>').join('');
+  sel.innerHTML='<option value="">-- No Account --</option>'+state.accounts.map(a=>'<option value="'+a.id+'"'+(String(a.id)===String(tx.account)?' selected':'')+'>'+a.name+'</option>').join('');
   // Set type buttons
   setEditTxType(tx.type);
   showModal('editTxModal');
@@ -2103,12 +2103,12 @@ function saveEditTx(){
   if(!amt||!desc||!date){showToast('Fill amount, description and date','yellow');return;}
   const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
   // Reverse original account effect
-  if(origAcct){const a=state.accounts.find(a=>a.id===origAcct);if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
+  if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
   // Apply new values
   tx.type=editTxType;tx.amount=amt;tx.desc=desc;tx.date=date;tx.notes=notes;tx.account=acct;
   tx.category=tx.category||'Other';tx.emoji=CAT_EMOJI[tx.category]||'🔮';
   // Apply new account effect
-  if(acct){const a=state.accounts.find(a=>a.id===acct);if(a)a.balance+=(editTxType==='income'?amt:-amt);}
+  if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amt:-amt);}
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
   if(curPage==='analytics')renderAnalytics();
   showToast('Transaction updated!','green');
@@ -2118,7 +2118,7 @@ function deleteFromEdit(){
   closeModal('editTxModal');
   customConfirm('🗑️','Delete Transaction','This cannot be undone.',function(){
     const tx=state.transactions.find(t=>t.id===id);
-    if(tx?.account){const a=state.accounts.find(a=>a.id===tx.account);if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
+    if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
     state.transactions=state.transactions.filter(t=>t.id!==id);
     saveState();updateDashboard();renderHistory();updateBudget();renderAccounts();
     if(curPage==='analytics')renderAnalytics();
@@ -2791,18 +2791,41 @@ function renderAccounts(){
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
 function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();});}
+// Account types that receive income (credit side)
+var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','UPI / GPay','Wallet'];
+// Account types used to pay expenses (debit side)
+var EXPENSE_ACCT_TYPES=['Cash','UPI / GPay','Credit Card','Debit Card','Savings Account','Salary Account','Current Account','Wallet'];
+
 function updateTxAccountSelect(){
   var sel=document.getElementById('txAccount');
   if(!sel) return;
   var curr=sel.value;
-  sel.innerHTML='<option value="">-- No Account --</option>'+
-    state.accounts.map(function(a){
+  var lbl=document.querySelector('label[for="txAccount"], #txAccountLabel');
+
+  // Filter accounts relevant to current transaction type
+  var validTypes=txType==='income'?INCOME_ACCT_TYPES:EXPENSE_ACCT_TYPES;
+  var filtered=state.accounts.filter(function(a){return validTypes.indexOf(a.type)>-1;});
+  // If no accounts match filter, show all
+  if(!filtered.length) filtered=state.accounts;
+
+  // Update field label based on type
+  var fieldLbl=document.querySelector('#txAccountField .field-label');
+  if(fieldLbl){
+    fieldLbl.textContent=txType==='income'?'🏦 Deposit to Account':'💳 Pay via';
+  }
+
+  sel.innerHTML='<option value="">-- '+(txType==='income'?'Select Account':'Select Payment Method')+' --</option>'+
+    filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
       var bal=a.balance!==0?' ('+state.currSymbol+fmt(Math.abs(a.balance))+')':'';
-      return '<option value="'+a.id+'"'+(a.id===curr?' selected':'')+'>'+info.emoji+' '+a.name+bal+'</option>';
+      // String comparison — IDs stored as numbers but select values are strings
+      return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+bal+'</option>';
     }).join('');
-  // Auto-select first account if nothing selected
-  if(!curr && state.accounts.length>0) sel.value=state.accounts[0].id;
+
+  // Auto-select best default
+  if(!curr || !filtered.find(function(a){return String(a.id)===String(curr);})){
+    if(filtered.length>0) sel.value=filtered[0].id;
+  }
 }
 function updateTxLiabSelect(){
   var sel=document.getElementById('txLiabLink');
