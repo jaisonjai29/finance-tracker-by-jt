@@ -1904,9 +1904,12 @@ function initApp(){
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
   updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();
   if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
-  renderAuthSignedOut();
-  if(state.isLoggedIn&&currentUser) renderAuthSignedIn(currentUser);
-  if(state.isLoggedIn)renderGoogleAccount();
+  if(state.isLoggedIn&&currentUser){
+    renderAuthSignedIn(currentUser);
+    renderGoogleAccount();
+  } else {
+    renderAuthSignedOut();
+  }
   // Update avatar letter from username or email
   var avatarLetter=document.getElementById('avatarLetter');
   if(avatarLetter){
@@ -3316,26 +3319,42 @@ function loadGoogleSDKs(){
 
 function tryBootGoogle(){
   if(!GIS_LOADED||!GAPI_LOADED) return;
-  // Only restore UI from saved session — never auto-request a new token
-  // User must explicitly tap "Sign In" to get a new token
+
+  // ── Step 1: Always restore identity from state (persisted in localStorage via saveState)
+  // state.isLoggedIn/userName/userEmail survive across page loads indefinitely.
+  // Only the user tapping "Sign Out" should ever clear these.
+  if(state.isLoggedIn && state.userName){
+    currentUser={
+      name:state.userName,
+      email:state.userEmail,
+      photo:state.localProfilePhoto||'',
+      id:''
+    };
+  }
+
+  // ── Step 2: Restore access_token from session if still valid (for Drive sync only)
+  // Token expiry does NOT affect login state — user stays signed in always.
   var saved=localStorage.getItem('ft_gsession');
   if(saved){
     try{
       var sess=JSON.parse(saved);
       if(sess && sess.access_token && sess.expiry > Date.now()){
-        // Session still valid — restore UI only, no new token request
         gAccessToken=sess.access_token;
-        currentUser={name:sess.name, email:sess.email, photo:sess.photo, id:sess.id};
-        state.isLoggedIn=true; state.userName=sess.name; state.userEmail=sess.email;
-        saveState(); updateAuthUI();
-        return;
+        // Also fill in the photo/id that may not be in state
+        if(sess.photo && currentUser) currentUser.photo=sess.photo;
+        if(sess.id && currentUser) currentUser.id=sess.id;
+      } else {
+        // Token expired — remove it silently. User stays signed in.
+        // They'll need to tap Sign In again only if they want to sync to Drive.
+        localStorage.removeItem('ft_gsession');
+        gAccessToken=null;
       }
-    }catch(e){}
-    // Expired or corrupt — clear silently, do NOT auto re-auth
-    localStorage.removeItem('ft_gsession');
-    state.isLoggedIn=false; state.userName=''; state.userEmail='';
-    saveState();
+    }catch(e){
+      localStorage.removeItem('ft_gsession');
+      gAccessToken=null;
+    }
   }
+
   updateAuthUI();
 }
 
@@ -3375,12 +3394,13 @@ function fetchGoogleProfile(token, expiresIn){
       id: profile.sub
     };
     state.isLoggedIn=true; state.userName=currentUser.name; state.userEmail=currentUser.email;
-    // Save session to localStorage (expires in 1hr)
+    // Save full session with token (expires in 1hr — only needed for Drive sync)
     localStorage.setItem('ft_gsession', JSON.stringify({
       access_token:token, name:currentUser.name,
       email:currentUser.email, photo:currentUser.photo,
       id:currentUser.id, expiry:Date.now()+(expiresIn*1000)
     }));
+    // Identity is also saved permanently via saveState() — survives token expiry
     saveState(); updateAuthUI();
     setTimeout(loadFromCloud, 1000);
   }).catch(function(e){ showToast('Profile fetch error: '+e.message,'red'); });
