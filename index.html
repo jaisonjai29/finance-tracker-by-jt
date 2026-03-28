@@ -14,7 +14,7 @@
 <link rel="manifest" id="pwaManifest">
 <link rel="apple-touch-icon" id="appleTouchIcon">
 <title>Finance Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Kaushan+Script&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Kaushan+Script&family=Protest+Riot&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 /* ══════════════════════════════════════════
@@ -23,7 +23,7 @@
 ══════════════════════════════════════════ */
 
 /* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Protest+Riot&display=swap');
 
 /* ══ BASE TOKENS — Midnight Dark (default) ══ */
 :root{
@@ -111,6 +111,7 @@
 
 /* ══ FONT VARIANTS ══ */
 [data-font="system"]{--font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
+[data-font="protest"]{--font:'Protest Riot',sans-serif;}
 [data-font="inter"]{--font:'Inter',sans-serif;}
 [data-font="kaushan"]{--font:'Kaushan Script',cursive;}
 
@@ -986,6 +987,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">💯 Financial Health Score</div>
         <div id="wealthHealthScore"></div>
       </div>
+
+      <!-- ALLOCATION TARGETS -->
+      <div class="box" id="wealthAllocBox" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">🎯 ALLOCATION TARGETS</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="allocTotalBadge" style="font-size:11px;font-weight:900;padding:3px 9px;border-radius:20px;background:var(--bg3)">0%</span>
+            <button onclick="showModal('allocModal')" style="background:rgba(79,142,247,0.12);color:var(--accent);border:1.5px solid rgba(79,142,247,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">✏️ Edit</button>
+          </div>
+        </div>
+        <div id="wealthAllocBars"></div>
+        <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:10px;display:flex;align-items:center;gap:10px">
+          <span>█ Actual &nbsp;│&nbsp; <span style="color:rgba(255,255,255,0.5)">│</span> = Target</span>
+        </div>
+      </div>
     </div>
 
     <!-- AI INSIGHTS -->
@@ -1131,19 +1147,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="font-btn on" onclick="setFont('system',this)" style="font-family:system-ui">System</div>
           <div class="font-btn" onclick="setFont('inter',this)" style="font-family:'Inter',sans-serif">Inter</div>
           <div class="font-btn" onclick="setFont('kaushan',this)" style="font-family:'Kaushan Script',cursive;font-size:13px">Kaushan Script</div>
+          <div class="font-btn" onclick="setFont('protest',this)" style="font-family:'Protest Riot',sans-serif;font-size:13px">Protest Riot</div>
         </div>
       </div>
-      <div class="set-sec">
-        <div class="set-sec-title">🎯 Asset Allocation Targets</div>
-        <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;line-height:1.6">Set your ideal % for each asset type. The app will warn you when your actual allocation deviates. Total should add up to 100%.</div>
-        <div id="allocTargetInputs"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-xs)">
-          <span style="font-size:12px;font-weight:900">Total Target</span>
-          <span style="font-family:var(--font);font-size:14px;font-weight:700" id="allocTargetTotal">0%</span>
-        </div>
-        <button class="btn-go" onclick="saveAllocTargets()" style="margin-top:10px">💾 Save Targets</button>
-        <button class="btn-cancel" onclick="resetAllocTargets()" style="margin-top:6px">↺ Reset to Defaults</button>
-      </div>
+
 
       <div class="set-sec">
         <div class="set-sec-title">🔒 Security & Access</div>
@@ -1194,11 +1201,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div class="set-row" onclick="showModal('driveModal')">
           <div class="set-row-left"><span class="set-row-icon">☁️</span><div><div class="set-row-label">Google Drive Backup</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="driveStatusText">Not connected · Encrypted backup</div></div></div>
           <div class="set-row-right" id="driveStatusBadge">Setup ▶</div>
-        </div>
-        <!-- Sync across devices -->
-        <div class="set-row" id="syncNowRow" onclick="syncNow()" style="display:none">
-          <div class="set-row-left"><span class="set-row-icon">🔄</span><div><div class="set-row-label">Sync Now</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="lastSyncText">Never synced</div></div></div>
-          <div class="set-row-right" style="color:var(--accent)">Sync ▶</div>
         </div>
         <!-- Backup test -->
         <div class="set-row" onclick="verifyBackup()">
@@ -1887,9 +1889,10 @@ function showPage(id){
   if(id==='recurring')renderRecurring();
   if(id==='loanadvisor'){renderLoanAdvisor();generateMonthlyPlan();}
   if(id==='insights')generateInsights();
-  if(id==='settings')setTimeout(renderAllocTargetInputs,50);
+  // alloc targets now on wealth page
 }
 function showModal(id){
+  if(id==='allocModal'){renderAllocModalRows();updateAllocModalTotal();}
   closeAddMenu();
   document.getElementById(id).classList.add('on');
   if(id==='txModal'){setTodayDate();updateTxAccountSelect();updateTxLiabSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(txType==='expense')?'block':'none';}
@@ -1897,7 +1900,6 @@ function showModal(id){
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
   if(id==='emailAuthModal'){document.getElementById('authError').style.display='none';setEmailTab('login');}
-  if(id==='gdriveSetupModal'){prefillGdriveForm();}
   if(id==='budgetModal')renderBudgetInputs();
   if(id==='billModal')renderBillCatChips();
   if(id==='recurModal')renderRecurCatChips();
@@ -2221,6 +2223,9 @@ function calcAssetPreview(){
 }
 
 
+// Pending asset stash for threshold override flow
+var _pendingAsset=null;
+
 function saveAsset(){
   var name=document.getElementById('assetName').value.trim();
   var scheme=document.getElementById('assetScheme').value;
@@ -2237,19 +2242,67 @@ function saveAsset(){
   var value=parseFloat(modal.dataset.value||'0')||details.currentValue||details.currentPrice||invested;
   if(!value&&!invested){showToast('Enter price/value details','yellow');return;}
   var editId=modal.dataset.editId;
+
+  // ── Simulate post-save allocation to check threshold breach ──
+  var t=getEffectiveTarget(scheme);
+  if(t){
+    var simAssets=state.assets.slice();
+    if(editId){
+      var si=simAssets.findIndex(function(a){return a.id===parseInt(editId);});
+      if(si>-1) simAssets[si]=Object.assign({},simAssets[si],{value:value,scheme:scheme});
+    } else {
+      simAssets.push({id:0,name:name,scheme:scheme,value:value});
+    }
+    var simTotal=simAssets.reduce(function(s,a){return s+a.value;},0);
+    var simSchemePct=simTotal>0?(simAssets.filter(function(a){return a.scheme===scheme;}).reduce(function(s,a){return s+a.value;},0)/simTotal*100):0;
+    if(simSchemePct>t.max){
+      // Breach — stash and show warning
+      _pendingAsset={name:name,scheme:scheme,invested:invested,value:value,details:details,editId:editId,
+        editColor:modal.dataset.editColor||'',btnText:document.querySelector('#assetModal .btn-go').textContent};
+      var body=document.getElementById('allocWarnBody');
+      if(body) body.innerHTML=
+        '<div style="margin-bottom:8px"><b>'+scheme+'</b> would reach <span style="color:var(--red);font-size:15px;font-weight:900">'+simSchemePct.toFixed(1)+'%</span> of your portfolio</div>'
+        +'<div>Your configured target for <b>'+scheme+'</b> is <span style="color:var(--accent);font-weight:900">'+t.ideal+'%</span> (max allowed: <span style="color:var(--orange);font-weight:900">'+t.max+'%</span>)</div>';
+      closeModal('assetModal');
+      document.getElementById('allocWarnModal').classList.add('on');
+      return;
+    }
+  }
+  _commitAsset(name,scheme,invested,value,details,editId,modal.dataset.editColor||'');
+}
+
+function allocWarnAdjust(){
+  closeModal('allocWarnModal');
+  // Re-open asset modal so user can change value, then open alloc targets
+  if(_pendingAsset){
+    showModal('assetModal');
+    document.getElementById('assetName').value=_pendingAsset.name;
+    document.getElementById('assetScheme').value=_pendingAsset.scheme;
+  }
+  setTimeout(function(){showModal('allocModal');},100);
+}
+
+function allocWarnForce(){
+  closeModal('allocWarnModal');
+  if(!_pendingAsset)return;
+  var p=_pendingAsset;_pendingAsset=null;
+  _commitAsset(p.name,p.scheme,p.invested,p.value,p.details,p.editId,p.editColor);
+}
+
+function _commitAsset(name,scheme,invested,value,details,editId,editColor){
   if(editId){
     var idx=state.assets.findIndex(function(a){return a.id===parseInt(editId);});
-    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:invested,value:value,details:details,color:modal.dataset.editColor||state.assets[idx].color});}
+    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:invested,value:value,details:details,color:editColor||state.assets[idx].color});}
   } else {
     state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
   }
-  // Auto-recalculate allocation % for ALL assets based on their values
   var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
   state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});
   saveState();closeModal('assetModal');renderAssets();
   if(curPage==='wealth')renderWealth();
   if(curPage==='assets')renderAssetChart();
   updateDashboard();
+  var modal=document.getElementById('assetModal');
   document.getElementById('assetName').value='';
   document.getElementById('assetDynamicFields').innerHTML='';
   modal.dataset.invested='0';modal.dataset.value='0';modal.dataset.editId='';
@@ -2258,80 +2311,184 @@ function saveAsset(){
 
 // ── ASSET ALLOCATION TARGET MANAGEMENT ──────────────────────────────────────
 function getEffectiveTarget(scheme){
-  // User-set target takes priority; fall back to IDEAL_ALLOC defaults
+  // User-set target always takes priority
   var userPct=state.allocTargets&&state.allocTargets[scheme];
-  if(userPct>0) return {ideal:userPct,min:Math.max(0,userPct-5),max:userPct+5,custom:true};
-  return IDEAL_ALLOC[scheme]||null;
+  if(userPct>0) return{ideal:userPct,min:Math.max(0,userPct-THRESHOLD),max:userPct+THRESHOLD,custom:true};
+  // Fall back to IDEAL_ALLOC — use ideal as centre with tight band
+  var d=IDEAL_ALLOC[scheme];
+  if(!d) return null;
+  return{ideal:d.ideal,min:Math.max(0,d.ideal-THRESHOLD),max:d.ideal+THRESHOLD,custom:false};
 }
 
 function getAllocStatus(scheme,pct){
   const t=getEffectiveTarget(scheme);
   if(!t)return null;
-  if(pct<t.min-THRESHOLD)return{type:'low',msg:`⬇️ Under-allocated (target ${t.ideal}%)`};
-  if(pct>t.max+THRESHOLD)return{type:'high',msg:`⬆️ Over-allocated (target ${t.ideal}%)`};
-  if(pct<t.ideal-THRESHOLD)return{type:'low',msg:`↙ Slightly low (target ${t.ideal}%)`};
-  if(pct>t.ideal+THRESHOLD)return{type:'high',msg:`↗ Slightly high (target ${t.ideal}%)`};
+  if(pct>t.max)return{type:'high',msg:`⬆️ Exceeded target (target ${t.ideal}%)`};
+  if(pct<t.min)return{type:'low',msg:`⬇️ Below target (target ${t.ideal}%)`};
   return{type:'ok',msg:'✅ On target'};
 }
 
 function renderAllocTargetInputs(){
-  var c=document.getElementById('allocTargetInputs');
-  if(!c)return;
-  if(!state.allocTargets)state.allocTargets={};
-  var schemes=Object.keys(SCHEME_INFO);
-  c.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
-    +schemes.map(function(s){
-      var info=SCHEME_INFO[s];
-      var def=IDEAL_ALLOC[s];
-      var val=state.allocTargets[s]!==undefined?state.allocTargets[s]:(def?.ideal||0);
-      return '<div style="background:var(--bg3);border-radius:10px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px">'
-        +'<div style="display:flex;align-items:center;gap:5px;min-width:0">'
-          +'<span style="font-size:14px;flex-shrink:0">'+info.emoji+'</span>'
-          +'<span style="font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s+'</span>'
-        +'</div>'
-        +'<input type="number" class="alloc-target-inp" data-scheme="'+s+'" value="'+val+'" min="0" max="100" step="1" '
-          +'style="width:44px;background:var(--bg2);border:1.5px solid var(--border2);border-radius:6px;padding:4px 6px;color:var(--text);font-size:12px;font-weight:900;text-align:center" '
-          +'oninput="updateAllocTargetTotal()">'
-        +'</div>';
-    }).join('')+'</div>';
-  updateAllocTargetTotal();
+  renderWealthAllocBars();
+  // refresh modal if open
+  var m=document.getElementById('allocModal');
+  if(m&&m.classList.contains('on')) renderAllocModalRows();
 }
 
-function updateAllocTargetTotal(){
-  var inputs=document.querySelectorAll('.alloc-target-inp');
+// ── WEALTH PAGE: stacked bars (bigger icons + bars) ──────────────────
+function renderWealthAllocBars(){
+  var wrap=document.getElementById('wealthAllocBars');
+  if(!wrap) return;
+  if(!state.allocTargets||!Object.keys(state.allocTargets).length){
+    wrap.innerHTML='<div style="font-size:12px;color:var(--text3);font-weight:600;padding:10px 0">No targets set yet. Tap ✏️ Edit to configure.</div>';
+    var badge=document.getElementById('allocTotalBadge');
+    if(badge){badge.textContent='0%';badge.style.background='var(--bg3)';badge.style.color='var(--text3)';}
+    return;
+  }
+  var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
+  var schemeActual={};
+  state.assets.forEach(function(a){
+    if(!schemeActual[a.scheme])schemeActual[a.scheme]=0;
+    schemeActual[a.scheme]+=(totalVal>0?(a.value/totalVal*100):0);
+  });
+  var targetTotal=Object.values(state.allocTargets).reduce(function(s,v){return s+(v||0);},0);
+  // Update badge
+  var badge=document.getElementById('allocTotalBadge');
+  if(badge){
+    badge.textContent=targetTotal.toFixed(0)+'%';
+    var nearHundred=Math.abs(targetTotal-100)<2;
+    var over=targetTotal>105;
+    badge.style.background=nearHundred?'rgba(34,197,94,0.15)':over?'rgba(239,68,68,0.15)':'rgba(234,179,8,0.15)';
+    badge.style.color=nearHundred?'var(--green)':over?'var(--red)':'var(--yellow)';
+  }
+  var schemes=Object.keys(state.allocTargets);
+  wrap.innerHTML=schemes.map(function(s){
+    var target=state.allocTargets[s]||0;
+    var info=SCHEME_INFO[s]||{emoji:'💼'};
+    var actual=schemeActual[s]||0;
+    var diff=actual-target;
+    var isOk=Math.abs(diff)<=THRESHOLD;
+    var isOver=diff>THRESHOLD;
+    var statusIcon=isOk?'✅':isOver?'▲':'▼';
+    var statusText=isOk?'On target':isOver?'+'+diff.toFixed(1)+'%':diff.toFixed(1)+'%';
+    var actualColor=isOk?'var(--green)':isOver?'var(--orange)':'var(--yellow)';
+    var maxBar=Math.max(target,actual,1);
+    var actualW=Math.min(100,(actual/maxBar*100)).toFixed(1);
+    var targetW=Math.min(100,(target/maxBar*100)).toFixed(1);
+    return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
+      +'<div style="width:40px;height:40px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+          +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+s+'</span>'
+          +'<div style="display:flex;align-items:center;gap:6px">'
+            +'<span style="font-size:11px;color:var(--accent);font-weight:700">🎯 '+target+'%</span>'
+            +'<span style="font-size:11px;font-weight:700;color:'+actualColor+';background:rgba(0,0,0,0.2);padding:2px 7px;border-radius:20px;border:1px solid '+actualColor+'">'+statusIcon+' '+statusText+'</span>'
+          +'</div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px;display:flex;justify-content:space-between">'
+          +'<span style="color:var(--accent)">▬ Target</span><span style="color:'+actualColor+'">▬ Actual: '+actual.toFixed(1)+'%</span>'
+        +'</div>'
+        +'<div style="height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:3px">'
+          +'<div style="height:100%;width:'+targetW+'%;background:var(--accent);border-radius:4px;transition:width .6s ease;opacity:0.85"></div>'
+        +'</div>'
+        +'<div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden">'
+          +'<div style="height:100%;width:'+actualW+'%;background:'+actualColor+';border-radius:3px;transition:width .6s ease"></div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+// ── MODAL: edit rows ──────────────────────────────────────────────────
+function renderAllocModalRows(){
+  var wrap=document.getElementById('allocModalRows');
+  if(!wrap)return;
+  if(!state.allocTargets)state.allocTargets={};
+  // Seed defaults only once ever (first install). Uses ft_allocSeeded flag.
+  var seeded=false;
+  try{seeded=!!localStorage.getItem('ft_allocSeeded');}catch(e){}
+  if(!seeded&&!Object.keys(state.allocTargets).length){
+    // Collect raw ideals and scale proportionally to exactly 100%
+    var rawTotal=0;var rawVals={};
+    Object.keys(SCHEME_INFO).forEach(function(s){var d=IDEAL_ALLOC[s];if(d&&d.ideal>0){rawVals[s]=d.ideal;rawTotal+=d.ideal;}});
+    Object.keys(rawVals).forEach(function(s){state.allocTargets[s]=Math.round(rawVals[s]/rawTotal*1000)/10;});
+    // Fix rounding drift so total == exactly 100
+    var rsum=Object.values(state.allocTargets).reduce(function(a,b){return a+b;},0);
+    var rdiff=Math.round((100-rsum)*10)/10;
+    if(rdiff!==0){var fk=Object.keys(state.allocTargets)[0];if(fk)state.allocTargets[fk]=Math.round((state.allocTargets[fk]+rdiff)*10)/10;}
+    saveState();
+    try{localStorage.setItem('ft_allocSeeded','1');}catch(e){}
+  }
+  wrap.innerHTML='';
+  Object.keys(SCHEME_INFO).forEach(function(s){
+    var info=SCHEME_INFO[s]||{emoji:'💼'};
+    var def=IDEAL_ALLOC[s];
+    var val=state.allocTargets[s]!==undefined?state.allocTargets[s]:0;
+    var totalVal=state.assets.reduce(function(sum,a){return sum+a.value;},0);
+    var schemeVal=state.assets.filter(function(a){return a.scheme===s;}).reduce(function(sum,a){return sum+a.value;},0);
+    var actual=totalVal>0?(schemeVal/totalVal*100):0;
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)';
+    var inputId='atp_'+s.replace(/[^a-z0-9]/gi,'_');
+    row.innerHTML=
+      '<span style="font-size:20px;width:28px;flex-shrink:0;text-align:center">'+info.emoji+'</span>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+s+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);font-weight:500">Actual: '+actual.toFixed(1)+'%</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+        +'<input id="'+inputId+'" type="number" min="0" max="100" step="1"'
+          +' value="'+(val>0?val:'')+'" placeholder="0"'
+          +' style="width:52px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:7px 8px;color:var(--text);font-size:15px;font-weight:900;text-align:center;outline:none"'
+          +' data-scheme="'+s+'"'
+          +' oninput="updateAllocModalTotal()"'
+          +' onblur="commitAllocFromModal(this)"'
+          +' onkeydown="if(event.keyCode===13)this.blur()">'
+        +'<span style="font-size:12px;color:var(--text3);font-weight:600">%</span>'
+      +'</div>';
+    wrap.appendChild(row);
+  });
+  updateAllocModalTotal();
+}
+
+function updateAllocModalTotal(){
+  var inputs=document.querySelectorAll('#allocModalRows input[data-scheme]');
   var total=0;
   inputs.forEach(function(inp){total+=parseFloat(inp.value||'0');});
-  var el=document.getElementById('allocTargetTotal');
+  var el=document.getElementById('allocModalTotal');
   if(el){
     el.textContent=total.toFixed(0)+'%';
-    el.style.color=Math.abs(total-100)<1?'var(--green)':total>100?'var(--red)':'var(--yellow)';
+    var ok=Math.abs(total-100)<2;
+    el.style.color=ok?'var(--green)':total>105?'var(--red)':'var(--yellow)';
   }
 }
 
-function saveAllocTargets(){
-  var inputs=document.querySelectorAll('.alloc-target-inp');
-  var targets={};var total=0;
-  inputs.forEach(function(inp){
-    var v=parseFloat(inp.value||'0');
-    if(v>0){targets[inp.dataset.scheme]=v;total+=v;}
-  });
-  if(total>0&&Math.abs(total-100)>5){
-    showToast('⚠️ Targets total '+total.toFixed(0)+'% — should be near 100%','yellow');
-  }
-  state.allocTargets=targets;
+function commitAllocFromModal(inp){
+  if(!state.allocTargets)state.allocTargets={};
+  var v=parseFloat(inp.value||'0');
+  var scheme=inp.dataset.scheme;
+  if(v>0)state.allocTargets[scheme]=v;
+  else delete state.allocTargets[scheme];
   saveState();
+  renderWealthAllocBars();
   renderAssets();
-  showToast('✅ Allocation targets saved!','green');
+  // Flash green border
+  inp.style.borderColor='var(--green)';
+  setTimeout(function(){inp.style.borderColor='';},700);
 }
+
+
 
 function resetAllocTargets(){
+  // Clear seeded flag so renderAllocModalRows re-seeds scaled 100% defaults
+  try{localStorage.removeItem('ft_allocSeeded');}catch(e){}
   state.allocTargets={};
   saveState();
-  renderAllocTargetInputs();
+  renderAllocModalRows();
+  renderWealthAllocBars();
   renderAssets();
-  showToast('Targets reset to defaults','blue');
+  showToast('Targets reset to defaults (100%)','blue');
 }
-
 // Show alloc target inputs when settings page renders
 function assetDetailLine(a){
   const d=a.details||{};const s=a.scheme;
@@ -2354,10 +2511,12 @@ function renderAssets(){
   const c=document.getElementById('assetList');
   if(!state.assets.length){c.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div>`;renderSchemeList();return;}
   const schemeMap={};state.assets.forEach(a=>{if(!schemeMap[a.scheme])schemeMap[a.scheme]=0;schemeMap[a.scheme]+=(a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0));});
+  // Also include schemes that have a configured target but zero actual assets
+  if(state.allocTargets){Object.keys(state.allocTargets).forEach(s=>{if(!(s in schemeMap))schemeMap[s]=0;});}
   const warnings=[];Object.entries(schemeMap).forEach(([scheme,pctVal])=>{const s=getAllocStatus(scheme,pctVal);const t=getEffectiveTarget(scheme);if(s&&s.type!=='ok')warnings.push({scheme,pct:pctVal.toFixed(1),status:s,target:t?.ideal||0,custom:t?.custom||false});});
   let warningHTML='';
-  if(warnings.length){const critical=warnings.filter(w=>w.status.type!=='ok');const col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';const bcol=critical.length?'rgba(239,68,68,0.4)':'rgba(234,179,8,0.4)';warningHTML=`<div style="background:${col};border:2px solid ${bcol};border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:14px;font-weight:900;margin-bottom:10px">${critical.length?'🚨':'⚠️'} Allocation Warnings</div>${warnings.map(w=>{const wc=w.status.type==='high'?'var(--orange)':'var(--yellow)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><div><div style="font-size:13px;font-weight:900">${SCHEME_INFO[w.scheme]?.emoji||'💼'} ${w.scheme}${w.custom?'<span style="font-size:9px;background:rgba(124,92,252,0.2);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px">custom</span>':''}</div><div style="font-size:11px;color:${wc};font-weight:700">${w.status.msg}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${wc}">${w.pct}%</div><div style="font-size:10px;color:var(--text3);font-weight:700">target ${w.target}%</div></div></div>`;}).join('')}<div style="margin-top:10px;font-size:11px;color:var(--text3);font-weight:700;text-align:center;cursor:pointer" onclick="showPage('settings')">⚙️ Adjust targets in Settings →</div></div>`;
-  }else if(state.assets.length>=3){warningHTML=`<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio Well Balanced!</div></div>`;}
+  if(warnings.length){const critical=warnings.filter(w=>w.status.type!=='ok');const col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';const bcol=critical.length?'rgba(239,68,68,0.4)':'rgba(234,179,8,0.4)';warningHTML=`<div style="background:${col};border:2px solid ${bcol};border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:14px;font-weight:900;margin-bottom:10px">${critical.length?'🚨':'⚠️'} Allocation Warnings</div>${warnings.map(w=>{const wc=w.status.type==='high'?'var(--orange)':'var(--yellow)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><div><div style="font-size:13px;font-weight:900">${SCHEME_INFO[w.scheme]?.emoji||'💼'} ${w.scheme}${w.custom?'<span style="font-size:9px;background:rgba(124,92,252,0.2);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px">custom</span>':''}</div><div style="font-size:11px;color:${wc};font-weight:700">${w.status.msg}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${wc}">${w.pct}%</div><div style="font-size:10px;color:var(--text3);font-weight:700">target ${w.target}%</div></div></div>`;}).join('')}<div style="margin-top:10px;font-size:11px;color:var(--text3);font-weight:700;text-align:center;cursor:pointer" onclick="closeModal('allocModal');showModal('allocModal')">🎯 Edit Targets →</div></div>`;
+  }else if(state.assets.length>0&&Object.keys(state.allocTargets||{}).length>0){warningHTML=`<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio on target!</div></div>`;}
   c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const t=getEffectiveTarget(a.scheme);const idealPct=t?.ideal||0;const isCustomTarget=t?.custom||false;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(a.value)+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editAsset('+a.id+')">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteAsset('+a.id+')">✕ Remove</span></div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>'+(isCustomTarget?'Target':'Ideal')+': '+idealPct+'% (±'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
   renderSchemeList();
 }
@@ -3654,14 +3813,14 @@ function restoreFromDrive(){
   setTimeout(()=>doImport(),300);
 }
 
-function syncNow(){backupToDrive();}
+/* syncNow: alias above */
 
 function updateDriveUI(){
   const connected=state.driveConnected;
   const driveStatus=document.getElementById('driveStatusText');
   const driveBadge=document.getElementById('driveStatusBadge');
-  const syncRow=document.getElementById('syncNowRow');
-  const lastSyncEl=document.getElementById('lastSyncText');
+  const syncRow=null;
+  const lastSyncEl=document.getElementById('lastSyncDisplay');
   if(driveStatus)driveStatus.textContent=connected?('Connected: '+state.driveEmail):'Not connected · Encrypted backup';
   if(driveBadge)driveBadge.textContent=connected?'Synced ✓':'Setup ▶';
   if(syncRow)syncRow.style.display=connected?'flex':'none';
@@ -3896,6 +4055,7 @@ function renderWealth(){
 
   // Health score
   renderWealthHealth(netWorth,totalAssets,totalLiab,totalAccts);
+  renderWealthAllocBars();
 }
 
 function renderWealthHealth(netWorth,assets,liab,accts){
@@ -4169,5 +4329,35 @@ initFpButton();
 initGoogleDrive();
 if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
 </script>
+<!-- ALLOCATION TARGET MODAL -->
+<!-- ASSET THRESHOLD WARNING MODAL -->
+<div class="modal-bg" id="allocWarnModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="font-size:32px;text-align:center;margin-bottom:8px">⚠️</div>
+    <div class="modal-title" style="text-align:center;justify-content:center;color:var(--red)">Allocation Limit Exceeded</div>
+    <div id="allocWarnBody" style="font-size:13px;color:var(--text2);font-weight:600;line-height:1.7;margin-bottom:16px;background:rgba(255,69,105,0.07);border:1px solid rgba(255,69,105,0.2);border-radius:12px;padding:12px"></div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:16px;text-align:center">Adjust your target before adding, or add anyway to override.</div>
+    <button class="btn-go" onclick="allocWarnAdjust()" style="background:var(--accent);margin-bottom:8px">🎯 Adjust Target</button>
+    <button class="btn-cancel" onclick="allocWarnForce()" style="width:100%;margin-bottom:8px">➕ Add Anyway</button>
+    <button class="btn-cancel" onclick="closeModal('allocWarnModal')" style="width:100%">✕ Cancel</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="allocModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="modal-title" style="margin:0">🎯 Allocation Targets</div>
+      <span id="allocModalTotal" style="font-size:14px;font-weight:900;color:var(--text3)">0%</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Tap value → edit → Enter or tap away to save. Total should be 100%.</div>
+    <div id="allocModalRows"></div>
+    <button class="btn-cancel" onclick="resetAllocTargets()" style="margin-top:8px;width:100%">↺ Reset to Defaults</button>
+    <button class="btn-go" onclick="closeModal('allocModal')" style="margin-top:8px">✅ Done</button>
+  </div>
+</div>
+
+
 </body>
 </html>
