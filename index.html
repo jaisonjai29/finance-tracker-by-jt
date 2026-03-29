@@ -4465,7 +4465,7 @@ function renderWealthSection(type){
         +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'
         +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'
       +'</div>'
-      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmt(Math.abs(ac.balance))+'</div>'
+      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(Math.abs(ac.balance))+'</div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
         +'<button onclick="editAcct(\''+ac.id+'\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
@@ -4545,12 +4545,22 @@ function renderWealth(){
   const totalAccts=state.accounts.reduce((s,a)=>s+a.balance,0);
   const netWorth=totalAssets+totalAccts-totalLiab;
 
-  document.getElementById('wealthNetWorth').textContent=fmt(Math.abs(netWorth));
+  var nwEl=document.getElementById('wealthNetWorth');
+  nwEl.textContent=(netWorth<0?'－':'')+fmt(Math.abs(netWorth));
+  nwEl.style.color=netWorth<0?'var(--red)':netWorth>0?'var(--green)':'var(--text)';
   document.getElementById('wealthTotalAssets').textContent=fmt(totalAssets);
   document.getElementById('wealthTotalDebts').textContent=fmt(totalLiab);
-  document.getElementById('wealthTotalAccts').textContent=fmt(totalAccts);
+  // Cash & Bank stat box: show sign + switch color green/red
+  var acctStatEl=document.getElementById('wealthTotalAccts');
+  acctStatEl.textContent=(totalAccts<0?'－':'')+fmt(Math.abs(totalAccts));
+  var acctBox=acctStatEl.closest('.stat-box');
+  if(acctBox){
+    acctBox.className='stat-box '+(totalAccts<0?'sr':'sb');
+    var acctEmoji=acctBox.querySelector('.stat-emoji');
+    if(acctEmoji)acctEmoji.textContent=totalAccts<0?'⚠️':'🏦';
+  }
   document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(totalAssets);
-  document.getElementById('wealthAcctsTotal').textContent=state.currSymbol+fmt(totalAccts);
+  document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(Math.abs(totalAccts));
   document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(totalLiab);
 
   const badge=document.getElementById('wealthBadge');
