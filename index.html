@@ -102,42 +102,43 @@
   radial-gradient(ellipse 60% 40% at 75% 80%,rgba(0,176,255,0.05) 0%,transparent 55%);
   pointer-events:none;z-index:0;}
 
-/* ══ CRIMSON — Blood Moon Dark ══ */
-[data-theme="crimson"]{
-  --accent:#ff2d55;--accent2:#ff6b81;--accent-text:#fff;
-  --accent-glow:rgba(255,45,85,0.35);
-  --bg:#0a0005;--bg2:#14000a;--bg3:#200010;
-  --card:#14000a;--card2:#1c000e;
-  --border:rgba(255,45,85,0.1);--border2:rgba(255,45,85,0.22);
-  --text:#fff0f3;--text2:#cc6680;--text3:#6a1a30;
-  --green:#22c55e;--red:#ff2d55;--blue:#64b5f6;
-  --yellow:#ffd740;--purple:#ce93d8;--orange:#ff9e40;--teal:#26c6da;
-  --glass:rgba(255,45,85,0.03);--glass-border:rgba(255,45,85,0.1);
-  --shadow:0 8px 32px rgba(255,45,85,0.18);
+/* ══ NEBULA — Deep Space Galaxy ══ */
+[data-theme="nebula"]{
+  --accent:#c084fc;--accent2:#e879f9;--accent-text:#1a0030;
+  --accent-glow:rgba(192,132,252,0.38);
+  --bg:#06020f;--bg2:#0d0520;--bg3:#160a30;
+  --card:#0d0520;--card2:#160a2c;
+  --border:rgba(192,132,252,0.1);--border2:rgba(232,121,249,0.2);
+  --text:#f3e8ff;--text2:#a78bc4;--text3:#4a2d6a;
+  --green:#4ade80;--red:#f87171;--blue:#818cf8;
+  --yellow:#fde68a;--purple:#c084fc;--orange:#fb923c;--teal:#34d399;
+  --glass:rgba(192,132,252,0.04);--glass-border:rgba(192,132,252,0.12);
+  --shadow:0 8px 32px rgba(192,132,252,0.2);
 }
-[data-theme="crimson"] body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 75% 50% at 20% 0%,rgba(255,45,85,0.1) 0%,transparent 60%),
-  radial-gradient(ellipse 55% 45% at 85% 90%,rgba(206,30,60,0.07) 0%,transparent 55%),
-  radial-gradient(ellipse 35% 40% at 60% 50%,rgba(255,107,129,0.04) 0%,transparent 60%);
+[data-theme="nebula"] body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 70% 55% at 15% 10%,rgba(192,132,252,0.12) 0%,transparent 60%),
+  radial-gradient(ellipse 55% 45% at 85% 20%,rgba(232,121,249,0.09) 0%,transparent 55%),
+  radial-gradient(ellipse 50% 60% at 50% 90%,rgba(129,140,248,0.07) 0%,transparent 60%),
+  radial-gradient(ellipse 30% 30% at 70% 55%,rgba(192,132,252,0.05) 0%,transparent 50%);
   pointer-events:none;z-index:0;}
 
-/* ══ EMBER — Volcanic Sunset ══ */
-[data-theme="ember"]{
-  --accent:#ff6a00;--accent2:#ff9a3c;--accent-text:#fff;
-  --accent-glow:rgba(255,106,0,0.35);
-  --bg:#090400;--bg2:#120800;--bg3:#1e1000;
-  --card:#120800;--card2:#1a0e00;
-  --border:rgba(255,106,0,0.1);--border2:rgba(255,106,0,0.22);
-  --text:#fff8f0;--text2:#cc7a30;--text3:#6a3500;
-  --green:#66bb6a;--red:#ff5252;--blue:#64b5f6;
-  --yellow:#ffd740;--purple:#ce93d8;--orange:#ff6a00;--teal:#26c6da;
-  --glass:rgba(255,106,0,0.03);--glass-border:rgba(255,106,0,0.1);
-  --shadow:0 8px 32px rgba(255,106,0,0.18);
+/* ══ MATCHA — Japanese Dark Tea ══ */
+[data-theme="matcha"]{
+  --accent:#86efac;--accent2:#4ade80;--accent-text:#052e16;
+  --accent-glow:rgba(134,239,172,0.3);
+  --bg:#030a05;--bg2:#071410;--bg3:#0d2218;
+  --card:#071410;--card2:#0d1e15;
+  --border:rgba(134,239,172,0.09);--border2:rgba(134,239,172,0.18);
+  --text:#ecfdf5;--text2:#6aaa84;--text3:#1e4a30;
+  --green:#86efac;--red:#f87171;--blue:#67e8f9;
+  --yellow:#fde68a;--purple:#c084fc;--orange:#fb923c;--teal:#2dd4bf;
+  --glass:rgba(134,239,172,0.03);--glass-border:rgba(134,239,172,0.1);
+  --shadow:0 8px 32px rgba(134,239,172,0.14);
 }
-[data-theme="ember"] body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 80% 55% at 10% 5%,rgba(255,106,0,0.1) 0%,transparent 60%),
-  radial-gradient(ellipse 60% 50% at 90% 85%,rgba(255,60,0,0.08) 0%,transparent 55%),
-  radial-gradient(ellipse 45% 40% at 55% 45%,rgba(255,154,60,0.05) 0%,transparent 60%);
+[data-theme="matcha"] body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 65% 50% at 80% 5%,rgba(74,222,128,0.08) 0%,transparent 60%),
+  radial-gradient(ellipse 55% 45% at 10% 80%,rgba(134,239,172,0.07) 0%,transparent 55%),
+  radial-gradient(ellipse 40% 50% at 50% 50%,rgba(45,212,191,0.04) 0%,transparent 60%);
   pointer-events:none;z-index:0;}
 
 /* ══ DEFAULT DARK AMBIENT ══ */
@@ -1172,14 +1173,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
             <span style="font-size:9px;font-weight:700;color:rgba(0,229,204,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(0,229,204,0.7);position:relative">✦ AURORA</span>
           </div>
 
-          <div class="theme-sw" style="background:linear-gradient(135deg,#0a0005,#200010);border:1.5px solid rgba(255,45,85,0.45);position:relative;overflow:hidden" onclick="setTheme('crimson',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 75% 60% at 20% 0%,rgba(255,45,85,0.22),transparent),radial-gradient(ellipse 50% 50% at 80% 90%,rgba(206,30,60,0.12),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(255,107,129,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(255,45,85,0.9);position:relative">🔴 CRIMSON</span>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#06020f,#160a30);border:1.5px solid rgba(192,132,252,0.45);position:relative;overflow:hidden" onclick="setTheme('nebula',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 15% 10%,rgba(192,132,252,0.25),transparent),radial-gradient(ellipse 50% 50% at 85% 20%,rgba(232,121,249,0.15),transparent),radial-gradient(ellipse 40% 55% at 50% 90%,rgba(129,140,248,0.12),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:700;color:rgba(232,121,249,0.98);letter-spacing:1.5px;text-shadow:0 0 14px rgba(192,132,252,0.95);position:relative">✦ NEBULA</span>
           </div>
 
-          <div class="theme-sw" style="background:linear-gradient(135deg,#090400,#1e1000);border:1.5px solid rgba(255,106,0,0.45);position:relative;overflow:hidden" onclick="setTheme('ember',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 5%,rgba(255,106,0,0.22),transparent),radial-gradient(ellipse 55% 50% at 85% 85%,rgba(255,60,0,0.14),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(255,154,60,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(255,106,0,0.9);position:relative">🔥 EMBER</span>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#030a05,#0d2218);border:1.5px solid rgba(134,239,172,0.4);position:relative;overflow:hidden" onclick="setTheme('matcha',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 80% 5%,rgba(74,222,128,0.18),transparent),radial-gradient(ellipse 55% 50% at 10% 80%,rgba(134,239,172,0.14),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:700;color:rgba(134,239,172,0.98);letter-spacing:1.5px;text-shadow:0 0 14px rgba(134,239,172,0.85);position:relative">🍵 MATCHA</span>
           </div>
 
         </div>
@@ -5026,8 +5027,8 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            🔴 Added <b style="color:var(--text)">Crimson</b> theme — Blood Moon dark<br>
-            🔥 Added <b style="color:var(--text)">Ember</b> theme — Volcanic Sunset<br>
+            🔴 Added <b style="color:var(--text)">Nebula</b> theme — Deep Space Galaxy<br>
+            🍵 Added <b style="color:var(--text)">Matcha</b> theme — Japanese Dark Tea<br>
             🎨 Theme grid updated to 3-column layout<br>
             🔄 Silent Google token auto-refresh on page reload<br>
             ☁️ Drive sync no longer shows "Sign in first" after token expires<br>
