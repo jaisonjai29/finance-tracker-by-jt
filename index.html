@@ -3642,6 +3642,49 @@ function getClientId(){
   try{ return JSON.parse(localStorage.getItem('ft_gclient_id')||'null'); }catch(e){ return null; }
 }
 
+// ── Silent token refresh (mirrors pass_man.html logic) ───────────────────────
+var _tokenRefreshPromise = null;
+function refreshToken(){
+  if(_tokenRefreshPromise) return _tokenRefreshPromise;
+  _tokenRefreshPromise = new Promise(function(resolve){
+    var cid = getClientId();
+    if(!cid || !GIS_LOADED){ _tokenRefreshPromise = null; resolve(false); return; }
+    try{
+      var tc = google.accounts.oauth2.initTokenClient({
+        client_id: cid,
+        scope: TOKEN_SCOPES,
+        callback: function(resp){
+          _tokenRefreshPromise = null;
+          if(resp.error || !resp.access_token){ resolve(false); return; }
+          gAccessToken = resp.access_token;
+          // Update stored session expiry
+          var s = localStorage.getItem('ft_gsession');
+          try{ var o=JSON.parse(s); o.access_token=gAccessToken; o.expiry=Date.now()+(resp.expires_in||3600)*1000; localStorage.setItem('ft_gsession',JSON.stringify(o)); }catch(e){}
+          resolve(true);
+        }
+      });
+      // prompt:'' = silent refresh — no popup if user already consented
+      tc.requestAccessToken({prompt:''});
+    }catch(e){ _tokenRefreshPromise = null; resolve(false); }
+  });
+  return _tokenRefreshPromise;
+}
+
+// Drive fetch with automatic 401 retry after silent token refresh
+function driveFetch(url, opts, retry){
+  if(retry === undefined) retry = true;
+  var headers = Object.assign({}, (opts && opts.headers) || {}, { Authorization: 'Bearer ' + gAccessToken });
+  return fetch(url, Object.assign({}, opts, { headers: headers })).then(function(r){
+    if(r.status === 401 && retry){
+      return refreshToken().then(function(ok){
+        if(ok) return driveFetch(url, opts, false);
+        return r;
+      });
+    }
+    return r;
+  });
+}
+
 // ── Load Google SDKs ─────────────────────────────────────────────────────────
 function initGoogleDrive(){
   var cid = getClientId();
@@ -3857,9 +3900,8 @@ var DRIVE_FILE_NAME = 'finance_tracker_backup.json';
 
 function findDriveFile(){
   var q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
-  return fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc',{
-    headers:{Authorization:'Bearer '+gAccessToken}
-  }).then(function(r){ return r.json(); }).then(function(res){
+  return driveFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc'
+  ).then(function(r){ return r.json(); }).then(function(res){
     if(res.error){ console.error('findDriveFile error:',res.error); return null; }
     if(!res.files||res.files.length===0) return null;
     gDriveFileId=res.files[0].id;
@@ -3869,13 +3911,12 @@ function findDriveFile(){
 
 function deleteAllDriveBackups(){
   var q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
-  return fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)&spaces=drive',{
-    headers:{Authorization:'Bearer '+gAccessToken}
-  }).then(function(r){ return r.json(); }).then(function(res){
+  return driveFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)&spaces=drive'
+  ).then(function(r){ return r.json(); }).then(function(res){
     if(!res.files||!res.files.length) return;
     return Promise.all(res.files.map(function(f){
-      return fetch('https://www.googleapis.com/drive/v3/files/'+f.id,{
-        method:'DELETE',headers:{Authorization:'Bearer '+gAccessToken}
+      return driveFetch('https://www.googleapis.com/drive/v3/files/'+f.id,{
+        method:'DELETE'
       }).catch(function(){});
     }));
   }).catch(function(){});
@@ -3885,6 +3926,9 @@ function syncToCloud(){
   if(!currentUser||!gAccessToken){
     showToast('Sign in first to sync','yellow'); return;
   }
+  // Silently refresh token if near expiry (within 60s)
+  var _sess = localStorage.getItem('ft_gsession');
+  try{ var _so=JSON.parse(_sess); if(_so.expiry < Date.now()+60000) refreshToken(); }catch(e){}
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Syncing...';
@@ -3921,9 +3965,9 @@ function syncToCloud(){
         +'Content-Type: application/json'+CRLF+CRLF
         +payload+CRLF
         +'--'+boundary+'--';
-      return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+      return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
         method:'POST',
-        headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':'multipart/related; boundary='+boundary},
+        headers:{'Content-Type':'multipart/related; boundary='+boundary},
         body:body
       }).then(function(r){ return r.json(); });
     });
@@ -3953,6 +3997,9 @@ function loadFromCloud(){
   if(!currentUser||!gAccessToken){
     showToast('Sign in first to load','yellow'); return;
   }
+  // Silently refresh token if near expiry (within 60s)
+  var _sess2 = localStorage.getItem('ft_gsession');
+  try{ var _so2=JSON.parse(_sess2); if(_so2.expiry < Date.now()+60000) refreshToken(); }catch(e){}
   var el=document.getElementById('cloudSyncStatus');
   var el2=document.getElementById('lastSyncDisplay');
   if(el) el.textContent='Loading from Drive...';
@@ -3971,9 +4018,8 @@ function loadFromCloud(){
       showToast('No backup found. Sync first from another device.','yellow');
       return;
     }
-    return fetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media',{
-      headers:{Authorization:'Bearer '+gAccessToken}
-    }).then(function(r){ return r.json(); });
+    return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media'
+    ).then(function(r){ return r.json(); });
   }).then(function(payload){
     if(!payload) return;
     clearTimeout(timer); if(timedOut) return;
