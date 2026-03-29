@@ -102,6 +102,44 @@
   radial-gradient(ellipse 60% 40% at 75% 80%,rgba(0,176,255,0.05) 0%,transparent 55%);
   pointer-events:none;z-index:0;}
 
+/* ══ CRIMSON — Blood Moon Dark ══ */
+[data-theme="crimson"]{
+  --accent:#ff2d55;--accent2:#ff6b81;--accent-text:#fff;
+  --accent-glow:rgba(255,45,85,0.35);
+  --bg:#0a0005;--bg2:#14000a;--bg3:#200010;
+  --card:#14000a;--card2:#1c000e;
+  --border:rgba(255,45,85,0.1);--border2:rgba(255,45,85,0.22);
+  --text:#fff0f3;--text2:#cc6680;--text3:#6a1a30;
+  --green:#22c55e;--red:#ff2d55;--blue:#64b5f6;
+  --yellow:#ffd740;--purple:#ce93d8;--orange:#ff9e40;--teal:#26c6da;
+  --glass:rgba(255,45,85,0.03);--glass-border:rgba(255,45,85,0.1);
+  --shadow:0 8px 32px rgba(255,45,85,0.18);
+}
+[data-theme="crimson"] body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 75% 50% at 20% 0%,rgba(255,45,85,0.1) 0%,transparent 60%),
+  radial-gradient(ellipse 55% 45% at 85% 90%,rgba(206,30,60,0.07) 0%,transparent 55%),
+  radial-gradient(ellipse 35% 40% at 60% 50%,rgba(255,107,129,0.04) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+
+/* ══ EMBER — Volcanic Sunset ══ */
+[data-theme="ember"]{
+  --accent:#ff6a00;--accent2:#ff9a3c;--accent-text:#fff;
+  --accent-glow:rgba(255,106,0,0.35);
+  --bg:#090400;--bg2:#120800;--bg3:#1e1000;
+  --card:#120800;--card2:#1a0e00;
+  --border:rgba(255,106,0,0.1);--border2:rgba(255,106,0,0.22);
+  --text:#fff8f0;--text2:#cc7a30;--text3:#6a3500;
+  --green:#66bb6a;--red:#ff5252;--blue:#64b5f6;
+  --yellow:#ffd740;--purple:#ce93d8;--orange:#ff6a00;--teal:#26c6da;
+  --glass:rgba(255,106,0,0.03);--glass-border:rgba(255,106,0,0.1);
+  --shadow:0 8px 32px rgba(255,106,0,0.18);
+}
+[data-theme="ember"] body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 80% 55% at 10% 5%,rgba(255,106,0,0.1) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 50% at 90% 85%,rgba(255,60,0,0.08) 0%,transparent 55%),
+  radial-gradient(ellipse 45% 40% at 55% 45%,rgba(255,154,60,0.05) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+
 /* ══ DEFAULT DARK AMBIENT ══ */
 :root body::before, [data-theme="dark"] body::before{
   background:
@@ -1112,7 +1150,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div class="set-sec">
         <div class="set-sec-title">🎨 Theme</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">
 
           <div class="theme-sw on" style="background:linear-gradient(135deg,#0a0a0f,#1a1a24);border:1.5px solid rgba(124,92,252,0.4);position:relative;overflow:hidden" onclick="setTheme('dark',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(124,92,252,0.2),transparent);pointer-events:none"></div>
@@ -1132,6 +1170,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="theme-sw" style="background:linear-gradient(135deg,#020c10,#072a38);border:1.5px solid rgba(0,229,204,0.4);position:relative;overflow:hidden" onclick="setTheme('aurora',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 30% 50%,rgba(0,229,204,0.18),transparent),radial-gradient(ellipse 50% 60% at 75% 30%,rgba(64,196,255,0.12),transparent);pointer-events:none"></div>
             <span style="font-size:9px;font-weight:700;color:rgba(0,229,204,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(0,229,204,0.7);position:relative">✦ AURORA</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#0a0005,#200010);border:1.5px solid rgba(255,45,85,0.45);position:relative;overflow:hidden" onclick="setTheme('crimson',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 75% 60% at 20% 0%,rgba(255,45,85,0.22),transparent),radial-gradient(ellipse 50% 50% at 80% 90%,rgba(206,30,60,0.12),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:700;color:rgba(255,107,129,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(255,45,85,0.9);position:relative">🔴 CRIMSON</span>
+          </div>
+
+          <div class="theme-sw" style="background:linear-gradient(135deg,#090400,#1e1000);border:1.5px solid rgba(255,106,0,0.45);position:relative;overflow:hidden" onclick="setTheme('ember',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 5%,rgba(255,106,0,0.22),transparent),radial-gradient(ellipse 55% 50% at 85% 85%,rgba(255,60,0,0.14),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:700;color:rgba(255,154,60,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(255,106,0,0.9);position:relative">🔥 EMBER</span>
           </div>
 
         </div>
@@ -1223,7 +1271,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         </div>
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
-      <div style="text-align:center;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;padding-bottom:16px;opacity:0.6">Build 20250321-v9 · <span style="color:var(--accent)">Latest</span></div>
+      <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260329-v10 · <span style="color:var(--accent)">Latest</span></span>
+        <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -3734,9 +3785,21 @@ function tryBootGoogle(){
             if(sess.id) currentUser.id=sess.id;
           }
         } else {
-          // Token expired — remove silently. Login state unaffected.
+          // Token expired — silently refresh if user was signed in, don't wipe gAccessToken yet
           localStorage.removeItem('ft_gsession');
           gAccessToken=null;
+          if(state.isLoggedIn && state.userName){
+            // Attempt silent refresh — no popup, no sign-out
+            setTimeout(function(){
+              refreshToken().then(function(ok){
+                if(!ok){
+                  // Silent refresh failed (user revoked access etc) — now sign out cleanly
+                  gAccessToken=null;
+                  updateAuthUI();
+                }
+              });
+            }, 500);
+          }
         }
       }catch(e){
         localStorage.removeItem('ft_gsession');
@@ -3923,8 +3986,17 @@ function deleteAllDriveBackups(){
 }
 
 function syncToCloud(){
-  if(!currentUser||!gAccessToken){
+  if(!currentUser && !state.isLoggedIn){
     showToast('Sign in first to sync','yellow'); return;
+  }
+  // If token missing but user is signed in, refresh silently first then retry
+  if(!gAccessToken){
+    showToast('Reconnecting to Google...','blue');
+    refreshToken().then(function(ok){
+      if(ok){ syncToCloud(); }
+      else { showToast('Session expired — please sign in again','yellow'); }
+    });
+    return;
   }
   // Silently refresh token if near expiry (within 60s)
   var _sess = localStorage.getItem('ft_gsession');
@@ -3994,8 +4066,17 @@ function syncToCloud(){
 }
 
 function loadFromCloud(){
-  if(!currentUser||!gAccessToken){
+  if(!currentUser && !state.isLoggedIn){
     showToast('Sign in first to load','yellow'); return;
+  }
+  // If token missing but user is signed in, refresh silently first then retry
+  if(!gAccessToken){
+    showToast('Reconnecting to Google...','blue');
+    refreshToken().then(function(ok){
+      if(ok){ loadFromCloud(); }
+      else{ showToast('Session expired — please sign in again','yellow'); }
+    });
+    return;
   }
   // Silently refresh token if near expiry (within 60s)
   var _sess2 = localStorage.getItem('ft_gsession');
@@ -4759,7 +4840,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   if(!('serviceWorker' in navigator)) return;
 
   // ── Version stamp: change this string on every release to force SW update ──
-  var BUILD = 'ft-build-20250321-v9';
+  var BUILD = 'ft-build-20260329-v10';
 
   var swCode = [
     "var CACHE_NAME = '" + BUILD + "';",
@@ -4921,6 +5002,116 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     <button class="btn-go" onclick="closeModal('signoutWarnModal');exportData()" style="margin-bottom:8px">📤 Export Backup First</button>
     <button class="btn-cancel" onclick="closeModal('signoutWarnModal');_doSignoutAndClear()" style="width:100%;margin-bottom:8px;color:var(--red);border-color:rgba(255,69,105,0.3)">🚪 Sign Out & Delete Data</button>
     <button class="btn-cancel" onclick="closeModal('signoutWarnModal')" style="width:100%">✕ Cancel</button>
+  </div>
+</div>
+
+<!-- BUILD HISTORY MODAL -->
+<div class="modal-bg" id="buildHistoryModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 Build History</div>
+
+    <!-- Timeline -->
+    <div style="display:flex;flex-direction:column;gap:0">
+
+      <!-- v10 — Current -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">10</div>
+          <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v10 — 29 Mar 2026</span>
+            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🔴 Added <b style="color:var(--text)">Crimson</b> theme — Blood Moon dark<br>
+            🔥 Added <b style="color:var(--text)">Ember</b> theme — Volcanic Sunset<br>
+            🎨 Theme grid updated to 3-column layout<br>
+            🔄 Silent Google token auto-refresh on page reload<br>
+            ☁️ Drive sync no longer shows "Sign in first" after token expires<br>
+            🛡️ Auto-reconnect before sync &amp; load from cloud
+          </div>
+        </div>
+      </div>
+
+      <!-- v9 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">9</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v9 — 21 Mar 2025</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            ☁️ Google Drive sync with encrypted backup<br>
+            🔵 Ocean &amp; Aurora themes added<br>
+            📊 Analytics chart improvements<br>
+            💎 Wealth Statement page<br>
+            🤖 AI Insights with Claude integration
+          </div>
+        </div>
+      </div>
+
+      <!-- v8 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">8</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v8 — Previous</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            📅 Recurring transactions engine<br>
+            🔔 Bill reminders &amp; due-date tracking<br>
+            🏦 Multi-account support<br>
+            🎯 Budget categories with progress bars<br>
+            📷 Receipt scanner via camera
+          </div>
+        </div>
+      </div>
+
+      <!-- v7 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">7</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v7 — Previous</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            👨‍👩‍👧‍👦 Family member tracking per transaction<br>
+            💸 Debts &amp; loan EMI tracker<br>
+            💼 Assets &amp; investment portfolio<br>
+            🎯 Savings goals with progress
+          </div>
+        </div>
+      </div>
+
+      <!-- v1–6 -->
+      <div style="display:flex;gap:14px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0">1–6</div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v1–v6 — Foundation</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            💰 Core income &amp; expense tracking<br>
+            🌙 Dark / Light themes<br>
+            📤 JSON export &amp; import<br>
+            🔒 PIN lock screen<br>
+            📲 PWA install support
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /timeline -->
+
+    <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
+      Current build: <span style="color:var(--accent)">20260329-v10</span>
+    </div>
+    <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
 </div>
 
