@@ -357,18 +357,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 }
 
 /* ══ TRANSACTION ITEM ══ */
-.tx{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s}
+.tx{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s}
 .tx:last-child{border-bottom:none}
 .tx:active{opacity:.7}
 .tx-ico{
   width:42px;height:42px;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
-  font-size:19px;flex-shrink:0;
+  font-size:19px;flex-shrink:0;margin-top:1px;
   background:var(--glass);border:1px solid var(--glass-border);
 }
 .tx-body{flex:1;min-width:0}
-.tx-name{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tx-meta{font-size:10px;color:var(--text3);font-weight:500}
+.tx-name{font-size:13px;font-weight:700;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px}
+.tx-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.tx-badge{display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:700;white-space:nowrap;line-height:1.4}
 .tx-amt{font-family:var(--font);font-size:14px;font-weight:700;flex-shrink:0;letter-spacing:-0.2px}
 
 /* ══ EMPTY STATE ══ */
@@ -1275,10 +1277,39 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <button class="type-btn exp" id="editTxTypeExp" onclick="setEditTxType('expense')">📤 Expense</button>
     </div>
     <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="editTxAmt" placeholder="0.00" inputmode="decimal"></div>
+    <div class="field">
+      <div class="field-label" id="editCatSelectLabel">📂 Category</div>
+      <select class="field-input" id="editTxCatSelect" onchange="onEditCatSelectChange(this)">
+        <option value="">-- Select --</option>
+      </select>
+    </div>
+    <div class="field" id="editPlatformField" style="display:none">
+      <div class="field-label">🛒 Platform / Where bought</div>
+      <select class="field-input" id="editTxPlatform">
+        <option value="">-- Select Platform --</option>
+      </select>
+    </div>
     <div class="field"><div class="field-label">📝 Description</div><input type="text" class="field-input" id="editTxDesc" placeholder="What was this for?"></div>
     <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="editTxDate"></div>
-    <div class="field"><div class="field-label">🏦 Account</div><select class="field-input" id="editTxAccount"><option value="">-- No Account --</option></select></div>
+    <div class="field" id="editTxAccountField"><div class="field-label" id="editTxAccountLabel">🏦 Deduct from Account</div><select class="field-input" id="editTxAccount"><option value="">-- No Account --</option></select></div>
+    <div class="field" id="editTxPayMethodField" style="display:none">
+      <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
+      <select class="field-input" id="editTxPayMethod">
+        <option value="">-- Select Method --</option>
+        <option value="UPI / GPay">📱 UPI / GPay</option>
+        <option value="Credit Card">💳 Credit Card</option>
+        <option value="Debit Card">💳 Debit Card</option>
+        <option value="Net Banking / NEFT">🏦 Net Banking / NEFT</option>
+        <option value="Cash">💵 Cash</option>
+        <option value="Wallet">👛 Wallet</option>
+        <option value="Other">🔮 Other</option>
+      </select>
+    </div>
     <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="editTxNotes" placeholder="Optional notes"></div>
+    <div class="field">
+      <div class="field-label">👤 For</div>
+      <div class="chips" id="editMemberChips" style="gap:6px"></div>
+    </div>
     <input type="hidden" id="editTxId">
     <input type="hidden" id="editTxOrigAmt">
     <input type="hidden" id="editTxOrigType">
@@ -1314,6 +1345,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <input type="hidden" id="txDesc">
     <div class="chips" id="catChips" style="display:none"></div>
     <div class="field" id="txAccountField"><div class="field-label">🏦 Deposit to Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
+    <div class="field" id="txPayMethodField" style="display:none">
+      <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
+      <select class="field-input" id="txPayMethod">
+        <option value="">-- Select Method --</option>
+        <option value="UPI / GPay">📱 UPI / GPay</option>
+        <option value="Credit Card">💳 Credit Card</option>
+        <option value="Debit Card">💳 Debit Card</option>
+        <option value="Net Banking / NEFT">🏦 Net Banking / NEFT</option>
+        <option value="Cash">💵 Cash</option>
+        <option value="Wallet">👛 Wallet</option>
+        <option value="Other">🔮 Other</option>
+      </select>
+    </div>
     <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
     <div class="field">
@@ -2058,7 +2102,7 @@ function closeModal(id){document.getElementById(id).classList.remove('on');if(id
 document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});});
 
 // ======== TRANSACTIONS ========
-function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';}
+function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';var pmf=document.getElementById('txPayMethodField');if(pmf)pmf.style.display=(t==='expense')?'block':'none';}
 function renderCatChips(){
   // Populate the category select dropdown
   var sel=document.getElementById('txCatSelect');
@@ -2125,11 +2169,13 @@ function saveTx(){
   const cat=getSelCatFromSelect();
   const desc=document.getElementById('txDesc').value||cat;
   const platform=document.getElementById('txPlatform')?.value||'';
+  // payMethod = UPI/Credit Card/etc — metadata only, no balance effect
+  const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
   const member=getSelMember();
-  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct,liabLink:liabLink,member:member,platform:platform};
+  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
   state.transactions.unshift(tx);
-  // Update account balance
+  // Balance only moves on the real bank/cash account — never on UPI/card (those are just payment rails)
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amt:-amt);}}
   // Auto-reduce linked liability remaining
   if(liabLink&&txType==='expense'){
@@ -2171,6 +2217,7 @@ function resetTxForm(){
   document.getElementById('txNotes').value='';
   var sel=document.getElementById('txCatSelect');if(sel)sel.value='';
   var plat=document.getElementById('txPlatform');if(plat)plat.value='';
+  var pm=document.getElementById('txPayMethod');if(pm)pm.value='';
   var ll=document.getElementById('txLiabLink');if(ll)ll.value='';
   setTxType('income');setRecurToggle(false);
 }
@@ -2179,13 +2226,17 @@ function txHTML(tx){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
   const acct=tx.account?state.accounts.find(a=>String(a.id)===String(tx.account)):null;
-  const acctBadge=acct?`<span style="margin-left:4px;background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${acct.name}</span>`:'';
-  const member=tx.member||'Self';
-  const memberColor=member==='Self'?'var(--accent)':'var(--teal)';
-  const memberBadge=`<span style="margin-left:4px;background:${memberColor}22;color:${memberColor};border:1px solid ${memberColor}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">👤 ${member}</span>`;
+  // Collect badges into a dedicated wrapping row — never crammed into the title line
+  const badges=[];
+  if(acct) badges.push(`<span class="tx-badge" style="background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44">${acct.name}</span>`);
+  const member=tx.member&&tx.member!=='Self'?tx.member:null;
+  if(member) badges.push(`<span class="tx-badge" style="background:rgba(29,233,182,0.12);color:var(--teal);border:1px solid rgba(29,233,182,0.3)">👤 ${member}</span>`);
   const platInfo=tx.platform?PLATFORMS.find(function(p){return p.name===tx.platform;}):null;
-  const platBadge=platInfo?`<span style="margin-left:4px;background:rgba(255,215,64,0.12);color:var(--yellow);border:1px solid rgba(255,215,64,0.3);padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${platInfo.emoji} ${platInfo.name}</span>`:'';
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}${memberBadge}${platBadge}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
+  if(platInfo) badges.push(`<span class="tx-badge" style="background:rgba(255,215,64,0.1);color:var(--yellow);border:1px solid rgba(255,215,64,0.25)">${platInfo.emoji} ${platInfo.name}</span>`);
+  const pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛'};
+  if(tx.payMethod) badges.push(`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${pmIcons[tx.payMethod]||'💳'} ${tx.payMethod}</span>`);
+  const badgeRow=badges.length?`<div class="tx-badges">${badges.join('')}</div>`:'';
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
 function customConfirm(icon, title, msg, onOk){
@@ -2209,11 +2260,22 @@ function editTx(id){
   document.getElementById('editTxOrigAmt').value=tx.amount;
   document.getElementById('editTxOrigType').value=tx.type;
   document.getElementById('editTxOrigAcct').value=tx.account||'';
-  // Populate account select
-  const sel=document.getElementById('editTxAccount');
-  sel.innerHTML='<option value="">-- No Account --</option>'+state.accounts.map(a=>'<option value="'+a.id+'"'+(String(a.id)===String(tx.account)?' selected':'')+'>'+a.name+'</option>').join('');
-  // Set type buttons
+  // Set type — also repopulates category dropdown
   setEditTxType(tx.type);
+  // Restore category, platform, payMethod after dropdown is built
+  setTimeout(function(){
+    var catSel=document.getElementById('editTxCatSelect');
+    if(catSel&&tx.category)catSel.value=tx.category;
+    var platSel=document.getElementById('editTxPlatform');
+    if(platSel&&tx.platform)platSel.value=tx.platform;
+    var pmSel=document.getElementById('editTxPayMethod');
+    if(pmSel&&tx.payMethod)pmSel.value=tx.payMethod;
+    // Restore account after setEditTxType rebuilt it
+    var accSel=document.getElementById('editTxAccount');
+    if(accSel&&tx.account)accSel.value=tx.account;
+  },0);
+  // Member chips
+  renderEditMemberChips(tx.member||'Self');
   showModal('editTxModal');
 }
 var editTxType='expense';
@@ -2223,6 +2285,88 @@ function setEditTxType(t){
   document.getElementById('editTxTypeInc').classList.toggle('inc',t==='income');
   document.getElementById('editTxTypeExp').classList.toggle('on',t==='expense');
   document.getElementById('editTxTypeExp').classList.toggle('exp',t==='expense');
+  // Repopulate category select for this type
+  var sel=document.getElementById('editTxCatSelect');
+  var lbl=document.getElementById('editCatSelectLabel');
+  var platField=document.getElementById('editPlatformField');
+  var platSel=document.getElementById('editTxPlatform');
+  if(!sel)return;
+  var prevCat=sel.value;
+  sel.innerHTML='<option value="">-- Select --</option>';
+  if(t==='income'){
+    if(lbl)lbl.textContent='💰 Income Source';
+    if(platField)platField.style.display='none';
+    INCOME_CATS.forEach(function(cat){
+      var opt=document.createElement('option');
+      opt.value=cat;opt.textContent=(CAT_EMOJI[cat]||'🔮')+' '+cat;
+      sel.appendChild(opt);
+    });
+  } else {
+    if(lbl)lbl.textContent='📂 Expense Category';
+    if(platField)platField.style.display='block';
+    if(platSel){
+      platSel.innerHTML='<option value="">-- Select Platform --</option>';
+      PLATFORMS.forEach(function(p){
+        var opt=document.createElement('option');
+        opt.value=p.name;opt.textContent=p.emoji+' '+p.name;
+        platSel.appendChild(opt);
+      });
+    }
+    Object.entries(EXPENSE_CATS_GROUPED).forEach(function([group,cats]){
+      var grpOpt=document.createElement('option');
+      grpOpt.disabled=true;grpOpt.textContent='── '+group+' ──';
+      sel.appendChild(grpOpt);
+      cats.forEach(function(cat){
+        var opt=document.createElement('option');
+        opt.value=cat;opt.textContent=(CAT_EMOJI[cat]||'🔮')+' '+cat;
+        sel.appendChild(opt);
+      });
+    });
+  }
+  // Restore previous selection if still valid
+  if(prevCat) sel.value=prevCat;
+  // Show/hide pay method field and update account label
+  var pmField=document.getElementById('editTxPayMethodField');
+  if(pmField) pmField.style.display=(t==='expense')?'block':'none';
+  var accLbl=document.getElementById('editTxAccountLabel');
+  if(accLbl) accLbl.textContent=t==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
+  // Repopulate account select with real accounts only
+  var accSel=document.getElementById('editTxAccount');
+  if(accSel){
+    var curr=accSel.value;
+    var filtered=state.accounts.filter(function(a){return INCOME_ACCT_TYPES.indexOf(a.type)>-1;});
+    if(!filtered.length) filtered=state.accounts;
+    accSel.innerHTML='<option value="">-- Select Account --</option>'+filtered.map(function(a){
+      var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
+      var bal=a.balance!==0?' · '+state.currSymbol+fmt(Math.abs(a.balance)):'';
+      return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+' ['+a.type+']'+bal+'</option>';
+    }).join('');
+  }
+}
+function onEditCatSelectChange(sel){
+  // Update description to match category if description is empty or was same as old cat
+  var descEl=document.getElementById('editTxDesc');
+  if(descEl&&(!descEl.value||EXPENSE_CATS.includes(descEl.value)||INCOME_CATS.includes(descEl.value))){
+    descEl.value=sel.value||'';
+  }
+}
+function renderEditMemberChips(selectedMember){
+  var c=document.getElementById('editMemberChips');
+  if(!c)return;
+  var members=['Self'].concat((state.familyMembers||[]).map(function(m){return m.name;}));
+  c.innerHTML='';
+  members.forEach(function(m){
+    var ch=document.createElement('div');
+    ch.className='chip'+(m===(selectedMember||'Self')?' on':'');
+    ch.textContent='👤 '+m;
+    ch.dataset.member=m;
+    ch.onclick=function(){c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});ch.classList.add('on');};
+    c.appendChild(ch);
+  });
+}
+function getEditSelMember(){
+  var ch=document.querySelector('#editMemberChips .chip.on');
+  return ch?ch.dataset.member:'Self';
 }
 function saveEditTx(){
   const id=parseInt(document.getElementById('editTxId').value);
@@ -2231,17 +2375,28 @@ function saveEditTx(){
   const date=document.getElementById('editTxDate').value;
   const notes=document.getElementById('editTxNotes').value.trim();
   const acct=document.getElementById('editTxAccount').value;
+  const cat=(document.getElementById('editTxCatSelect')?.value)||'Other';
+  const platform=document.getElementById('editTxPlatform')?.value||'';
+  // payMethod = UPI/Credit Card/etc — metadata only, no balance effect
+  const payMethod=editTxType==='expense'?(document.getElementById('editTxPayMethod')?.value||''):'';
+  const member=getEditSelMember();
   const origAmt=parseFloat(document.getElementById('editTxOrigAmt').value);
   const origType=document.getElementById('editTxOrigType').value;
   const origAcct=document.getElementById('editTxOrigAcct').value;
-  if(!amt||!desc||!date){showToast('Fill amount, description and date','yellow');return;}
+  if(!amt||!date){showToast('Fill amount and date','yellow');return;}
   const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
-  // Reverse original account effect
+  // Reverse original real-account balance effect
   if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
-  // Apply new values
-  tx.type=editTxType;tx.amount=amt;tx.desc=desc;tx.date=date;tx.notes=notes;tx.account=acct;
-  tx.category=tx.category||'Other';tx.emoji=CAT_EMOJI[tx.category]||'🔮';
-  // Apply new account effect
+  // Apply all updated fields
+  tx.type=editTxType;tx.amount=amt;
+  tx.desc=desc||(cat||'Transaction');
+  tx.date=date;tx.notes=notes;tx.account=acct;
+  tx.category=cat||tx.category||'Other';
+  tx.emoji=CAT_EMOJI[tx.category]||'🔮';
+  tx.platform=platform;
+  tx.payMethod=payMethod;
+  tx.member=member;
+  // Balance moves only on the real bank/cash account
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amt:-amt);}
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
   if(curPage==='analytics')renderAnalytics();
@@ -2995,30 +3150,30 @@ function renderAccounts(){
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
 function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();});}
-// Account types that receive income (credit side)
-var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','UPI / GPay','Wallet'];
-// Account types used to pay expenses (debit side)
-var EXPENSE_ACCT_TYPES=['Cash','UPI / GPay','Credit Card','Debit Card','Savings Account','Salary Account','Current Account','Wallet'];
+// Real store-of-value accounts — income deposits here, expenses deduct from here
+var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Fixed Deposit','PPF Account','Investment / Demat','Wallet'];
+var EXPENSE_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Wallet'];
+// Payment methods — metadata label for expenses only (no balance tracking)
+var PAYMENT_METHODS=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
 
 function updateTxAccountSelect(){
   var sel=document.getElementById('txAccount');
   if(!sel) return;
   var curr=sel.value;
-  var lbl=document.querySelector('label[for="txAccount"], #txAccountLabel');
 
-  // Filter accounts relevant to current transaction type
-  var validTypes=txType==='income'?INCOME_ACCT_TYPES:EXPENSE_ACCT_TYPES;
+  // For expenses: txAccount = real source account (Savings/Cash etc.) that gets debited
+  // For income:   txAccount = real destination account where money lands
+  var validTypes=INCOME_ACCT_TYPES; // same list for both — real store-of-value accounts
   var filtered=state.accounts.filter(function(a){return validTypes.indexOf(a.type)>-1;});
-  // If no accounts match filter, show all
   if(!filtered.length) filtered=state.accounts;
 
-  // Update field label based on type
+  // Label changes based on type
   var fieldLbl=document.querySelector('#txAccountField .field-label');
   if(fieldLbl){
-    fieldLbl.textContent=txType==='income'?'🏦 Deposit to Account':'💳 Pay via';
+    fieldLbl.textContent=txType==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
   }
 
-  sel.innerHTML='<option value="">-- '+(txType==='income'?'Select Account':'Select Payment Method')+' --</option>'+
+  sel.innerHTML='<option value="">-- '+(txType==='income'?'Select Account':'Select Account') +' --</option>'+
     filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
       var bal=a.balance!==0?' · '+state.currSymbol+fmt(Math.abs(a.balance)):'';
@@ -3026,10 +3181,13 @@ function updateTxAccountSelect(){
       return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
     }).join('');
 
-  // Auto-select best default
   if(!curr || !filtered.find(function(a){return String(a.id)===String(curr);})){
     if(filtered.length>0) sel.value=filtered[0].id;
   }
+
+  // Show/hide the payment method field (expenses only)
+  var pmField=document.getElementById('txPayMethodField');
+  if(pmField) pmField.style.display=txType==='expense'?'block':'none';
 }
 function updateTxLiabSelect(){
   var sel=document.getElementById('txLiabLink');
