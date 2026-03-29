@@ -854,6 +854,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <option value="">All Accounts</option>
         </select>
       </div>
+      <div id="histMemberRow" style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">👥 WHO</div>
+        <div class="fpills" id="memberFilter" style="margin-bottom:0;flex-wrap:wrap"></div>
+      </div>
       <div id="histList"></div>
     </div>
 
@@ -1207,6 +1211,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="set-row-left"><span class="set-row-icon">🔍</span><div><div class="set-row-label">Verify Backup</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Test export + import integrity check</div></div></div>
           <div class="set-row-right">Test ▶</div>
         </div>
+        <div class="set-row" onclick="showModal('familyModal')">
+          <div class="set-row-left"><span class="set-row-icon">👨‍👩‍👧‍👦</span><div><div class="set-row-label">Family Members</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="familyMembersPreview">Manage who you track expenses for</div></div></div>
+          <div class="set-row-right">Edit ▶</div>
+        </div>
         <div class="set-row" onclick="clearData()" style="border-color:rgba(239,68,68,.2)">
           <div class="set-row-left"><span class="set-row-icon">🗑️</span><span class="set-row-label" style="color:var(--red)">Clear All Data</span></div>
           <div class="set-row-right" style="color:var(--red)">⚠️</div>
@@ -1290,14 +1298,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="type-btn exp" id="typeExp" onclick="setTxType('expense')">📤 Expense</div>
     </div>
     <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="txAmt" placeholder="0.00" inputmode="decimal"></div>
-    <div class="field-row">
-      <div class="field"><div class="field-label">📝 What for?</div><input type="text" class="field-input" id="txDesc" placeholder="e.g. Salary"></div>
-      <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="txDate"></div>
+    <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="txDate"></div>
+    <div class="field">
+      <div class="field-label" id="catSelectLabel">📂 Income Source</div>
+      <select class="field-input" id="txCatSelect" onchange="onCatSelectChange(this)">
+        <option value="">-- Select --</option>
+      </select>
     </div>
-    <div class="field"><div class="field-label">🗂️ Category</div><div class="chips" id="catChips"></div></div>
+    <div class="field" id="platformField" style="display:none">
+      <div class="field-label">🛒 Platform / Where bought</div>
+      <select class="field-input" id="txPlatform">
+        <option value="">-- Select Platform --</option>
+      </select>
+    </div>
+    <input type="hidden" id="txDesc">
+    <div class="chips" id="catChips" style="display:none"></div>
     <div class="field" id="txAccountField"><div class="field-label">🏦 Deposit to Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
     <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
-    <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="txNotes" placeholder="Optional"></div>
+    <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
+    <div class="field">
+      <div class="field-label">👤 For</div>
+      <div class="chips" id="memberChips" style="gap:6px"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;margin-bottom:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">🔄 Monthly Recurring</div>
+        <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">Auto-add every month on same day</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div id="recurToggleNo" onclick="setRecurToggle(false)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;background:var(--accent);color:var(--accent-text);transition:all .2s">No</div>
+        <div id="recurToggleYes" onclick="setRecurToggle(true)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;background:var(--bg3);color:var(--text3);transition:all .2s">Yes</div>
+      </div>
+    </div>
     <button class="btn-go" onclick="saveTx()">✅ Save</button>
     <button class="btn-cancel" onclick="closeModal('txModal')">Cancel</button>
   </div>
@@ -1507,6 +1539,27 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 </div>
 
 <!-- EXPORT KEY MODAL -->
+<!-- FAMILY MEMBERS MODAL -->
+<div class="modal-bg" id="familyModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👨‍👩‍👧‍👦 Family Members</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Tag transactions by person to track spending and income per family member.</div>
+    <div id="familyMembersList" style="margin-bottom:16px"></div>
+    <div class="field" style="margin-bottom:8px">
+      <div class="field-label">➕ Add New Member</div>
+      <input type="text" class="field-input" id="newMemberInput"
+        placeholder="e.g. Wife, Son, Dad…"
+        style="font-size:16px;padding:14px 16px;width:100%;background:var(--bg3);border:2px solid var(--border2);border-radius:12px;color:var(--text);outline:none;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')addFamilyMember()"
+        oninput="document.getElementById('familyModalError').style.display='none'">
+    </div>
+    <div id="familyModalError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
+    <button class="btn-go" onclick="addFamilyMember()" style="margin-bottom:8px">➕ Add Member</button>
+    <button class="btn-cancel" onclick="closeModal('familyModal')">✅ Done</button>
+  </div>
+</div>
+
 <!-- IMPORT PASSWORD MODAL -->
 <div class="modal-bg" id="importKeyModal">
   <div class="modal">
@@ -1699,6 +1752,32 @@ const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium'
 const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'EPFO':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
 const THRESHOLD=2;
 const INCOME_CATS=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Gift','Other'];
+
+const PLATFORMS=[
+  {name:'Offline / Store',   emoji:'🏪'},
+  {name:'Amazon',            emoji:'📦'},
+  {name:'Flipkart',          emoji:'🛒'},
+  {name:'Meesho',            emoji:'🛍️'},
+  {name:'Myntra',            emoji:'👗'},
+  {name:'Nykaa',             emoji:'💄'},
+  {name:'Reliance / JioMart',emoji:'🏬'},
+  {name:'DMart',             emoji:'🛒'},
+  {name:'BigBasket',         emoji:'🥦'},
+  {name:'Zepto',             emoji:'⚡'},
+  {name:'Blinkit',           emoji:'💛'},
+  {name:'Swiggy',            emoji:'🧡'},
+  {name:'Zomato',            emoji:'❤️'},
+  {name:'Swiggy Instamart',  emoji:'🟠'},
+  {name:'PharmEasy',         emoji:'💊'},
+  {name:'1mg',               emoji:'🩺'},
+  {name:'BookMyShow',        emoji:'🎬'},
+  {name:'MakeMyTrip',        emoji:'✈️'},
+  {name:'Ola / Uber',        emoji:'🚕'},
+  {name:'Rapido',            emoji:'🛵'},
+  {name:'IRCTC',             emoji:'🚆'},
+  {name:'Paytm',             emoji:'💙'},
+  {name:'Other',             emoji:'🔮'},
+];
 const EXPENSE_CATS_GROUPED={
   'Home':['Rent','Electricity','Water','LPG/Gas','Internet','Mobile'],
   'Food':['Grocery','Fruits','Restaurant','Food Delivery'],
@@ -1826,6 +1905,7 @@ let state={
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},bills:[],accounts:[],recurring:[],
   allocTargets:{},
+  familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
   driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''
@@ -1834,7 +1914,7 @@ let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m)m.style.display=addMenuOpen?'flex':'none';const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
 function closeAddMenu(){addMenuOpen=false;const m=document.getElementById('addMenu');if(m)m.style.display='none';const fab=document.getElementById('fab');if(fab)fab.textContent='➕';}
 document.addEventListener('click',function(e){if(!addMenuOpen)return;const menu=document.getElementById('addMenu');const fab=document.getElementById('fab');if(menu&&!menu.contains(e.target)&&fab&&!fab.contains(e.target))closeAddMenu();});
-let txType='expense',goalIcon='🏠',chartType='pie',charts={},pinBuf='',curPage='home',histFilt='all';
+let txType='income',goalIcon='🏠',chartType='pie',charts={},pinBuf='',curPage='home',histFilt='all',histMemberFilt='all',txRecurring=false;
 let acctColor='#22c55e',recurType='expense',selectedBillCat='Bills',scanResult=null;
 
 // ======== PERSIST ========
@@ -1867,6 +1947,17 @@ function loadState(){
   applyTheme(state.theme);
   applyFont(state.font);
   updateCurrSymbols();
+  if(!Array.isArray(state.familyMembers)||!state.familyMembers.length) state.familyMembers=['Self'];
+  if(state.familyMembers.indexOf('Self')===-1) state.familyMembers.unshift('Self');
+  // Restore currentUser from persisted state immediately (no SDK needed)
+  if(state.isLoggedIn && state.userName){
+    currentUser={
+      name:state.userName,
+      email:state.userEmail||'',
+      photo:state.localProfilePhoto||'',
+      id:''
+    };
+  }
 }
 function saveState(){
   try{
@@ -1940,7 +2031,7 @@ function showPage(id){
   if(id==='goals')renderGoals();
   if(id==='liabilities')renderLiabilities();
   if(id==='accounts')renderAccounts();
-  if(id==='history')renderHistory();
+  if(id==='history'){renderMemberFilterChips();renderHistory();}
   if(id==='bills'){renderBills();updateBillsBadge();}
   if(id==='budget')updateBudget();
   if(id==='recurring')renderRecurring();
@@ -1952,12 +2043,13 @@ function showModal(id){
   if(id==='allocModal'){renderAllocModalRows();updateAllocModalTotal();}
   closeAddMenu();
   document.getElementById(id).classList.add('on');
-  if(id==='txModal'){setTodayDate();updateTxAccountSelect();updateTxLiabSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(txType==='expense')?'block':'none';}
+  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
   if(id==='emailAuthModal'){document.getElementById('authError').style.display='none';setEmailTab('login');}
   if(id==='budgetModal')renderBudgetInputs();
+  if(id==='familyModal'){renderFamilyMembersList();document.getElementById('newMemberInput').value='';document.getElementById('familyModalError').style.display='none';}
   if(id==='billModal')renderBillCatChips();
   if(id==='recurModal')renderRecurCatChips();
 }
@@ -1968,47 +2060,74 @@ document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=
 // ======== TRANSACTIONS ========
 function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';}
 function renderCatChips(){
-  const c=document.getElementById('catChips');
-  c.innerHTML='';
+  // Populate the category select dropdown
+  var sel=document.getElementById('txCatSelect');
+  var lbl=document.getElementById('catSelectLabel');
+  var platField=document.getElementById('platformField');
+  var platSel=document.getElementById('txPlatform');
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- Select --</option>';
   if(txType==='income'){
-    INCOME_CATS.forEach((cat,i)=>{
-      const ch=document.createElement('div');
-      ch.className='chip'+(i===0?' on':'');
-      ch.innerHTML=(CAT_EMOJI[cat]||'🔮')+' '+cat;
-      ch.dataset.cat=cat;
-      ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};
-      c.appendChild(ch);
+    if(lbl)lbl.textContent='💰 Income Source';
+    if(platField)platField.style.display='none';
+    INCOME_CATS.forEach(function(cat){
+      var opt=document.createElement('option');
+      opt.value=cat;
+      opt.textContent=(CAT_EMOJI[cat]||'🔮')+' '+cat;
+      sel.appendChild(opt);
     });
   } else {
-    var firstSet=false;
-    Object.entries(EXPENSE_CATS_GROUPED).forEach(([group,cats])=>{
-      const lbl=document.createElement('div');
-      lbl.style.cssText='font-size:9px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);width:100%;margin:8px 0 4px;padding-left:2px';
-      lbl.textContent=group;
-      c.appendChild(lbl);
-      cats.forEach(cat=>{
-        const ch=document.createElement('div');
-        ch.className='chip'+(!firstSet?' on':'');
-        if(!firstSet)firstSet=true;
-        ch.innerHTML=(CAT_EMOJI[cat]||'🔮')+' '+cat;
-        ch.dataset.cat=cat;
-        ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};
-        c.appendChild(ch);
+    if(lbl)lbl.textContent='📂 Expense Category';
+    // Platform dropdown for expenses
+    if(platField)platField.style.display='block';
+    if(platSel){
+      platSel.innerHTML='<option value="">-- Select Platform --</option>';
+      PLATFORMS.forEach(function(p){
+        var opt=document.createElement('option');
+        opt.value=p.name;
+        opt.textContent=p.emoji+' '+p.name;
+        platSel.appendChild(opt);
+      });
+    }
+    Object.entries(EXPENSE_CATS_GROUPED).forEach(function([group,cats]){
+      var grpOpt=document.createElement('option');
+      grpOpt.disabled=true;
+      grpOpt.textContent='── '+group+' ──';
+      sel.appendChild(grpOpt);
+      cats.forEach(function(cat){
+        var opt=document.createElement('option');
+        opt.value=cat;
+        opt.textContent=(CAT_EMOJI[cat]||'🔮')+' '+cat;
+        sel.appendChild(opt);
       });
     });
   }
+  sel.value='';
+  // Reset hidden desc
+  var descEl=document.getElementById('txDesc');
+  if(descEl)descEl.value='';
 }
-function getSelCat(){const c=document.querySelectorAll('#catChips .chip.on');return c.length?(c[0].dataset.cat||'Other'):'Other';}
+function onCatSelectChange(sel){
+  var descEl=document.getElementById('txDesc');
+  if(descEl)descEl.value=sel.value||'';
+}
+function getSelCatFromSelect(){
+  var sel=document.getElementById('txCatSelect');
+  return sel?sel.value:'Other';
+}
+function getSelCat(){return getSelCatFromSelect();}
 function saveTx(){
   const amt=parseFloat(document.getElementById('txAmt').value);
-  const desc=document.getElementById('txDesc').value.trim();
   const date=document.getElementById('txDate').value;
   const notes=document.getElementById('txNotes').value.trim();
   const acct=document.getElementById('txAccount').value;
   const liabLink=document.getElementById('txLiabLink')?.value||'';
-  if(!amt||!desc||!date){showToast('Fill amount, description and date','yellow');return;}
-  const cat=getSelCat();
-  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct,liabLink:liabLink};
+  const cat=getSelCatFromSelect();
+  const desc=document.getElementById('txDesc').value||cat;
+  const platform=document.getElementById('txPlatform')?.value||'';
+  if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
+  const member=getSelMember();
+  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🔮',account:acct,liabLink:liabLink,member:member,platform:platform};
   state.transactions.unshift(tx);
   // Update account balance
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amt:-amt);}}
@@ -2019,42 +2138,54 @@ function saveTx(){
   }
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
-  // Ask if recurring
-  askMakeRecurring(desc, amt, txType, cat);
+  // Auto-add as recurring if toggle was Yes
+  if(txRecurring){
+    addAsRecurring(desc,amt,txType,cat);
+    txRecurring=false;
+  }
 }
-function askMakeRecurring(desc, amt, type, cat){
-  var existing=document.getElementById('recurAskBar');
-  if(existing)existing.remove();
-  window._pendingRecur={desc:desc,amt:amt,type:type,cat:cat};
-  var bar=document.createElement('div');
-  bar.id='recurAskBar';
-  bar.style.cssText='position:fixed;bottom:72px;left:0;right:0;margin:0 12px;background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:9998;box-shadow:0 8px 32px rgba(0,0,0,0.4)';
-  var yesBtn='<button onclick="addPendingRecurring()" style="background:var(--accent);color:var(--accent-text);border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:900;cursor:pointer">Yes</button>';
-  var noBtn='<button onclick="var b=document.getElementById(\"recurAskBar\");if(b)b.remove();" style="background:var(--bg3);color:var(--text);border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:900;cursor:pointer">No</button>';
-  bar.innerHTML='<div style="font-size:13px;font-weight:900">🔄 Add as monthly recurring?</div><div style="display:flex;gap:8px">'+yesBtn+noBtn+'</div>';
-  document.body.appendChild(bar);
-  setTimeout(function(){var b=document.getElementById('recurAskBar');if(b)b.remove();},8000);
-}
-function addPendingRecurring(){
-  var p=window._pendingRecur; if(!p)return;
-  addAsRecurring(p.desc,p.amt,p.type,p.cat);
-  window._pendingRecur=null;
-}
+
 function addAsRecurring(desc,amt,type,cat){
   var today=new Date().getDate();
   state.recurring.push({id:Date.now(),type:type,desc:desc,amount:amt,day:today,freq:'monthly',category:cat,emoji:CAT_EMOJI[cat]||'🔮',lastAdded:new Date().toISOString().split('T')[0]});
   saveState();renderRecurring();
-  document.getElementById('recurAskBar')?.remove();
+
   showToast('Added as monthly recurring on day '+today,'green');
 }
-function resetTxForm(){document.getElementById('txAmt').value='';document.getElementById('txDesc').value='';document.getElementById('txNotes').value='';var ll=document.getElementById('txLiabLink');if(ll)ll.value='';setTxType('expense');}
+function setRecurToggle(val){
+  txRecurring=val;
+  var no=document.getElementById('recurToggleNo');
+  var yes=document.getElementById('recurToggleYes');
+  if(!no||!yes)return;
+  if(val){
+    yes.style.background='var(--accent)';yes.style.color='var(--accent-text)';
+    no.style.background='var(--bg3)';no.style.color='var(--text3)';
+  } else {
+    no.style.background='var(--accent)';no.style.color='var(--accent-text)';
+    yes.style.background='var(--bg3)';yes.style.color='var(--text3)';
+  }
+}
+function resetTxForm(){
+  document.getElementById('txAmt').value='';
+  document.getElementById('txDesc').value='';
+  document.getElementById('txNotes').value='';
+  var sel=document.getElementById('txCatSelect');if(sel)sel.value='';
+  var plat=document.getElementById('txPlatform');if(plat)plat.value='';
+  var ll=document.getElementById('txLiabLink');if(ll)ll.value='';
+  setTxType('income');setRecurToggle(false);
+}
 function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx.date);return d.getMonth()===state.currentMonth&&d.getFullYear()===state.currentYear;});}
 function txHTML(tx){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
   const acct=tx.account?state.accounts.find(a=>String(a.id)===String(tx.account)):null;
   const acctBadge=acct?`<span style="margin-left:4px;background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${acct.name}</span>`:'';
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
+  const member=tx.member||'Self';
+  const memberColor=member==='Self'?'var(--accent)':'var(--teal)';
+  const memberBadge=`<span style="margin-left:4px;background:${memberColor}22;color:${memberColor};border:1px solid ${memberColor}44;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">👤 ${member}</span>`;
+  const platInfo=tx.platform?PLATFORMS.find(function(p){return p.name===tx.platform;}):null;
+  const platBadge=platInfo?`<span style="margin-left:4px;background:rgba(255,215,64,0.12);color:var(--yellow);border:1px solid rgba(255,215,64,0.3);padding:1px 5px;border-radius:5px;font-size:9px;font-weight:900">${platInfo.emoji} ${platInfo.name}</span>`:'';
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}${acctBadge}${memberBadge}${platBadge}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div></div><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
 function customConfirm(icon, title, msg, onOk){
@@ -2157,13 +2288,42 @@ function updateDashboard(){
 }
 
 // ======== HISTORY ========
+function renderMemberFilterChips(){
+  var wrap=document.getElementById('memberFilter');
+  if(!wrap)return;
+  var members=['all'].concat(state.familyMembers||['Self']);
+  wrap.innerHTML='';
+  members.forEach(function(m){
+    var pill=document.createElement('div');
+    pill.className='fpill'+(histMemberFilt===m?' on':'');
+    pill.textContent=m==='all'?'All':m;
+    pill.onclick=function(){histMemberFilt=m;renderMemberFilterChips();renderHistory();};
+    wrap.appendChild(pill);
+  });
+}
+function renderMemberChips(){
+  var wrap=document.getElementById('memberChips');
+  if(!wrap)return;
+  var members=state.familyMembers||['Self'];
+  wrap.innerHTML='';
+  members.forEach(function(m,i){
+    var ch=document.createElement('div');
+    ch.className='chip'+(i===0?' on':'');
+    ch.textContent=m;
+    ch.dataset.member=m;
+    ch.onclick=function(){wrap.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});ch.classList.add('on');};
+    wrap.appendChild(ch);
+  });
+}
+function getSelMember(){var c=document.querySelector('#memberChips .chip.on');return c?c.dataset.member:'Self';}
 function renderHistory(){
   const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
   const acctFilter=document.getElementById('histAcctFilter')?.value||'';
   let txs=[...state.transactions];
   if(histFilt!=='all')txs=txs.filter(t=>t.type===histFilt);
+  if(histMemberFilt!=='all')txs=txs.filter(t=>(t.member||'Self')===histMemberFilt);
   if(search)txs=txs.filter(t=>t.desc.toLowerCase().includes(search)||t.category.toLowerCase().includes(search));
-  if(acctFilter)txs=txs.filter(t=>t.account===acctFilter);
+  if(acctFilter)txs=txs.filter(t=>String(t.account)===String(acctFilter));
   const c=document.getElementById('histList');
   if(!txs.length){c.innerHTML=`<div class="empty"><div class="empty-big">🔍</div><div class="empty-title">${tr('noTx')}</div></div>`;return;}
   const groups={};txs.forEach(tx=>{if(!groups[tx.date])groups[tx.date]=[];groups[tx.date].push(tx);});
@@ -2566,6 +2726,47 @@ function commitAllocFromModal(inp){
 
 
 
+function renderFamilyMembersList(){
+  var wrap=document.getElementById('familyMembersList');
+  if(!wrap) return;
+  if(!state.familyMembers||!state.familyMembers.length){wrap.innerHTML='<div style="color:var(--text3);font-size:12px;font-weight:600;text-align:center;padding:12px">No members added yet</div>';return;}
+  wrap.innerHTML=state.familyMembers.map(function(m,i){
+    var isSelf=m==='Self';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:20px">'+(isSelf?'👤':'👥')+'</span>'
+        +'<span style="font-size:14px;font-weight:700;color:var(--text)">'+m+'</span>'
+        +(isSelf?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">DEFAULT</span>':'')
+      +'</div>'
+      +(!isSelf?'<span onclick="removeFamilyMember('+i+')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px">✕</span>':'<span></span>')
+    +'</div>';
+  }).join('');
+  var preview=document.getElementById('familyMembersPreview');
+  if(preview) preview.textContent=state.familyMembers.join(', ');
+}
+function addFamilyMember(){
+  var inp=document.getElementById('newMemberInput');
+  var err=document.getElementById('familyModalError');
+  var name=(inp.value||'').trim();
+  if(!name){err.textContent='Enter a name';err.style.display='block';return;}
+  if(state.familyMembers.find(function(m){return m.toLowerCase()===name.toLowerCase();})){err.textContent='Already exists';err.style.display='block';return;}
+  err.style.display='none';
+  if(!state.familyMembers) state.familyMembers=['Self'];
+  state.familyMembers.push(name);
+  inp.value='';
+  saveState();
+  renderFamilyMembersList();
+  renderMemberFilterChips();
+}
+function removeFamilyMember(idx){
+  if(!state.familyMembers||idx<0||idx>=state.familyMembers.length) return;
+  if(state.familyMembers[idx]==='Self'){showToast('Cannot remove Self','yellow');return;}
+  state.familyMembers.splice(idx,1);
+  saveState();
+  renderFamilyMembersList();
+  renderMemberFilterChips();
+}
+
 function resetAllocTargets(){
   // Clear seeded flag so renderAllocModalRows re-seeds scaled 100% defaults
   try{localStorage.removeItem('ft_allocSeeded');}catch(e){}
@@ -2820,9 +3021,9 @@ function updateTxAccountSelect(){
   sel.innerHTML='<option value="">-- '+(txType==='income'?'Select Account':'Select Payment Method')+' --</option>'+
     filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
-      var bal=a.balance!==0?' ('+state.currSymbol+fmt(Math.abs(a.balance))+')':'';
-      // String comparison — IDs stored as numbers but select values are strings
-      return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+bal+'</option>';
+      var bal=a.balance!==0?' · '+state.currSymbol+fmt(Math.abs(a.balance)):'';
+      var typeLabel=a.type!==a.name?' ['+a.type+']':'';
+      return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
     }).join('');
 
   // Auto-select best default
@@ -3318,43 +3519,31 @@ function loadGoogleSDKs(){
 }
 
 function tryBootGoogle(){
-  if(!GIS_LOADED||!GAPI_LOADED) return;
-
-  // ── Step 1: Always restore identity from state (persisted in localStorage via saveState)
-  // state.isLoggedIn/userName/userEmail survive across page loads indefinitely.
-  // Only the user tapping "Sign Out" should ever clear these.
-  if(state.isLoggedIn && state.userName){
-    currentUser={
-      name:state.userName,
-      email:state.userEmail,
-      photo:state.localProfilePhoto||'',
-      id:''
-    };
-  }
-
-  // ── Step 2: Restore access_token from session if still valid (for Drive sync only)
-  // Token expiry does NOT affect login state — user stays signed in always.
-  var saved=localStorage.getItem('ft_gsession');
-  if(saved){
-    try{
-      var sess=JSON.parse(saved);
-      if(sess && sess.access_token && sess.expiry > Date.now()){
-        gAccessToken=sess.access_token;
-        // Also fill in the photo/id that may not be in state
-        if(sess.photo && currentUser) currentUser.photo=sess.photo;
-        if(sess.id && currentUser) currentUser.id=sess.id;
-      } else {
-        // Token expired — remove it silently. User stays signed in.
-        // They'll need to tap Sign In again only if they want to sync to Drive.
+  // Restore access_token if still valid (for Drive sync only)
+  // Requires both SDKs to be ready
+  if(GIS_LOADED && GAPI_LOADED){
+    var saved=localStorage.getItem('ft_gsession');
+    if(saved){
+      try{
+        var sess=JSON.parse(saved);
+        if(sess && sess.access_token && sess.expiry > Date.now()){
+          gAccessToken=sess.access_token;
+          if(currentUser){
+            if(sess.photo) currentUser.photo=sess.photo;
+            if(sess.id) currentUser.id=sess.id;
+          }
+        } else {
+          // Token expired — remove silently. Login state unaffected.
+          localStorage.removeItem('ft_gsession');
+          gAccessToken=null;
+        }
+      }catch(e){
         localStorage.removeItem('ft_gsession');
         gAccessToken=null;
       }
-    }catch(e){
-      localStorage.removeItem('ft_gsession');
-      gAccessToken=null;
     }
   }
-
+  // Identity is already restored from state in loadState() — just update UI
   updateAuthUI();
 }
 
@@ -3472,7 +3661,11 @@ function updateAuthUI(){
   var s2=document.getElementById('stateSignedOut');
   var s3=document.getElementById('stateSignedIn');
   if(!s1||!s2||!s3) return;
-  if(currentUser){
+  // Use state.isLoggedIn as truth — currentUser may be null before SDK loads
+  if(!currentUser && state.isLoggedIn && state.userName){
+    currentUser={name:state.userName,email:state.userEmail||'',photo:state.localProfilePhoto||'',id:''};
+  }
+  if(currentUser && state.isLoggedIn){
     s1.style.display='none'; s2.style.display='none'; s3.style.display='block';
     var nameEl=document.getElementById('userDisplayName');
     var emailEl=document.getElementById('userEmailDisplay');
