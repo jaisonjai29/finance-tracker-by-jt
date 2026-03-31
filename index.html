@@ -494,7 +494,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   position:fixed;inset:0;
   background:rgba(0,0,0,0.7);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  z-index:500;display:none;align-items:flex-end;justify-content:center;
+  z-index:500;display:none;
+  justify-content:center;
+  align-items:flex-end;
+  overflow-y:scroll;
+  -webkit-overflow-scrolling:touch;
+  padding-top:env(safe-area-inset-top,0px);
 }
 .modal-bg.on{display:flex}
 .modal{
@@ -502,25 +507,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   border:1px solid var(--border2);
   border-radius:28px 28px 0 0;
   padding:20px 16px 48px;
-  width:100%;max-width:480px;max-height:92vh;
-  overflow-y:auto;animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+  width:100%;max-width:480px;
+  flex-shrink:0;
+  margin-top:auto;
+  position:relative;
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
 }
 @keyframes slideUp{from{transform:translateY(100%);opacity:.7}to{transform:translateY(0);opacity:1}}
 .modal-handle{
   width:36px;height:4px;background:var(--bg3);
-  border-radius:100px;margin:0 auto 22px;
+  border-radius:100px;margin:0 auto 14px;
 }
-.modal-title{font-size:21px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;letter-spacing:-0.3px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:-0.3px}
 
 /* ══ FORM FIELDS ══ */
-.field{margin-bottom:14px}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.field{margin-bottom:10px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:4px}
 .field-input{
   width:100%;
   background:var(--bg3);
   border:1px solid var(--border);
-  border-radius:var(--radius-xs);padding:13px 14px;
+  border-radius:var(--radius-xs);padding:10px 12px;
   color:var(--text);font-family:var(--font);font-size:14px;font-weight:500;
   outline:none;transition:all .2s;
   -webkit-appearance:none;appearance:none;
@@ -1519,17 +1527,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         </div>
         <!-- Auto-Lock -->
         <div class="set-row" style="cursor:default">
-          <div class="set-row-left"><span class="set-row-icon">🔒</span><div><div class="set-row-label">Auto-Lock</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Lock app after inactivity</div></div></div>
+          <div class="set-row-left"><span class="set-row-icon">🔒</span><div><div class="set-row-label">Auto-Lock (5 min)</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Lock app after 5 min of inactivity</div></div></div>
           <div id="autoLockToggle" class="tog" onclick="toggleAutoLock(this)" style="cursor:pointer"><div class="tog-knob"></div></div>
-        </div>
-        <div id="autoLockDurationRow" style="display:none;padding:0 4px 12px 4px">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;padding-left:2px">Lock after</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button onclick="setAutoLockDuration(30000,this)" data-dur="30000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">30s</button>
-            <button onclick="setAutoLockDuration(60000,this)" data-dur="60000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">1 min</button>
-            <button onclick="setAutoLockDuration(120000,this)" data-dur="120000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">2 min</button>
-            <button onclick="setAutoLockDuration(300000,this)" data-dur="300000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">5 min</button>
-          </div>
         </div>
         <div class="set-row" onclick="clearData()" style="border-color:rgba(239,68,68,.2)">
           <div class="set-row-left"><span class="set-row-icon">🗑️</span><span class="set-row-label" style="color:var(--red)">Clear All Data</span></div>
@@ -1592,20 +1591,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
   <button class="fab" onclick="toggleAddMenu()" id="fab">➕</button>
   <!-- Quick Add Menu -->
-  <div id="addMenu" style="display:none;position:fixed;bottom:152px;right:12px;z-index:98;flex-direction:column;gap:8px;align-items:flex-end">
-    <div onclick="closeAddMenu();showModal('txModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">💸</span><span style="font-size:13px;font-weight:900">Add Transaction</span></div>
-    <div onclick="closeAddMenu();showModal('assetModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">💼</span><span style="font-size:13px;font-weight:900">Add Asset</span></div>
-    <div onclick="closeAddMenu();showModal('goalModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🎯</span><span style="font-size:13px;font-weight:900">Add Goal</span></div>
-    <div onclick="closeAddMenu();showPage('loanadvisor')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🧮</span><span style="font-size:13px;font-weight:900">Loan Advisor</span></div>
-    <div onclick="closeAddMenu();showModal('liabModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🏧</span><span style="font-size:13px;font-weight:900">Add Debt</span></div>
-    <div onclick="closeAddMenu();showModal('acctModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🏦</span><span style="font-size:13px;font-weight:900">Add Account</span></div>
-    <div onclick="closeAddMenu();showPage('scanner')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📷</span><span style="font-size:13px;font-weight:900">Scan Receipt</span></div>
-    <div onclick="closeAddMenu();showPage('bills');showModal('billModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🔔</span><span style="font-size:13px;font-weight:900">Add Bill Reminder</span></div>
-    <div onclick="closeAddMenu();showPage('recurring');showModal('recurModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📅</span><span style="font-size:13px;font-weight:900">Add Recurring</span></div>
-    <div onclick="closeAddMenu();showPage('insights')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🤖</span><span style="font-size:13px;font-weight:900">AI Money Advisor</span></div>
-    <div onclick="closeAddMenu();showModal('transferModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🔀</span><span style="font-size:13px;font-weight:900">Transfer Funds</span></div>
-    <div onclick="closeAddMenu();showPage('reports')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📋</span><span style="font-size:13px;font-weight:900">Reports & Forecast</span></div>
-    <div onclick="closeAddMenu();showPage('trends')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📊</span><span style="font-size:13px;font-weight:900">Spending Trends</span></div>
+  <div id="addMenu" style="display:none;position:fixed;bottom:152px;right:12px;z-index:98;width:220px;max-height:60vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;flex-direction:column;gap:8px;align-items:flex-end;border-radius:16px;padding:8px;">
+    <div onclick="closeAddMenu();showModal('txModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">💸</span><span style="font-size:13px;font-weight:900">Add Transaction</span></div>
+    <div onclick="closeAddMenu();showModal('assetModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">💼</span><span style="font-size:13px;font-weight:900">Add Asset</span></div>
+    <div onclick="closeAddMenu();showModal('goalModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🎯</span><span style="font-size:13px;font-weight:900">Add Goal</span></div>
+    <div onclick="closeAddMenu();showPage('loanadvisor')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🧮</span><span style="font-size:13px;font-weight:900">Loan Advisor</span></div>
+    <div onclick="closeAddMenu();showModal('liabModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🏧</span><span style="font-size:13px;font-weight:900">Add Debt</span></div>
+    <div onclick="closeAddMenu();showModal('acctModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🏦</span><span style="font-size:13px;font-weight:900">Add Account</span></div>
+    <div onclick="closeAddMenu();showPage('scanner')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">📷</span><span style="font-size:13px;font-weight:900">Scan Receipt</span></div>
+    <div onclick="closeAddMenu();showPage('bills');showModal('billModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🔔</span><span style="font-size:13px;font-weight:900">Add Bill Reminder</span></div>
+    <div onclick="closeAddMenu();showPage('recurring');showModal('recurModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">📅</span><span style="font-size:13px;font-weight:900">Add Recurring</span></div>
+    <div onclick="closeAddMenu();showPage('insights')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🤖</span><span style="font-size:13px;font-weight:900">AI Money Advisor</span></div>
+    <div onclick="closeAddMenu();showModal('transferModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🔀</span><span style="font-size:13px;font-weight:900">Transfer Funds</span></div>
+    <div onclick="closeAddMenu();showPage('reports')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">📋</span><span style="font-size:13px;font-weight:900">Reports & Forecast</span></div>
+    <div onclick="closeAddMenu();showPage('trends')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">📊</span><span style="font-size:13px;font-weight:900">Spending Trends</span></div>
   </div>
 </div>
 
@@ -2358,7 +2357,7 @@ let state={
   driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''
 };
 let addMenuOpen=false;
-function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m)m.style.display=addMenuOpen?'flex':'none';const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
+function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=9999;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
 function closeAddMenu(){addMenuOpen=false;const m=document.getElementById('addMenu');if(m)m.style.display='none';const fab=document.getElementById('fab');if(fab)fab.textContent='➕';}
 document.addEventListener('click',function(e){if(!addMenuOpen)return;const menu=document.getElementById('addMenu');const fab=document.getElementById('fab');if(menu&&!menu.contains(e.target)&&fab&&!fab.contains(e.target))closeAddMenu();});
 let txType='income',goalIcon='🏠',chartType='pie',charts={},pinBuf='',curPage='home',histFilt='all',histMemberFilt='all',txRecurring=false;
@@ -2449,7 +2448,7 @@ function initApp(){
   }
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
-  updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();_syncAutoLockDurationUI();
+  updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();
   if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
   if(state.isLoggedIn&&currentUser){
     renderAuthSignedIn(currentUser);
@@ -2513,7 +2512,13 @@ function showPage(id){
 function showModal(id){
   if(id==='allocModal'){renderAllocModalRows();updateAllocModalTotal();}
   closeAddMenu();
-  document.getElementById(id).classList.add('on');
+  var modalBg=document.getElementById(id);
+  modalBg.classList.add('on');
+  setTimeout(function(){
+    modalBg.scrollTop=0;
+    var panel=modalBg.querySelector('.modal');
+    if(panel)panel.scrollTop=0;
+  },10);
   if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
@@ -5519,7 +5524,7 @@ renderAuthSignedIn=function(u){
 };
 
 // ======== AUTO-LOCK / INACTIVITY ========
-var _inactivityMs = state.autoLockDuration || 5*60*1000;
+var _inactivityMs=5*60*1000;
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
   if(!state.autoLockEnabled) return;
@@ -5540,43 +5545,16 @@ function dismissInactivity(){
 ['click','touchstart','keydown','scroll'].forEach(function(ev){
   document.addEventListener(ev,resetInactivityTimer,{passive:true});
 });
-function _syncAutoLockDurationUI(){
-  var dur=state.autoLockDuration||300000;
-  document.querySelectorAll('.dur-btn').forEach(function(b){
-    var active=parseInt(b.dataset.dur)===dur;
-    b.style.background=active?'var(--accent)':'var(--bg3)';
-    b.style.color=active?'#fff':'var(--text2)';
-    b.style.borderColor=active?'var(--accent)':'var(--border2)';
-  });
-  var row=document.getElementById('autoLockDurationRow');
-  if(row) row.style.display=state.autoLockEnabled?'block':'none';
-}
-function setAutoLockDuration(ms, el){
-  _inactivityMs=ms;
-  state.autoLockDuration=ms;
-  saveState();
-  _syncAutoLockDurationUI();
-  var labels={30000:'30 seconds',60000:'1 minute',120000:'2 minutes',300000:'5 minutes'};
-  showToast('Auto-lock: '+( labels[ms]||ms/60000+' min'),'green');
-  resetInactivityTimer();
-}
 // Settings toggle
 function toggleAutoLock(el){
   state.autoLockEnabled=!state.autoLockEnabled;
-  if(!state.autoLockDuration) state.autoLockDuration=300000;
-  _inactivityMs=state.autoLockDuration;
   saveState();
   el.classList.toggle('on',state.autoLockEnabled);
   el.querySelector('.tog-knob').style.transform=state.autoLockEnabled?'translateX(22px)':'translateX(0)';
-  _syncAutoLockDurationUI();
   if(state.autoLockEnabled) resetInactivityTimer();
   else clearTimeout(inactivityTimer);
-  showToast(state.autoLockEnabled?'Auto-lock enabled':'Auto-lock disabled',state.autoLockEnabled?'green':'yellow');
+  showToast(state.autoLockEnabled?'Auto-lock enabled (5 min)':'Auto-lock disabled','green');
 }
-// Restore duration UI on settings open
-document.addEventListener('DOMContentLoaded',function(){
-  setTimeout(_syncAutoLockDurationUI,500);
-});
 
 // ======== BILL CALENDAR ========
 function renderBillCalendar(){
