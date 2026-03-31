@@ -1312,7 +1312,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <!-- Net Worth Timeline -->
       <div class="box" style="margin-top:12px">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">📈 Net Worth Growth</div>
-        <canvas id="netWorthChartReport" height="120" style="width:100%"></canvas>
+        <div style="height:140px;position:relative"><canvas id="netWorthChartReport" style="width:100%;height:100%"></canvas></div>
       </div>
     </div>
 
@@ -1527,8 +1527,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         </div>
         <!-- Auto-Lock -->
         <div class="set-row" style="cursor:default">
-          <div class="set-row-left"><span class="set-row-icon">🔒</span><div><div class="set-row-label">Auto-Lock (5 min)</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Lock app after 5 min of inactivity</div></div></div>
-          <div id="autoLockToggle" class="tog" onclick="toggleAutoLock(this)" style="cursor:pointer"><div class="tog-knob"></div></div>
+          <div class="set-row-left"><span class="set-row-icon">🔒</span><div><div class="set-row-label">Auto-Lock</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Lock app after inactivity</div></div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <select id="autoLockDuration" class="field-input" style="padding:6px 10px;font-size:12px;width:auto" onchange="setAutoLockDuration(this.value)">
+              <option value="30000">30 sec</option>
+              <option value="60000">1 min</option>
+              <option value="120000">2 min</option>
+              <option value="300000" selected>5 min</option>
+            </select>
+            <div id="autoLockToggle" class="tog" onclick="toggleAutoLock(this)" style="cursor:pointer"><div class="tog-knob"></div></div>
+          </div>
         </div>
         <div class="set-row" onclick="clearData()" style="border-color:rgba(239,68,68,.2)">
           <div class="set-row-left"><span class="set-row-icon">🗑️</span><span class="set-row-label" style="color:var(--red)">Clear All Data</span></div>
@@ -2539,6 +2547,8 @@ function showPage(id){
     });
     updateCurrRateInfo();
     // Sync auto-lock toggle
+    // Restore auto-lock duration
+    if(state.autoLockMs){ _inactivityMs=state.autoLockMs; var ald=document.getElementById('autoLockDuration'); if(ald) ald.value=String(state.autoLockMs); }
     var alt=document.getElementById('autoLockToggle');
     if(alt){
       alt.classList.toggle('on',!!state.autoLockEnabled);
@@ -5588,6 +5598,14 @@ window.addEventListener('pagehide',function(){
 
 // ======== AUTO-LOCK / INACTIVITY ========
 var _inactivityMs=5*60*1000;
+function setAutoLockDuration(ms){
+  _inactivityMs=parseInt(ms);
+  state.autoLockMs=_inactivityMs;
+  saveState();
+  if(state.autoLockEnabled) resetInactivityTimer();
+  var labels={30000:'30 sec',60000:'1 min',120000:'2 min',300000:'5 min'};
+  showToast('Auto-lock: '+(labels[_inactivityMs]||'custom'),'green');
+}
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
   if(!state.autoLockEnabled) return;
@@ -5616,7 +5634,7 @@ function toggleAutoLock(el){
   el.querySelector('.tog-knob').style.transform=state.autoLockEnabled?'translateX(22px)':'translateX(0)';
   if(state.autoLockEnabled) resetInactivityTimer();
   else clearTimeout(inactivityTimer);
-  showToast(state.autoLockEnabled?'Auto-lock enabled (5 min)':'Auto-lock disabled','green');
+  var _lbl={30000:'30 sec',60000:'1 min',120000:'2 min',300000:'5 min'};showToast(state.autoLockEnabled?'Auto-lock enabled ('+(_lbl[_inactivityMs]||'custom')+')':'Auto-lock disabled','green');
 }
 
 // ======== BILL CALENDAR ========
@@ -6110,7 +6128,7 @@ function renderNetWorthTimeline(){
   var cumulative=[];var running=baseNW;
   for(var i=data.length-1;i>=0;i--){running-=data[i];cumulative.unshift(running);}
   cumulative[cumulative.length-1]=baseNW;
-  charts.nwt=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:cumulative.map(cv),borderColor:'var(--accent)',backgroundColor:'rgba(124,92,252,0.1)',fill:true,tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:'var(--accent)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10},callback:function(v){return state.currSymbol+fmt(v);}}}}}});
+  charts.nwt=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:cumulative.map(cv),borderColor:'var(--accent)',backgroundColor:'rgba(124,92,252,0.08)',fill:true,tension:0.4,borderWidth:1.5,pointRadius:2,pointBackgroundColor:'var(--accent)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return state.currSymbol+fmt(c.raw);}}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:9},maxRotation:0}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:9},maxTicksLimit:4,callback:function(v){var a=Math.abs(v);if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+v;}}}}}});
 }
 
 // ======== SHAREABLE SPENDING SUMMARY CARD ========
