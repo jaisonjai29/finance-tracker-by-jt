@@ -2423,6 +2423,44 @@ function saveState(){
       showToast('Storage full! Export a backup and clear old data.','red');
     }
   }
+  // Debounced silent sync — fires 4s after last saveState call
+  _scheduleSilentSync();
+}
+var _silentSyncTimer=null;
+function _scheduleSilentSync(){
+  if(!gAccessToken||!state.isLoggedIn) return;
+  clearTimeout(_silentSyncTimer);
+  _silentSyncTimer=setTimeout(function(){
+    if(gAccessToken&&state.isLoggedIn) _silentSync();
+  },4000);
+}
+function _silentSync(){
+  // Refresh token if near expiry
+  var _sess=localStorage.getItem('ft_gsession');
+  try{var _so=JSON.parse(_sess);if(_so.expiry<Date.now()+60000)refreshToken();}catch(e){}
+  var safeState=JSON.parse(JSON.stringify(state));
+  delete safeState.gClientId;
+  safeState.lastSync=new Date().toISOString();
+  var payload=JSON.stringify({v:'1',updatedAt:safeState.lastSync,data:safeState});
+  var boundary='ft_b_'+Date.now();
+  var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
+  var CRLF='\r\n';
+  var body='--'+boundary+CRLF+'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
+  deleteAllDriveBackups().then(function(){
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+      method:'POST',
+      headers:{'Content-Type':'multipart/related; boundary='+boundary},
+      body:body
+    }).then(function(r){return r.json();});
+  }).then(function(res){
+    if(res&&res.id){
+      gDriveFileId=res.id;
+      state.lastSync=safeState.lastSync;
+      localStorage.setItem('ft_v5',JSON.stringify(state));
+      updateCloudSyncStatus();
+      console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
+    }
+  }).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
 }
 
 // ======== LOCK ========
@@ -4579,17 +4617,32 @@ function loadFromCloud(){
     // Handle both formats
     var imported=payload.data||payload;
     if(typeof imported==='string') imported=JSON.parse(imported);
-    // Always restore — ignore timestamp comparison so "clear + load" always works
+    // SMART MERGE: keep whichever side has more transactions, merge the rest
+    var localTxCount=(state.transactions||[]).length;
+    var driveTxCount=(imported.transactions||[]).length;
+    var localTime=state.lastSync?new Date(state.lastSync).getTime():0;
+    var driveTime=payload.updatedAt?new Date(payload.updatedAt).getTime():0;
+    // Merge transactions by id — union of both sides, no duplicates
+    var allTx={};
+    (state.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
+    (imported.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
+    var mergedTx=Object.values(allTx).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+    // For everything else, use Drive if Drive is newer, else keep local
+    var base=driveTime>=localTime?imported:state;
     var keep={
       isLoggedIn:state.isLoggedIn, userName:state.userName, userEmail:state.userEmail,
-      lastSync:payload.updatedAt||new Date().toISOString(),
+      lastSync:new Date().toISOString(),
       gClientId:state.gClientId,
       localProfilePhoto:state.localProfilePhoto,
-      pin:state.pin, fpEnabled:state.fpEnabled
+      pin:state.pin, fpEnabled:state.fpEnabled,
+      transactions:mergedTx
     };
-    Object.assign(state,imported,keep);
-    ['liabilities','bills','accounts','recurring','assets','transactions','goals'].forEach(function(k){
-      if(!Array.isArray(state[k])) state[k]=[];
+    Object.assign(state,base,keep);
+    ['liabilities','bills','accounts','recurring','assets','goals'].forEach(function(k){
+      // For arrays other than transactions, take the longer/newer side
+      var localArr=state[k]||[];
+      var driveArr=imported[k]||[];
+      state[k]=driveArr.length>=localArr.length?driveArr:localArr;
     });
     if(!state.budgets) state.budgets={};
     saveState();
@@ -4597,7 +4650,9 @@ function loadFromCloud(){
     applyFont(state.font);
     updateCurrSymbols();
     initApp();
-    showToast('✅ Data loaded! '+state.transactions.length+' transactions restored.','green');
+    var added=mergedTx.length-driveTxCount;
+    var msg=added>0?'✅ Merged! '+added+' local entries kept + Drive data restored.':'✅ Data loaded! '+state.transactions.length+' transactions restored.';
+    showToast(msg,'green');
   }).catch(function(e){
     clearTimeout(timer);
     showToast('❌ Load error: '+e.message,'red');
@@ -5511,10 +5566,9 @@ function startAutoSync(){
   if(_autoSyncInterval) clearInterval(_autoSyncInterval);
   _autoSyncInterval=setInterval(function(){
     if(state.isLoggedIn&&gAccessToken){
-      syncToCloud();
-      console.log('[AutoSync] Triggered at',new Date().toLocaleTimeString());
+      _silentSync();
     }
-  },30*60*1000); // every 30 min
+  },5*60*1000); // every 5 min
 }
 // Hook into auth success
 var _origRenderAuthSignedIn=renderAuthSignedIn;
@@ -5522,6 +5576,15 @@ renderAuthSignedIn=function(u){
   _origRenderAuthSignedIn(u);
   startAutoSync();
 };
+// Sync when app goes to background or is closed
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden'&&gAccessToken&&state.isLoggedIn){
+    _silentSync();
+  }
+});
+window.addEventListener('pagehide',function(){
+  if(gAccessToken&&state.isLoggedIn) _silentSync();
+});
 
 // ======== AUTO-LOCK / INACTIVITY ========
 var _inactivityMs=5*60*1000;
