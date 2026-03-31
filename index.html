@@ -703,6 +703,70 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 .wealth-action-btn:active{background:var(--bg3)}
 .wealth-action-btn.del{color:var(--red)}
 
+/* ══ NEW FEATURES CSS ══ */
+/* Calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.cal-day{border-radius:8px;min-height:36px;padding:4px;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:background .15s;background:var(--glass);border:1px solid transparent}
+.cal-day.has-bill{background:rgba(255,69,105,0.1);border-color:rgba(255,69,105,0.3);color:var(--red)}
+.cal-day.today{border-color:var(--accent);background:rgba(124,92,252,0.1)}
+.cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-day-num{font-size:12px;font-weight:900}
+.cal-bill-dot{width:5px;height:5px;border-radius:50%;background:var(--red);margin-top:2px}
+
+/* Transfer row */
+.transfer-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.transfer-row:last-child{border-bottom:none}
+
+/* Debt countdown */
+.debt-countdown{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.debt-countdown:last-child{border-bottom:none}
+.countdown-num{font-size:22px;font-weight:900;font-family:var(--font);color:var(--accent)}
+.countdown-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:700}
+
+/* Spending trends bars */
+.trend-bar-wrap{display:flex;align-items:flex-end;gap:4px;height:80px;margin:8px 0}
+.trend-bar{flex:1;border-radius:4px 4px 0 0;min-height:4px;position:relative;cursor:pointer;transition:opacity .2s}
+.trend-bar:hover{opacity:.8}
+.trend-bar-label{font-size:9px;font-weight:700;color:var(--text3);text-align:center;margin-top:4px}
+.trend-period{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.trend-pill{padding:6px 14px;border-radius:100px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);transition:all .2s}
+.trend-pill.on{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:var(--accent-text);box-shadow:0 4px 16px var(--accent-glow)}
+
+/* Emergency fund tracker */
+.efund-arc{width:120px;height:60px;position:relative;margin:0 auto 12px;overflow:hidden}
+.efund-arc svg{width:120px;height:60px}
+
+/* Duplicate alert */
+.dup-alert{background:rgba(255,69,105,0.08);border:2px solid rgba(255,69,105,0.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer}
+
+/* Search filter row */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filter-select{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--text);font-family:var(--font);outline:none;cursor:pointer;backdrop-filter:blur(12px);-webkit-appearance:none}
+
+/* Report card */
+.report-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;backdrop-filter:blur(12px)}
+
+/* Net worth timeline chart */
+.nw-timeline{height:120px;position:relative;margin:8px 0}
+
+/* Forecast card */
+.forecast-bar{height:10px;border-radius:100px;overflow:hidden;background:var(--bg3);margin-top:4px;margin-bottom:2px}
+.forecast-fill{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* Inactivity lock */
+#inactivityOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);z-index:8000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#inactivityOverlay.on{display:flex}
+
+/* Spending summary card */
+.share-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.share-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 20%,var(--accent-glow) 0%,transparent 60%);pointer-events:none}
+
+/* Prepayment calculator */
+.prepay-result{background:rgba(34,197,94,0.08);border:2px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px;margin-top:12px}
+
+/* Retirement calc */
+.retire-result{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-top:12px}
+
 </style>
 </head>
 <body>
@@ -1091,6 +1155,192 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
     </div>
 
+    <!-- BILL CALENDAR VIEW -->
+    <div class="page" id="page-calendar">
+      <div class="sec-head"><div class="sec-title">📅 Bill Calendar</div><button class="sec-btn" onclick="showModal('billModal')">➕ Add Bill</button></div>
+      <div class="box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <button onclick="calNavMonth(-1)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 14px;color:var(--text);font-weight:900;cursor:pointer;font-size:16px">‹</button>
+          <div style="font-size:15px;font-weight:800;color:var(--text)" id="calMonthLabel"></div>
+          <button onclick="calNavMonth(1)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 14px;color:var(--text);font-weight:900;cursor:pointer;font-size:16px">›</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">SUN</div>
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">MON</div>
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">TUE</div>
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">WED</div>
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">THU</div>
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">FRI</div>
+          <div style="text-align:center;font-size:9px;font-weight:900;color:var(--text3);padding:4px">SAT</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div id="calBillDetail" style="display:none">
+        <div class="box">
+          <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px">📌 Bills on Selected Day</div>
+          <div id="calBillDetailList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTER-ACCOUNT TRANSFER -->
+    <div class="page" id="page-transfers">
+      <div class="sec-head"><div class="sec-title">🔀 Transfers</div><button class="sec-btn" onclick="showModal('transferModal')">➕ Transfer</button></div>
+      <div class="box" style="background:rgba(68,138,255,0.05);border-color:rgba(68,138,255,0.2);margin-bottom:12px">
+        <div style="font-size:12px;font-weight:800;color:var(--blue)">💡 Move money between your accounts. Both account balances update automatically.</div>
+      </div>
+      <div id="transferList"><div class="empty"><div class="empty-big">🔀</div><div class="empty-title">No transfers yet</div><div class="empty-desc">Move money between accounts</div></div></div>
+    </div>
+
+    <!-- DEBT PAYOFF COUNTDOWN -->
+    <div class="page" id="page-debtcountdown">
+      <div class="sec-head"><div class="sec-title">⏱️ Debt Payoff</div></div>
+      <div id="debtCountdownList"><div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div></div>
+      <!-- Prepayment Impact Calculator -->
+      <div class="box" style="margin-top:14px">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:12px">⚡ Prepayment Impact Calculator</div>
+        <div class="field"><div class="field-label">🏧 Select Loan</div><select class="field-input" id="prepayLoanSel" onchange="calcPrepay()"><option value="">-- Select Loan --</option></select></div>
+        <div class="field"><div class="field-label">💰 Extra Payment Amount</div><input type="number" class="field-input" id="prepayAmt" placeholder="50000" oninput="calcPrepay()"></div>
+        <div id="prepayResult" style="display:none" class="prepay-result"></div>
+      </div>
+    </div>
+
+    <!-- RETIREMENT CALCULATOR -->
+    <div class="page" id="page-retirement">
+      <div class="sec-head"><div class="sec-title">🧓 Retirement Planner</div></div>
+      <div class="box">
+        <div class="field-row">
+          <div class="field"><div class="field-label">🎂 Current Age</div><input type="number" class="field-input" id="retCurrentAge" placeholder="30" oninput="calcRetirement()"></div>
+          <div class="field"><div class="field-label">🏖️ Retire at Age</div><input type="number" class="field-input" id="retRetireAge" placeholder="60" oninput="calcRetirement()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><div class="field-label">💰 Current Savings</div><input type="number" class="field-input" id="retCurrentSavings" placeholder="500000" oninput="calcRetirement()"></div>
+          <div class="field"><div class="field-label">📅 Monthly Investment</div><input type="number" class="field-input" id="retMonthly" placeholder="10000" oninput="calcRetirement()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><div class="field-label">📈 Expected Return %</div><input type="number" class="field-input" id="retReturn" placeholder="12" step="0.1" oninput="calcRetirement()"></div>
+          <div class="field"><div class="field-label">💸 Monthly Expense at Retire</div><input type="number" class="field-input" id="retMonthlyExp" placeholder="50000" oninput="calcRetirement()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><div class="field-label">🎂 Life Expectancy</div><input type="number" class="field-input" id="retLifeExp" placeholder="80" oninput="calcRetirement()"></div>
+          <div class="field"><div class="field-label">📉 Inflation %</div><input type="number" class="field-input" id="retInflation" placeholder="6" step="0.1" oninput="calcRetirement()"></div>
+        </div>
+        <div id="retirementResult" class="retire-result" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- EMERGENCY FUND TRACKER -->
+    <div class="page" id="page-emergency">
+      <div class="sec-head"><div class="sec-title">🆘 Emergency Fund</div></div>
+      <div class="box">
+        <div class="field"><div class="field-label">🎯 Target Months of Expenses</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="efundMonthBtns">
+            <div class="chip on" onclick="setEfundMonths(3,this)">3 Months</div>
+            <div class="chip" onclick="setEfundMonths(6,this)">6 Months</div>
+            <div class="chip" onclick="setEfundMonths(9,this)">9 Months</div>
+            <div class="chip" onclick="setEfundMonths(12,this)">12 Months</div>
+          </div>
+        </div>
+        <div class="field"><div class="field-label">💰 Current Emergency Fund</div><input type="number" class="field-input" id="efundCurrent" placeholder="0" oninput="calcEmergencyFund()"></div>
+        <div id="efundResult" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- SPENDING TRENDS -->
+    <div class="page" id="page-trends">
+      <div class="sec-head"><div class="sec-title">📊 Spending Trends</div></div>
+      <div class="trend-period" id="trendPeriodBtns">
+        <div class="trend-pill on" onclick="setTrendPeriod('week',this)">Weekly</div>
+        <div class="trend-pill" onclick="setTrendPeriod('month',this)">Monthly</div>
+        <div class="trend-pill" onclick="setTrendPeriod('year',this)">Yearly</div>
+      </div>
+      <div class="box">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px" id="trendChartTitle">Last 8 Weeks Spending</div>
+        <div class="trend-bar-wrap" id="trendBarWrap"></div>
+        <div style="display:flex;justify-content:space-between" id="trendBarLabels"></div>
+      </div>
+      <div class="box">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📈 Period Comparison</div>
+        <div id="trendComparison"></div>
+      </div>
+      <div class="box">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">🔍 Category Trends</div>
+        <div id="trendCategoryBreakdown"></div>
+      </div>
+    </div>
+
+    <!-- ADVANCED REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="sec-head"><div class="sec-title">📋 Reports</div></div>
+      <!-- Date Range -->
+      <div class="box" style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📅 Custom Date Range</div>
+        <div class="field-row">
+          <div class="field"><div class="field-label">From</div><input type="date" class="field-input" id="reportFrom"></div>
+          <div class="field"><div class="field-label">To</div><input type="date" class="field-input" id="reportTo"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <div class="chip on" onclick="setReportPreset('thisMonth',this)">This Month</div>
+          <div class="chip" onclick="setReportPreset('lastMonth',this)">Last Month</div>
+          <div class="chip" onclick="setReportPreset('last3',this)">Last 3M</div>
+          <div class="chip" onclick="setReportPreset('last6',this)">Last 6M</div>
+          <div class="chip" onclick="setReportPreset('thisYear',this)">This Year</div>
+        </div>
+        <button class="btn-go" onclick="generateReport()" style="margin-top:4px">📊 Generate Report</button>
+      </div>
+      <!-- Duplicate Transactions -->
+      <div class="box" style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">🔍 Duplicate Transaction Detection</div>
+        <button class="sec-btn" onclick="detectDuplicates()" style="width:100%;border-radius:10px;padding:11px;text-align:center">🔎 Scan for Duplicates</button>
+        <div id="duplicatesList" style="margin-top:10px"></div>
+      </div>
+      <!-- Report Output -->
+      <div id="reportOutput"></div>
+      <!-- Income vs Expense Forecast -->
+      <div class="box" style="margin-top:12px">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">🔮 Next Month Forecast</div>
+        <div id="forecastOutput"></div>
+      </div>
+      <!-- Net Worth Timeline -->
+      <div class="box" style="margin-top:12px">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">📈 Net Worth Growth</div>
+        <canvas id="netWorthChartReport" height="120" style="width:100%"></canvas>
+      </div>
+    </div>
+
+    <!-- SPENDING SUMMARY SHARE CARD -->
+    <div class="page" id="page-sharecard">
+      <div class="sec-head"><div class="sec-title">🎴 Spending Summary</div></div>
+      <div id="spendingShareCard" class="share-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">Finance Tracker</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text2)" id="shareCardMonth"></div>
+          </div>
+          <div style="font-size:28px">💰</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase">Income</div>
+            <div style="font-size:20px;font-weight:900;color:var(--green)" id="shareCardIncome">₹0</div>
+          </div>
+          <div style="background:rgba(255,69,105,0.1);border:1px solid rgba(255,69,105,0.2);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase">Spent</div>
+            <div style="font-size:20px;font-weight:900;color:var(--red)" id="shareCardExpense">₹0</div>
+          </div>
+        </div>
+        <div id="shareCardTopCats" style="margin-bottom:16px"></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);font-weight:700;border-top:1px solid var(--border);padding-top:10px">
+          <span>Savings Rate: <span id="shareCardRate" style="color:var(--accent);font-weight:900"></span></span>
+          <span id="shareCardDate"></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-go" onclick="shareSpendingCard()" style="flex:1">📤 Share</button>
+        <button class="btn-cancel" onclick="refreshShareCard()" style="flex:1;margin-top:0">🔄 Refresh</button>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="sec-title" style="margin-bottom:16px">⚙️ Settings</div>
@@ -1267,14 +1517,64 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="set-row-left"><span class="set-row-icon">👨‍👩‍👧‍👦</span><div><div class="set-row-label">Family Members</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="familyMembersPreview">Manage who you track expenses for</div></div></div>
           <div class="set-row-right">Edit ▶</div>
         </div>
+        <!-- Auto-Lock -->
+        <div class="set-row" style="cursor:default">
+          <div class="set-row-left"><span class="set-row-icon">🔒</span><div><div class="set-row-label">Auto-Lock</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Lock app after inactivity</div></div></div>
+          <div id="autoLockToggle" class="tog" onclick="toggleAutoLock(this)" style="cursor:pointer"><div class="tog-knob"></div></div>
+        </div>
+        <div id="autoLockDurationRow" style="display:none;padding:0 4px 12px 4px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;padding-left:2px">Lock after</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="setAutoLockDuration(30000,this)" data-dur="30000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">30s</button>
+            <button onclick="setAutoLockDuration(60000,this)" data-dur="60000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">1 min</button>
+            <button onclick="setAutoLockDuration(120000,this)" data-dur="120000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">2 min</button>
+            <button onclick="setAutoLockDuration(300000,this)" data-dur="300000" class="dur-btn" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">5 min</button>
+          </div>
+        </div>
         <div class="set-row" onclick="clearData()" style="border-color:rgba(239,68,68,.2)">
           <div class="set-row-left"><span class="set-row-icon">🗑️</span><span class="set-row-label" style="color:var(--red)">Clear All Data</span></div>
           <div class="set-row-right" style="color:var(--red)">⚠️</div>
         </div>
       </div>
+      <!-- NEW TOOLS SECTION -->
+      <div class="set-sec">
+        <div class="set-sec-title">🧰 Tools & Calculators</div>
+        <div class="set-row" onclick="showPage('calendar')">
+          <div class="set-row-left"><span class="set-row-icon">📅</span><div><div class="set-row-label">Bill Calendar</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Visual monthly bill due dates</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('transfers')">
+          <div class="set-row-left"><span class="set-row-icon">🔀</span><div><div class="set-row-label">Account Transfers</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Move money between accounts</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('debtcountdown')">
+          <div class="set-row-left"><span class="set-row-icon">⏱️</span><div><div class="set-row-label">Debt Payoff Countdown</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Track debt-free date & prepayment impact</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('retirement')">
+          <div class="set-row-left"><span class="set-row-icon">🧓</span><div><div class="set-row-label">Retirement Planner</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Calculate retirement corpus & SIP needed</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('emergency')">
+          <div class="set-row-left"><span class="set-row-icon">🆘</span><div><div class="set-row-label">Emergency Fund Tracker</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Are you covered for 3-6 months?</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('trends')">
+          <div class="set-row-left"><span class="set-row-icon">📊</span><div><div class="set-row-label">Spending Trends</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Week / Month / Year comparison</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('reports')">
+          <div class="set-row-left"><span class="set-row-icon">📋</span><div><div class="set-row-label">Advanced Reports</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Date range reports, duplicates, forecast</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('sharecard')">
+          <div class="set-row-left"><span class="set-row-icon">🎴</span><div><div class="set-row-label">Spending Summary Card</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Share your monthly financial summary</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+      </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260329-v10 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260331-v11 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -1303,6 +1603,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div onclick="closeAddMenu();showPage('bills');showModal('billModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🔔</span><span style="font-size:13px;font-weight:900">Add Bill Reminder</span></div>
     <div onclick="closeAddMenu();showPage('recurring');showModal('recurModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📅</span><span style="font-size:13px;font-weight:900">Add Recurring</span></div>
     <div onclick="closeAddMenu();showPage('insights')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🤖</span><span style="font-size:13px;font-weight:900">AI Money Advisor</span></div>
+    <div onclick="closeAddMenu();showModal('transferModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">🔀</span><span style="font-size:13px;font-weight:900">Transfer Funds</span></div>
+    <div onclick="closeAddMenu();showPage('reports')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📋</span><span style="font-size:13px;font-weight:900">Reports & Forecast</span></div>
+    <div onclick="closeAddMenu();showPage('trends')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><span style="font-size:18px">📊</span><span style="font-size:13px;font-weight:900">Spending Trends</span></div>
   </div>
 </div>
 
@@ -1788,6 +2091,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   </div>
 </div>
 
+<!-- TRANSFER MODAL -->
+<div class="modal-bg" id="transferModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔀 Transfer Between Accounts</div>
+    <div class="field"><div class="field-label">📤 From Account</div><select class="field-input" id="transferFrom"><option value="">-- Select --</option></select></div>
+    <div class="field"><div class="field-label">📥 To Account</div><select class="field-input" id="transferTo"><option value="">-- Select --</option></select></div>
+    <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="transferAmt" placeholder="0" inputmode="decimal"></div>
+    <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="transferDate"></div>
+    <div class="field"><div class="field-label">📌 Notes (optional)</div><input type="text" class="field-input" id="transferNote" placeholder="e.g. Move savings to investment"></div>
+    <button class="btn-go" onclick="saveTransfer()">✅ Transfer</button>
+    <button class="btn-cancel" onclick="closeModal('transferModal')">Cancel</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="driveModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -2131,7 +2449,7 @@ function initApp(){
   }
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
-  updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();
+  updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();_syncAutoLockDurationUI();
   if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
   if(state.isLoggedIn&&currentUser){
     renderAuthSignedIn(currentUser);
@@ -2183,6 +2501,13 @@ function showPage(id){
       b.classList.toggle('on',matches);
     });
     updateCurrRateInfo();
+    // Sync auto-lock toggle
+    var alt=document.getElementById('autoLockToggle');
+    if(alt){
+      alt.classList.toggle('on',!!state.autoLockEnabled);
+      var knob=alt.querySelector('.tog-knob');
+      if(knob) knob.style.transform=state.autoLockEnabled?'translateX(22px)':'translateX(0)';
+    }
   }
 }
 function showModal(id){
@@ -4993,7 +5318,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   if(!('serviceWorker' in navigator)) return;
 
   // ── Version stamp: change this string on every release to force SW update ──
-  var BUILD = 'ft-build-20260329-v10';
+  var BUILD = 'ft-build-20260331-v11';
 
   var swCode = [
     "var CACHE_NAME = '" + BUILD + "';",
@@ -5129,6 +5454,731 @@ function clearSWCache(){
 }
 
 
+// ======== NEW FEATURES v11 ========
+
+// ── State extensions ──
+if(!state.transfers) state.transfers=[];
+var efundTargetMonths=3;
+var trendPeriod='week';
+var calMonth=new Date().getMonth(), calYear=new Date().getFullYear();
+var reportPreset='thisMonth';
+var inactivityTimer=null;
+var INACTIVITY_TIMEOUT=5*60*1000; // 5 min default
+
+// ── PAGE_TITLES extension ──
+PAGE_TITLES['calendar']='📅 Bill Calendar';
+PAGE_TITLES['transfers']='🔀 Transfers';
+PAGE_TITLES['debtcountdown']='⏱️ Debt Payoff';
+PAGE_TITLES['retirement']='🧓 Retirement';
+PAGE_TITLES['emergency']='🆘 Emergency Fund';
+PAGE_TITLES['trends']='📊 Spending Trends';
+PAGE_TITLES['reports']='📋 Reports';
+PAGE_TITLES['sharecard']='🎴 Summary Card';
+
+// showPage extension — add new page hooks
+var _origShowPage=showPage;
+showPage=function(id){
+  _origShowPage(id);
+  if(id==='calendar'){renderBillCalendar();}
+  if(id==='transfers'){renderTransferList();populateTransferSelects();}
+  if(id==='debtcountdown'){renderDebtCountdown();populatePrepaySelect();}
+  if(id==='retirement'){/* user triggers calc */}
+  if(id==='emergency'){calcEmergencyFund();}
+  if(id==='trends'){renderSpendingTrends();}
+  if(id==='reports'){setReportPreset('thisMonth',document.querySelector('.chip.on'));generateForecast();renderNetWorthTimeline();}
+  if(id==='sharecard'){refreshShareCard();}
+};
+
+// ── showModal extension for transfer ──
+var _origShowModal=showModal;
+showModal=function(id){
+  _origShowModal(id);
+  if(id==='transferModal'){
+    populateTransferSelects();
+    document.getElementById('transferDate').value=new Date().toISOString().split('T')[0];
+  }
+};
+
+// ======== SCHEDULED AUTO-SYNC ========
+var _autoSyncInterval=null;
+function startAutoSync(){
+  if(!state.isLoggedIn||!gAccessToken) return;
+  if(_autoSyncInterval) clearInterval(_autoSyncInterval);
+  _autoSyncInterval=setInterval(function(){
+    if(state.isLoggedIn&&gAccessToken){
+      syncToCloud();
+      console.log('[AutoSync] Triggered at',new Date().toLocaleTimeString());
+    }
+  },30*60*1000); // every 30 min
+}
+// Hook into auth success
+var _origRenderAuthSignedIn=renderAuthSignedIn;
+renderAuthSignedIn=function(u){
+  _origRenderAuthSignedIn(u);
+  startAutoSync();
+};
+
+// ======== AUTO-LOCK / INACTIVITY ========
+var _inactivityMs = state.autoLockDuration || 5*60*1000;
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  if(!state.autoLockEnabled) return;
+  inactivityTimer=setTimeout(function(){
+    var overlay=document.getElementById('inactivityOverlay');
+    if(overlay) overlay.classList.add('on');
+    setTimeout(function(){
+      if(overlay) overlay.classList.remove('on');
+      lockApp();
+    },3000);
+  },_inactivityMs);
+}
+function dismissInactivity(){
+  var overlay=document.getElementById('inactivityOverlay');
+  if(overlay) overlay.classList.remove('on');
+  resetInactivityTimer();
+}
+['click','touchstart','keydown','scroll'].forEach(function(ev){
+  document.addEventListener(ev,resetInactivityTimer,{passive:true});
+});
+function _syncAutoLockDurationUI(){
+  var dur=state.autoLockDuration||300000;
+  document.querySelectorAll('.dur-btn').forEach(function(b){
+    var active=parseInt(b.dataset.dur)===dur;
+    b.style.background=active?'var(--accent)':'var(--bg3)';
+    b.style.color=active?'#fff':'var(--text2)';
+    b.style.borderColor=active?'var(--accent)':'var(--border2)';
+  });
+  var row=document.getElementById('autoLockDurationRow');
+  if(row) row.style.display=state.autoLockEnabled?'block':'none';
+}
+function setAutoLockDuration(ms, el){
+  _inactivityMs=ms;
+  state.autoLockDuration=ms;
+  saveState();
+  _syncAutoLockDurationUI();
+  var labels={30000:'30 seconds',60000:'1 minute',120000:'2 minutes',300000:'5 minutes'};
+  showToast('Auto-lock: '+( labels[ms]||ms/60000+' min'),'green');
+  resetInactivityTimer();
+}
+// Settings toggle
+function toggleAutoLock(el){
+  state.autoLockEnabled=!state.autoLockEnabled;
+  if(!state.autoLockDuration) state.autoLockDuration=300000;
+  _inactivityMs=state.autoLockDuration;
+  saveState();
+  el.classList.toggle('on',state.autoLockEnabled);
+  el.querySelector('.tog-knob').style.transform=state.autoLockEnabled?'translateX(22px)':'translateX(0)';
+  _syncAutoLockDurationUI();
+  if(state.autoLockEnabled) resetInactivityTimer();
+  else clearTimeout(inactivityTimer);
+  showToast(state.autoLockEnabled?'Auto-lock enabled':'Auto-lock disabled',state.autoLockEnabled?'green':'yellow');
+}
+// Restore duration UI on settings open
+document.addEventListener('DOMContentLoaded',function(){
+  setTimeout(_syncAutoLockDurationUI,500);
+});
+
+// ======== BILL CALENDAR ========
+function renderBillCalendar(){
+  var d=new Date(calYear,calMonth,1);
+  var lbl=document.getElementById('calMonthLabel');
+  if(lbl) lbl.textContent=d.toLocaleString('default',{month:'long',year:'numeric'});
+  var grid=document.getElementById('calGrid');
+  if(!grid) return;
+  var daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  var firstDay=d.getDay(); // 0=Sun
+  var today=new Date();
+  var todayDay=(today.getFullYear()===calYear&&today.getMonth()===calMonth)?today.getDate():-1;
+  // Build bill map: day → bills
+  var billMap={};
+  state.bills.forEach(function(b){
+    var day=b.dueDay;
+    if(!billMap[day]) billMap[day]=[];
+    billMap[day].push(b);
+  });
+  var html='';
+  for(var i=0;i<firstDay;i++) html+='<div class="cal-day empty"></div>';
+  for(var d2=1;d2<=daysInMonth;d2++){
+    var bills=billMap[d2]||[];
+    var isToday=d2===todayDay;
+    var hasBills=bills.length>0;
+    var cls='cal-day'+(hasBills?' has-bill':'')+(isToday?' today':'');
+    var dots=bills.slice(0,3).map(function(){return'<div class="cal-bill-dot"></div>';}).join('');
+    html+='<div class="'+cls+'" onclick="calShowDay('+d2+')">'
+      +'<div class="cal-day-num">'+d2+'</div>'
+      +dots
+      +'</div>';
+  }
+  grid.innerHTML=html;
+}
+function calNavMonth(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderBillCalendar();
+  document.getElementById('calBillDetail').style.display='none';
+}
+function calShowDay(day){
+  var bills=state.bills.filter(function(b){return b.dueDay===day;});
+  var det=document.getElementById('calBillDetail');
+  var list=document.getElementById('calBillDetailList');
+  if(!bills.length){det.style.display='none';return;}
+  det.style.display='block';
+  list.innerHTML=bills.map(function(b){
+    return'<div class="bill-row"><div class="bill-ico">'+b.emoji+'</div>'
+      +'<div class="bill-info"><div class="bill-name">'+b.name+'</div>'
+      +'<div class="bill-due" style="color:var(--text3)">Day '+b.dueDay+' · '+b.freq+'</div></div>'
+      +'<div class="bill-amt">'+state.currSymbol+fmt(cv(b.amt))+'</div></div>';
+  }).join('');
+}
+
+// ======== INTER-ACCOUNT TRANSFERS ========
+function populateTransferSelects(){
+  var from=document.getElementById('transferFrom');
+  var to=document.getElementById('transferTo');
+  if(!from||!to) return;
+  var opts='<option value="">-- Select --</option>'
+    +state.accounts.map(function(a){return'<option value="'+a.id+'">'+a.name+' ('+state.currSymbol+fmt(cv(a.balance))+')</option>';}).join('');
+  from.innerHTML=opts;
+  to.innerHTML=opts;
+}
+function saveTransfer(){
+  var fromId=document.getElementById('transferFrom').value;
+  var toId=document.getElementById('transferTo').value;
+  var amt=parseFloat(document.getElementById('transferAmt').value||0);
+  var date=document.getElementById('transferDate').value;
+  var note=document.getElementById('transferNote').value.trim();
+  if(!fromId||!toId){showToast('Select both accounts','yellow');return;}
+  if(fromId===toId){showToast('Cannot transfer to same account','red');return;}
+  if(!amt||amt<=0){showToast('Enter a valid amount','yellow');return;}
+  var amtINR=amt/(state.currencyRate||1);
+  var fromAcct=state.accounts.find(function(a){return String(a.id)===String(fromId);});
+  var toAcct=state.accounts.find(function(a){return String(a.id)===String(toId);});
+  if(!fromAcct||!toAcct){showToast('Account not found','red');return;}
+  fromAcct.balance-=amtINR;
+  toAcct.balance+=amtINR;
+  if(!state.transfers) state.transfers=[];
+  state.transfers.unshift({id:Date.now(),from:fromId,to:toId,fromName:fromAcct.name,toName:toAcct.name,amount:amtINR,date:date,note:note});
+  saveState();
+  closeModal('transferModal');
+  renderTransferList();
+  renderAccounts();
+  showToast('✅ Transferred '+state.currSymbol+fmt(cv(amtINR))+' from '+fromAcct.name+' to '+toAcct.name,'green');
+}
+function renderTransferList(){
+  var c=document.getElementById('transferList');
+  if(!c) return;
+  if(!state.transfers||!state.transfers.length){
+    c.innerHTML='<div class="empty"><div class="empty-big">🔀</div><div class="empty-title">No transfers yet</div><div class="empty-desc">Move money between accounts</div></div>';return;
+  }
+  c.innerHTML=state.transfers.map(function(t){
+    return'<div class="box" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(68,138,255,0.1);border:1px solid rgba(68,138,255,0.3);display:flex;align-items:center;justify-content:center;font-size:20px">🔀</div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:13px;font-weight:900">'+t.fromName+' → '+t.toName+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);font-weight:600">'+formatDate(t.date)+(t.note?' · '+t.note:'')+'</div>'
+      +'</div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--blue)">'+state.currSymbol+fmt(cv(t.amount))+'</div>'
+      +'<span style="color:var(--red);font-size:16px;cursor:pointer;font-weight:900;padding:4px" onclick="deleteTransfer('+t.id+')">✕</span>'
+      +'</div></div>';
+  }).join('');
+}
+function deleteTransfer(id){
+  var t=state.transfers.find(function(x){return x.id===id;});
+  if(!t) return;
+  // Reverse the transfer
+  var fromAcct=state.accounts.find(function(a){return String(a.id)===String(t.from);});
+  var toAcct=state.accounts.find(function(a){return String(a.id)===String(t.to);});
+  if(fromAcct) fromAcct.balance+=t.amount;
+  if(toAcct) toAcct.balance-=t.amount;
+  state.transfers=state.transfers.filter(function(x){return x.id!==id;});
+  saveState();
+  renderTransferList();
+  renderAccounts();
+  showToast('Transfer reversed & deleted','yellow');
+}
+
+// ======== DEBT PAYOFF COUNTDOWN ========
+function renderDebtCountdown(){
+  var c=document.getElementById('debtCountdownList');
+  if(!c) return;
+  if(!state.liabilities||!state.liabilities.length){
+    c.innerHTML='<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div>';return;
+  }
+  c.innerHTML=state.liabilities.map(function(l){
+    var monthsLeft=0;
+    var interest=0;
+    if(l.emi>0&&l.remaining>0){
+      if(l.rate>0){
+        var r=l.rate/12/100;
+        monthsLeft=Math.ceil(-Math.log(1-l.remaining*r/l.emi)/Math.log(1+r));
+        interest=(l.emi*monthsLeft)-l.remaining;
+      } else {
+        monthsLeft=Math.ceil(l.remaining/l.emi);
+      }
+    }
+    var payoffDate='';
+    if(monthsLeft>0){
+      var pd=new Date();pd.setMonth(pd.getMonth()+monthsLeft);
+      payoffDate=pd.toLocaleString('default',{month:'short',year:'numeric'});
+    }
+    var pct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;
+    return'<div class="box" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<div style="font-size:14px;font-weight:900">'+l.name+'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3)">'+l.type+'</div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:10px">'
+      +'<div><div class="countdown-num">'+state.currSymbol+fmt(cv(l.remaining))+'</div><div class="countdown-lbl">Outstanding</div></div>'
+      +'<div><div class="countdown-num" style="color:var(--yellow)">'+(monthsLeft>0?monthsLeft+'mo':'—')+'</div><div class="countdown-lbl">Months Left</div></div>'
+      +'<div><div class="countdown-num" style="color:var(--red)">'+state.currSymbol+(interest>0?fmt(cv(interest)):'0')+'</div><div class="countdown-lbl">Remaining Interest</div></div>'
+      +'</div>'
+      +(payoffDate?'<div style="font-size:12px;font-weight:700;color:var(--green);text-align:center;margin-bottom:8px">🏁 Payoff by '+payoffDate+'</div>':'')
+      +'<div class="goal-bar"><div class="goal-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--green),var(--teal))"></div></div>'
+      +'<div style="font-size:10px;color:var(--text3);font-weight:700;text-align:right;margin-top:4px">'+pct+'% paid</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── Prepayment Calculator ──
+function populatePrepaySelect(){
+  var sel=document.getElementById('prepayLoanSel');
+  if(!sel) return;
+  sel.innerHTML='<option value="">-- Select Loan --</option>'
+    +state.liabilities.map(function(l){return'<option value="'+l.id+'">'+l.name+'</option>';}).join('');
+}
+function calcPrepay(){
+  var id=document.getElementById('prepayLoanSel')?.value;
+  var extra=parseFloat(document.getElementById('prepayAmt')?.value||0);
+  var res=document.getElementById('prepayResult');
+  if(!res) return;
+  if(!id||!extra){res.style.display='none';return;}
+  var l=state.liabilities.find(function(x){return String(x.id)===String(id);});
+  if(!l||!l.emi||l.remaining<=0){res.style.display='none';return;}
+  var r=l.rate>0?l.rate/12/100:0;
+  function monthsToPayoff(rem,emi){
+    if(emi<=0) return 0;
+    if(r<=0) return Math.ceil(rem/emi);
+    return Math.ceil(-Math.log(1-(rem*r/emi))/Math.log(1+r));
+  }
+  var origMonths=monthsToPayoff(l.remaining,l.emi);
+  var newRem=Math.max(0,l.remaining-extra/(state.currencyRate||1));
+  var newMonths=monthsToPayoff(newRem,l.emi);
+  var savedMonths=origMonths-newMonths;
+  var savedInterest=savedMonths*l.emi-(extra/(state.currencyRate||1));
+  res.style.display='block';
+  res.innerHTML='<div style="font-size:11px;font-weight:900;color:var(--green);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">⚡ Impact of '+state.currSymbol+fmt(cv(extra/(state.currencyRate||1)))+' Prepayment</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">'
+    +'<div><div style="font-size:16px;font-weight:900;color:var(--accent)">'+savedMonths+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Months Saved</div></div>'
+    +'<div><div style="font-size:16px;font-weight:900;color:var(--green)">'+state.currSymbol+fmt(cv(Math.max(0,savedInterest)))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Interest Saved</div></div>'
+    +'<div><div style="font-size:16px;font-weight:900;color:var(--yellow)">'+newMonths+'mo</div><div style="font-size:10px;color:var(--text3);font-weight:700">New Duration</div></div>'
+    +'</div>';
+}
+
+// ======== RETIREMENT CALCULATOR ========
+function calcRetirement(){
+  var curAge=parseFloat(document.getElementById('retCurrentAge')?.value||0);
+  var retAge=parseFloat(document.getElementById('retRetireAge')?.value||60);
+  var curSavings=parseFloat(document.getElementById('retCurrentSavings')?.value||0)/(state.currencyRate||1);
+  var monthly=parseFloat(document.getElementById('retMonthly')?.value||0)/(state.currencyRate||1);
+  var retPct=parseFloat(document.getElementById('retReturn')?.value||12);
+  var monthlyExp=parseFloat(document.getElementById('retMonthlyExp')?.value||0)/(state.currencyRate||1);
+  var lifeExp=parseFloat(document.getElementById('retLifeExp')?.value||80);
+  var inflation=parseFloat(document.getElementById('retInflation')?.value||6);
+  var res=document.getElementById('retirementResult');
+  if(!res) return;
+  if(!curAge||!retAge||retAge<=curAge){res.style.display='none';return;}
+  var yearsToRetire=retAge-curAge;
+  var retireYears=Math.max(0,lifeExp-retAge);
+  var monthlyRate=retPct/12/100;
+  var inflRate=inflation/12/100;
+  // Future value of current savings + monthly SIP
+  var fvSavings=curSavings*Math.pow(1+retPct/100,yearsToRetire);
+  var fvSIP=monthly*((Math.pow(1+monthlyRate,yearsToRetire*12)-1)/monthlyRate)*(1+monthlyRate);
+  var corpusNeeded=0;
+  if(monthlyExp>0&&retireYears>0){
+    // Inflation-adjusted monthly expense at retirement
+    var expAtRetire=monthlyExp*Math.pow(1+inflation/100,yearsToRetire);
+    // Real rate = (1+nom)/(1+inf)-1
+    var realRate=(1+retPct/100)/(1+inflation/100)-1;
+    var monthlyReal=realRate/12;
+    var n=retireYears*12;
+    if(monthlyReal>0){
+      corpusNeeded=expAtRetire*((1-Math.pow(1+monthlyReal,-n))/monthlyReal);
+    } else {
+      corpusNeeded=expAtRetire*n;
+    }
+  }
+  var totalCorpus=fvSavings+fvSIP;
+  var surplus=totalCorpus-corpusNeeded;
+  var onTrack=surplus>=0;
+  res.style.display='block';
+  res.innerHTML='<div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:'+(onTrack?'var(--green)':'var(--red)')+';margin-bottom:10px">'+(onTrack?'✅ On Track!':'⚠️ Gap Detected')+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--accent)">'+state.currSymbol+fmtCr(cv(totalCorpus))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Projected Corpus</div></div>'
+    +(corpusNeeded>0?'<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--yellow)">'+state.currSymbol+fmtCr(cv(corpusNeeded))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Needed Corpus</div></div>':'<div></div>')
+    +'</div>'
+    +(corpusNeeded>0?'<div style="text-align:center;padding:10px;border-radius:10px;background:'+(onTrack?'rgba(34,197,94,0.1)':'rgba(255,69,105,0.1)')+'"><div style="font-size:15px;font-weight:900;color:'+(onTrack?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmtCr(cv(Math.abs(surplus)))+'</div><div style="font-size:11px;font-weight:700;color:var(--text3)">'+(onTrack?'Surplus at Retirement':'Shortfall — increase SIP')+'</div></div>':'')
+    +'<div style="margin-top:10px;font-size:11px;color:var(--text3);font-weight:700;line-height:1.8">'
+    +'📅 Years to retire: <b style="color:var(--text)">'+yearsToRetire+'</b><br>'
+    +'🎂 Retirement duration: <b style="color:var(--text)">'+retireYears+' years</b><br>'
+    +'📈 From SIP: <b style="color:var(--text)">'+state.currSymbol+fmtCr(cv(fvSIP))+'</b><br>'
+    +'💰 From existing: <b style="color:var(--text)">'+state.currSymbol+fmtCr(cv(fvSavings))+'</b>'
+    +'</div>';
+}
+function fmtCr(n){
+  if(n>=10000000) return (n/10000000).toFixed(2)+'Cr';
+  if(n>=100000) return (n/100000).toFixed(2)+'L';
+  return fmt(n);
+}
+
+// ======== EMERGENCY FUND TRACKER ========
+function setEfundMonths(n,el){
+  efundTargetMonths=n;
+  document.querySelectorAll('#efundMonthBtns .chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  calcEmergencyFund();
+}
+function calcEmergencyFund(){
+  var res=document.getElementById('efundResult');
+  if(!res) return;
+  var curEl=document.getElementById('efundCurrent');
+  var current=curEl?parseFloat(curEl.value||0)/(state.currencyRate||1):0;
+  var monthTxs=getMonthTxs();
+  var monthlyExp=monthTxs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  // Use last 3 months average if available
+  var expArr=[];
+  for(var i=0;i<3;i++){
+    var m2=(new Date().getMonth()-i+12)%12;
+    var y2=new Date().getFullYear()-(new Date().getMonth()-i<0?1:0);
+    var e2=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===m2&&d.getFullYear()===y2&&t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    if(e2>0) expArr.push(e2);
+  }
+  var avgExp=expArr.length?expArr.reduce(function(a,b){return a+b;},0)/expArr.length:monthlyExp;
+  var target=avgExp*efundTargetMonths;
+  var pct=target>0?Math.min(100,current/target*100):0;
+  var monthsCovered=avgExp>0?current/avgExp:0;
+  var gap=Math.max(0,target-current);
+  var color=pct>=100?'var(--green)':pct>=60?'var(--yellow)':'var(--red)';
+  res.innerHTML='<div style="text-align:center;margin-bottom:14px">'
+    +'<svg width="160" height="80" viewBox="0 0 160 80">'
+    +'<path d="M10,70 A70,70 0 0,1 150,70" fill="none" stroke="var(--bg3)" stroke-width="14" stroke-linecap="round"/>'
+    +'<path d="M10,70 A70,70 0 0,1 150,70" fill="none" stroke="'+color+'" stroke-width="14" stroke-linecap="round" stroke-dasharray="'+Math.PI*70+'" stroke-dashoffset="'+(Math.PI*70*(1-pct/100))+'"/>'
+    +'<text x="80" y="60" text-anchor="middle" font-size="20" font-weight="900" fill="'+color+'">'+pct.toFixed(0)+'%</text>'
+    +'</svg></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:12px">'
+    +'<div><div style="font-size:15px;font-weight:900;color:var(--text)">'+state.currSymbol+fmt(cv(current))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Current Fund</div></div>'
+    +'<div><div style="font-size:15px;font-weight:900;color:var(--accent)">'+state.currSymbol+fmt(cv(target))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Target ('+efundTargetMonths+'mo)</div></div>'
+    +'<div><div style="font-size:15px;font-weight:900;color:'+color+'">'+monthsCovered.toFixed(1)+'mo</div><div style="font-size:10px;color:var(--text3);font-weight:700">Months Covered</div></div>'
+    +'</div>'
+    +(gap>0?'<div style="background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:900;color:var(--red)">'+state.currSymbol+fmt(cv(gap))+' more needed</div><div style="font-size:11px;color:var(--text3);font-weight:700">Save '+state.currSymbol+fmt(cv(gap/6))+'/mo to reach target in 6 months</div></div>':'<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:900;color:var(--green)">🎉 Emergency fund target met!</div></div>');
+}
+
+// ======== SPENDING TRENDS ========
+function setTrendPeriod(p,el){
+  trendPeriod=p;
+  document.querySelectorAll('.trend-pill').forEach(function(x){x.classList.remove('on');});
+  el.classList.add('on');
+  renderSpendingTrends();
+}
+function renderSpendingTrends(){
+  var wrap=document.getElementById('trendBarWrap');
+  var labelsEl=document.getElementById('trendBarLabels');
+  var title=document.getElementById('trendChartTitle');
+  var comp=document.getElementById('trendComparison');
+  var catBreak=document.getElementById('trendCategoryBreakdown');
+  if(!wrap) return;
+  var periods=[];
+  var now=new Date();
+  if(trendPeriod==='week'){
+    if(title) title.textContent='Last 8 Weeks Spending';
+    for(var i=7;i>=0;i--){
+      var wStart=new Date(now);wStart.setDate(now.getDate()-i*7-6);
+      var wEnd=new Date(now);wEnd.setDate(now.getDate()-i*7);
+      var label='W'+(8-i);
+      var txs=state.transactions.filter(function(t){var d=new Date(t.date);return d>=wStart&&d<=wEnd&&t.type==='expense';});
+      periods.push({label:label,amount:txs.reduce(function(s,t){return s+t.amount;},0)});
+    }
+  } else if(trendPeriod==='month'){
+    if(title) title.textContent='Last 8 Months Spending';
+    for(var i=7;i>=0;i--){
+      var m=(now.getMonth()-i+120)%12;
+      var y=now.getFullYear()-Math.floor((12-(now.getMonth()-i+12)%12-1)/12);
+      if(now.getMonth()-i<0) y=now.getFullYear()-Math.ceil((i-now.getMonth())/12);
+      var mn=now.getMonth()-i;
+      while(mn<0){mn+=12;}
+      var yr=now.getFullYear()+Math.floor((now.getMonth()-i)/12);
+      var txs2=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr&&t.type==='expense';});
+      periods.push({label:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mn],amount:txs2.reduce(function(s,t){return s+t.amount;},0)});
+    }
+  } else {
+    if(title) title.textContent='Last 5 Years Spending';
+    for(var i=4;i>=0;i--){
+      var yr2=now.getFullYear()-i;
+      var txs3=state.transactions.filter(function(t){var d=new Date(t.date);return d.getFullYear()===yr2&&t.type==='expense';});
+      periods.push({label:yr2+'',amount:txs3.reduce(function(s,t){return s+t.amount;},0)});
+    }
+  }
+  var maxAmt=Math.max.apply(null,periods.map(function(p){return p.amount;}));
+  if(!maxAmt) maxAmt=1;
+  wrap.innerHTML=periods.map(function(p){
+    var h=Math.max(4,Math.round((p.amount/maxAmt)*80));
+    var col=p.amount>maxAmt*0.8?'var(--red)':p.amount>maxAmt*0.5?'var(--yellow)':'var(--accent)';
+    return'<div style="flex:1;display:flex;flex-direction:column;align-items:center">'
+      +'<div title="'+state.currSymbol+fmt(cv(p.amount))+'" class="trend-bar" style="width:100%;height:'+h+'px;background:'+col+'22;border:2px solid '+col+'"></div>'
+      +'</div>';
+  }).join('');
+  labelsEl.innerHTML='<div style="display:flex;width:100%">'+periods.map(function(p){
+    return'<div style="flex:1;text-align:center;font-size:9px;font-weight:700;color:var(--text3)">'+p.label+'</div>';
+  }).join('')+'</div>';
+  // Comparison
+  var cur=periods[periods.length-1]?.amount||0;
+  var prev=periods[periods.length-2]?.amount||0;
+  var chg=prev>0?((cur-prev)/prev*100):0;
+  if(comp) comp.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">'
+    +'<div style="font-size:13px;font-weight:700">Current vs Previous</div>'
+    +'<div style="font-size:14px;font-weight:900;color:'+(chg<=0?'var(--green)':'var(--red)')+'">'+( chg<=0?'▼':'▲')+Math.abs(chg).toFixed(1)+'%</div>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px;color:var(--text3);font-weight:700">'
+    +'<span>Current: <b style="color:var(--text)">'+state.currSymbol+fmt(cv(cur))+'</b></span>'
+    +'<span>Previous: <b style="color:var(--text)">'+state.currSymbol+fmt(cv(prev))+'</b></span>'
+    +'</div>';
+  // Category breakdown for trends
+  var allTxs=state.transactions.filter(function(t){return t.type==='expense';});
+  var catMap={};
+  allTxs.forEach(function(t){catMap[t.category]=(catMap[t.category]||0)+t.amount;});
+  var catArr=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+  var total=catArr.reduce(function(s,e){return s+e[1];},0)||1;
+  if(catBreak) catBreak.innerHTML=catArr.map(function(e){
+    var pct=(e[1]/total*100).toFixed(0);
+    var col=CAT_COLOR[e[0]]||'var(--accent)';
+    return'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px"><span>'+(CAT_EMOJI[e[0]]||'🌀')+' '+e[0]+'</span><span style="color:'+col+'">'+state.currSymbol+fmt(cv(e[1]))+'</span></div>'
+      +'<div class="pbar"><div class="pbar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'
+      +'</div>';
+  }).join('');
+}
+
+// ======== ADVANCED REPORTS & DATE RANGE ========
+function setReportPreset(p,el){
+  reportPreset=p;
+  if(el){document.querySelectorAll('#page-reports .chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');}
+  var now=new Date();
+  var from='',to=now.toISOString().split('T')[0];
+  if(p==='thisMonth'){from=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];}
+  else if(p==='lastMonth'){var lm=new Date(now.getFullYear(),now.getMonth()-1,1);from=lm.toISOString().split('T')[0];to=new Date(now.getFullYear(),now.getMonth(),0).toISOString().split('T')[0];}
+  else if(p==='last3'){from=new Date(now.getFullYear(),now.getMonth()-3,1).toISOString().split('T')[0];}
+  else if(p==='last6'){from=new Date(now.getFullYear(),now.getMonth()-6,1).toISOString().split('T')[0];}
+  else if(p==='thisYear'){from=new Date(now.getFullYear(),0,1).toISOString().split('T')[0];}
+  var f=document.getElementById('reportFrom');var t=document.getElementById('reportTo');
+  if(f) f.value=from;if(t) t.value=to;
+}
+function generateReport(){
+  var from=document.getElementById('reportFrom')?.value;
+  var to=document.getElementById('reportTo')?.value;
+  var out=document.getElementById('reportOutput');
+  if(!out) return;
+  if(!from||!to){showToast('Select a date range','yellow');return;}
+  var txs=state.transactions.filter(function(t){return t.date>=from&&t.date<=to;});
+  var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+  var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var net=inc-exp;
+  var catMap={};
+  txs.filter(function(t){return t.type==='expense';}).forEach(function(t){catMap[t.category]=(catMap[t.category]||0)+t.amount;});
+  var topCats=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  out.innerHTML='<div class="report-card">'
+    +'<div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">📊 Report: '+from+' to '+to+'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:14px">'
+    +'<div><div style="font-size:16px;font-weight:900;color:var(--green)">'+state.currSymbol+fmt(cv(inc))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Income</div></div>'
+    +'<div><div style="font-size:16px;font-weight:900;color:var(--red)">'+state.currSymbol+fmt(cv(exp))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Spent</div></div>'
+    +'<div><div style="font-size:16px;font-weight:900;color:'+(net>=0?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmt(cv(Math.abs(net)))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">'+(net>=0?'Saved':'Deficit')+'</div></div>'
+    +'</div>'
+    +'<div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px">🏆 TOP CATEGORIES</div>'
+    +topCats.map(function(e){var pct=exp>0?(e[1]/exp*100).toFixed(0):'0';var col=CAT_COLOR[e[0]]||'var(--accent)';return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:16px">'+(CAT_EMOJI[e[0]]||'🌀')+'</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700"><span>'+e[0]+'</span><span>'+state.currSymbol+fmt(cv(e[1]))+'</span></div><div class="pbar" style="margin-top:3px"><div class="pbar-fill" style="width:'+pct+'%;background:'+col+'"></div></div></div></div>';}).join('')
+    +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin-top:10px">📋 '+txs.length+' transactions in range</div>'
+    +'</div>';
+}
+
+// ── Duplicate Detection ──
+function detectDuplicates(){
+  var dups=[];
+  var seen={};
+  state.transactions.forEach(function(t){
+    var key=t.type+'_'+t.amount+'_'+t.date+'_'+t.category;
+    if(seen[key]) dups.push({original:seen[key],duplicate:t});
+    else seen[key]=t;
+  });
+  var el=document.getElementById('duplicatesList');
+  if(!el) return;
+  if(!dups.length){el.innerHTML='<div style="color:var(--green);font-size:12px;font-weight:900;padding:10px 0">✅ No duplicates found!</div>';return;}
+  el.innerHTML=dups.map(function(d){
+    return'<div class="dup-alert" onclick="deleteDuplicate('+d.duplicate.id+')">'
+      +'<div style="font-size:12px;font-weight:900;color:var(--red)">🔍 Possible Duplicate — Tap to Delete</div>'
+      +'<div style="font-size:11px;color:var(--text2);margin-top:4px;font-weight:700">'+d.duplicate.date+' · '+(d.duplicate.emoji||'🌀')+' '+d.duplicate.desc+' · '+state.currSymbol+fmt(cv(d.duplicate.amount))+'</div>'
+      +'</div>';
+  }).join('');
+  showToast(dups.length+' possible duplicate(s) found','yellow');
+}
+function deleteDuplicate(id){
+  state.transactions=state.transactions.filter(function(t){return t.id!==id;});
+  saveState();renderHistory();detectDuplicates();
+  showToast('Duplicate removed','green');
+}
+
+// ── Income vs Expense Forecast ──
+function generateForecast(){
+  var out=document.getElementById('forecastOutput');
+  if(!out) return;
+  var months=[];
+  var now=new Date();
+  for(var i=2;i>=0;i--){
+    var mn=now.getMonth()-i;var yr=now.getFullYear()+Math.floor(mn/12);mn=(mn+120)%12;
+    var txs=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr;});
+    months.push({inc:txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0),exp:txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0)});
+  }
+  var avgInc=months.reduce(function(s,m){return s+m.inc;},0)/3;
+  var avgExp=months.reduce(function(s,m){return s+m.exp;},0)/3;
+  var forecastInc=avgInc*1.02;var forecastExp=avgExp*1.05;var forecastNet=forecastInc-forecastExp;
+  out.innerHTML='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:8px">Based on 3-month average</div>'
+    +'<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px"><span>💰 Expected Income</span><span style="color:var(--green)">'+state.currSymbol+fmt(cv(forecastInc))+'</span></div><div class="forecast-bar"><div class="forecast-fill" style="width:100%;background:var(--green)"></div></div></div>'
+    +'<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px"><span>💸 Expected Spending</span><span style="color:var(--red)">'+state.currSymbol+fmt(cv(forecastExp))+'</span></div><div class="forecast-bar"><div class="forecast-fill" style="width:'+(forecastInc>0?Math.min(100,forecastExp/forecastInc*100).toFixed(0):0)+'%;background:var(--red)"></div></div></div>'
+    +'<div style="text-align:center;padding:10px;border-radius:10px;background:'+(forecastNet>=0?'rgba(34,197,94,0.08)':'rgba(255,69,105,0.08)')+'"><div style="font-size:16px;font-weight:900;color:'+(forecastNet>=0?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmt(cv(Math.abs(forecastNet)))+'</div><div style="font-size:11px;font-weight:700;color:var(--text3)">'+(forecastNet>=0?'Projected Savings':'Projected Deficit')+'</div></div>';
+}
+
+// ── Net Worth Timeline ──
+function renderNetWorthTimeline(){
+  var ctx=document.getElementById('netWorthChartReport');
+  if(!ctx) return;
+  if(charts.nwt) charts.nwt.destroy();
+  var now=new Date();
+  var labels=[];var data=[];
+  var totalAssets=state.assets.reduce(function(s,a){return s+a.value;},0);
+  var totalLiab=state.liabilities.reduce(function(s,l){return s+l.remaining;},0);
+  var totalAccts=state.accounts.reduce(function(s,a){return s+a.balance;},0);
+  var baseNW=totalAssets+totalAccts-totalLiab;
+  for(var i=11;i>=0;i--){
+    var mn=now.getMonth()-i;var yr=now.getFullYear()+Math.floor(mn/12);mn=(mn+120)%12;
+    labels.push(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mn]);
+    // Net change in that month
+    var txsM=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr;});
+    var net=txsM.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0)
+           -txsM.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    data.push(net);
+  }
+  // Build cumulative from baseNW backwards
+  var cumulative=[];var running=baseNW;
+  for(var i=data.length-1;i>=0;i--){running-=data[i];cumulative.unshift(running);}
+  cumulative[cumulative.length-1]=baseNW;
+  charts.nwt=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:cumulative.map(cv),borderColor:'var(--accent)',backgroundColor:'rgba(124,92,252,0.1)',fill:true,tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:'var(--accent)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10},callback:function(v){return state.currSymbol+fmt(v);}}}}}});
+}
+
+// ======== SHAREABLE SPENDING SUMMARY CARD ========
+function refreshShareCard(){
+  var now=new Date();
+  var txs=getMonthTxs();
+  var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+  var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var rate=inc>0?((inc-exp)/inc*100).toFixed(0):'0';
+  var monthEl=document.getElementById('shareCardMonth');
+  var incEl=document.getElementById('shareCardIncome');
+  var expEl=document.getElementById('shareCardExpense');
+  var rateEl=document.getElementById('shareCardRate');
+  var dateEl=document.getElementById('shareCardDate');
+  var catsEl=document.getElementById('shareCardTopCats');
+  if(monthEl) monthEl.textContent=now.toLocaleString('default',{month:'long',year:'numeric'});
+  if(incEl) incEl.textContent=state.currSymbol+fmt(cv(inc));
+  if(expEl) expEl.textContent=state.currSymbol+fmt(cv(exp));
+  if(rateEl) rateEl.textContent=rate+'%';
+  if(dateEl) dateEl.textContent=now.toLocaleDateString();
+  // Top 3 categories
+  var catMap={};
+  txs.filter(function(t){return t.type==='expense';}).forEach(function(t){catMap[t.category]=(catMap[t.category]||0)+t.amount;});
+  var top=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];}).slice(0,3);
+  if(catsEl) catsEl.innerHTML=top.map(function(e){
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;font-weight:700">'
+      +'<span>'+(CAT_EMOJI[e[0]]||'🌀')+' '+e[0]+'</span>'
+      +'<span style="color:var(--red)">'+state.currSymbol+fmt(cv(e[1]))+'</span>'
+      +'</div>';
+  }).join('');
+}
+function shareSpendingCard(){
+  var card=document.getElementById('spendingShareCard');
+  if(!card){showToast('Card not ready','red');return;}
+  // Try native share first with text summary
+  var now=new Date();
+  var txs=getMonthTxs();
+  var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+  var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var rate=inc>0?((inc-exp)/inc*100).toFixed(0):'0';
+  var text='💰 My '+now.toLocaleString('default',{month:'long',year:'numeric'})+' Summary\n'
+    +'📥 Income: '+state.currSymbol+fmt(cv(inc))+'\n'
+    +'📤 Spent: '+state.currSymbol+fmt(cv(exp))+'\n'
+    +'🐷 Saved: '+rate+'%\n'
+    +'— via Finance Tracker';
+  if(navigator.share){navigator.share({title:'My Spending Summary',text:text}).catch(function(){});}
+  else{navigator.clipboard?.writeText(text).then(function(){showToast('Summary copied to clipboard!','green');}).catch(function(){showToast('Long-press to copy','yellow');});}
+}
+
+// ======== TRANSACTION SEARCH ADVANCED FILTERS ========
+// Extend renderHistory with advanced search filters
+var _origRenderHistory=renderHistory;
+function renderHistoryExtended(){
+  // Additional filter: date range and category
+  var fromEl=document.getElementById('histFromDate');
+  var toEl=document.getElementById('histToDate');
+  var catEl=document.getElementById('histCatFilter');
+  if(fromEl&&toEl&&catEl){
+    var from=fromEl.value,to=toEl.value,cat=catEl.value;
+    if(from||to||cat){
+      // Re-filter after normal render
+      setTimeout(function(){
+        var items=document.querySelectorAll('#txList [data-txid]');
+        items.forEach(function(item){
+          var txid=item.dataset.txid;
+          var tx=state.transactions.find(function(t){return String(t.id)===txid;});
+          if(!tx){return;}
+          var show=true;
+          if(from&&tx.date<from) show=false;
+          if(to&&tx.date>to) show=false;
+          if(cat&&tx.category!==cat) show=false;
+          item.style.display=show?'':'none';
+        });
+      },50);
+    }
+  }
+  _origRenderHistory();
+}
+
+// ======== INACTIVITY OVERLAY HTML (injected) ========
+(function(){
+  var ov=document.createElement('div');
+  ov.id='inactivityOverlay';
+  ov.innerHTML='<div style="font-size:60px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">Locking due to inactivity...</div><div style="font-size:13px;color:var(--text3);font-weight:600">Tap anywhere to stay</div><button onclick="dismissInactivity()" style="background:var(--accent);border:none;border-radius:12px;padding:12px 28px;color:#fff;font-size:14px;font-weight:900;cursor:pointer;margin-top:8px">Stay Unlocked</button>';
+  ov.onclick=function(e){if(e.target===ov)dismissInactivity();};
+  document.body.appendChild(ov);
+})();
+
+// ── Patch initApp to init new state fields ──
+var _origInitApp=initApp;
+initApp=function(){
+  if(!state.transfers) state.transfers=[];
+  _origInitApp();
+  resetInactivityTimer();
+  // Init reports page date pickers with defaults
+  setReportPreset('thisMonth',null);
+  // Update build history
+};
+
+// ── Patch saveState to include transfers ──
+var _origSaveState=saveState;
+saveState=function(){
+  if(!state.transfers) state.transfers=[];
+  _origSaveState();
+};
+
+// ── Navigation for new pages via settings or helper ──
+function navToPage(id){ showPage(id); }
+
 // ======== BOOT ========
 loadState();
 initFpButton();
@@ -5167,17 +6217,43 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v10 — Current -->
+      <!-- v11 — Current -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">10</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">11</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v10 — 29 Mar 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v11 — 31 Mar 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            ☁️ <b style="color:var(--text)">Scheduled auto-sync</b> to Drive every 30 min<br>
+            🔒 <b style="color:var(--text)">Auto-lock</b> after inactivity timeout<br>
+            📅 <b style="color:var(--text)">Bill payment calendar</b> view<br>
+            🔀 <b style="color:var(--text)">Inter-account transfer</b> tracking<br>
+            ⏱️ <b style="color:var(--text)">Debt payoff countdown</b> timer<br>
+            ⚡ <b style="color:var(--text)">Prepayment impact</b> calculator<br>
+            🧓 <b style="color:var(--text)">Retirement calculator</b> with inflation<br>
+            🆘 <b style="color:var(--text)">Emergency fund tracker</b> with arc gauge<br>
+            🔍 <b style="color:var(--text)">Duplicate transaction</b> detection<br>
+            📋 <b style="color:var(--text)">Advanced reports</b> with date range<br>
+            🔮 <b style="color:var(--text)">Income vs expense forecast</b> (next month)<br>
+            📊 <b style="color:var(--text)">Spending trends</b> week/month/year<br>
+            🎴 <b style="color:var(--text)">Shareable spending summary</b> card
+          </div>
+        </div>
+      </div>
+
+      <!-- v10 — Previous -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">10</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v10 — 29 Mar 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             🔴 Added <b style="color:var(--text)">Nebula</b> theme — Deep Space Galaxy<br>
             🍵 Added <b style="color:var(--text)">Matcha</b> theme — Japanese Dark Tea<br>
@@ -5262,7 +6338,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">20260329-v10</span>
+      Current build: <span style="color:var(--accent)">20260331-v11</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
