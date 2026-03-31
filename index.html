@@ -1188,13 +1188,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="set-sec">
         <div class="set-sec-title">💱 Currency</div>
         <div class="curr-grid" id="currGrid">
-          <div class="curr-btn on" onclick="setCurr('INR','₹',this)">₹</div>
-          <div class="curr-btn" onclick="setCurr('USD','$',this)">$</div>
-          <div class="curr-btn" onclick="setCurr('EUR','€',this)">€</div>
-          <div class="curr-btn" onclick="setCurr('GBP','£',this)">£</div>
-          <div class="curr-btn" onclick="setCurr('JPY','¥',this)">¥</div>
-          <div class="curr-btn" onclick="setCurr('AED','د.إ',this)">د.إ</div>
+          <div class="curr-btn on" onclick="setCurr('INR','₹',this)">₹ INR</div>
+          <div class="curr-btn" onclick="setCurr('USD','$',this)">$ USD</div>
+          <div class="curr-btn" onclick="setCurr('EUR','€',this)">€ EUR</div>
+          <div class="curr-btn" onclick="setCurr('GBP','£',this)">£ GBP</div>
+          <div class="curr-btn" onclick="setCurr('JPY','¥',this)">¥ JPY</div>
+          <div class="curr-btn" onclick="setCurr('AED','د.إ',this)">د.إ AED</div>
         </div>
+        <div id="currRateInfo" style="margin-top:10px;font-size:11px;font-weight:700;color:var(--text3);text-align:center;min-height:16px"></div>
       </div>
       <div class="set-sec">
         <div class="set-sec-title">🔤 Font</div>
@@ -2029,7 +2030,7 @@ const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Accou
 
 // ======== STATE ========
 let state={
-  pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',
+  pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},bills:[],accounts:[],recurring:[],
   allocTargets:{},
@@ -2072,9 +2073,18 @@ function loadState(){
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
   if(!state.lang) state.lang='en';
   if(!state.pin) state.pin='0000';
+  if(!state.currencyRate) state.currencyRate=1;
+  if(!state.baseCurrency) state.baseCurrency='INR';
   applyTheme(state.theme);
   applyFont(state.font);
   updateCurrSymbols();
+  // Silently refresh exchange rate in background on page load if non-INR
+  if(state.currency && state.currency!=='INR'){
+    fetch('https://open.er-api.com/v6/latest/INR')
+      .then(r=>r.json())
+      .then(d=>{const r=d.rates&&d.rates[state.currency];if(r){state.currencyRate=r;saveState();}})
+      .catch(()=>{});
+  }
   if(!Array.isArray(state.familyMembers)||!state.familyMembers.length) state.familyMembers=['Self'];
   if(state.familyMembers.indexOf('Self')===-1) state.familyMembers.unshift('Self');
   // Restore currentUser from persisted state immediately (no SDK needed)
@@ -2166,6 +2176,14 @@ function showPage(id){
   if(id==='loanadvisor'){renderLoanAdvisor();generateMonthlyPlan();}
   if(id==='insights')generateInsights();
   // alloc targets now on wealth page
+  if(id==='settings'){
+    // Restore active currency button to match saved state
+    document.querySelectorAll('#currGrid .curr-btn').forEach(function(b){
+      var matches=b.getAttribute('onclick')&&b.getAttribute('onclick').indexOf("'"+state.currency+"'")>-1;
+      b.classList.toggle('on',matches);
+    });
+    updateCurrRateInfo();
+  }
 }
 function showModal(id){
   if(id==='allocModal'){renderAllocModalRows();updateAllocModalTotal();}
@@ -2256,15 +2274,17 @@ function saveTx(){
   // payMethod = UPI/Credit Card/etc — metadata only, no balance effect
   const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
+  // Normalize entered amount back to INR base for storage
+  const amtINR=amt/(state.currencyRate||1);
   const member=getSelMember();
-  const tx={id:Date.now(),type:txType,amount:amt,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
+  const tx={id:Date.now(),type:txType,amount:amtINR,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
   state.transactions.unshift(tx);
   // Balance only moves on the real bank/cash account — never on UPI/card (those are just payment rails)
-  if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amt:-amt);}}
+  if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amtINR:-amtINR);}}
   // Auto-reduce linked liability remaining
   if(liabLink&&txType==='expense'){
     const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
-    if(l){l.remaining=Math.max(0,l.remaining-amt);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(amt),'green');}
+    if(l){l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');}
   }
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
@@ -2320,7 +2340,7 @@ function txHTML(tx){
   const pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛'};
   if(tx.payMethod) badges.push(`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${pmIcons[tx.payMethod]||'💳'} ${tx.payMethod}</span>`);
   const badgeRow=badges.length?`<div class="tx-badges">${badges.join('')}</div>`:'';
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(tx.amount)}</div></div>`;
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div>`;
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
 function customConfirm(icon, title, msg, onOk){
@@ -2337,11 +2357,11 @@ function customConfirm(icon, title, msg, onOk){
 function editTx(id){
   const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
   document.getElementById('editTxId').value=id;
-  document.getElementById('editTxAmt').value=tx.amount;
+  document.getElementById('editTxAmt').value=parseFloat((tx.amount*(state.currencyRate||1)).toFixed(2));
   document.getElementById('editTxDesc').value=tx.desc;
   document.getElementById('editTxDate').value=tx.date;
   document.getElementById('editTxNotes').value=tx.notes||'';
-  document.getElementById('editTxOrigAmt').value=tx.amount;
+  document.getElementById('editTxOrigAmt').value=tx.amount;  // stored INR value
   document.getElementById('editTxOrigType').value=tx.type;
   document.getElementById('editTxOrigAcct').value=tx.account||'';
   // Set type — also repopulates category dropdown
@@ -2422,7 +2442,7 @@ function setEditTxType(t){
     if(!filtered.length) filtered=state.accounts;
     accSel.innerHTML='<option value="">-- Select Account --</option>'+filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
-      var bal=a.balance!==0?' · '+state.currSymbol+fmt(Math.abs(a.balance)):'';
+      var bal=a.balance!==0?' · '+state.currSymbol+fmt(cv(Math.abs(a.balance))):'';
       return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+' ['+a.type+']'+bal+'</option>';
     }).join('');
   }
@@ -2468,11 +2488,12 @@ function saveEditTx(){
   const origType=document.getElementById('editTxOrigType').value;
   const origAcct=document.getElementById('editTxOrigAcct').value;
   if(!amt||!date){showToast('Fill amount and date','yellow');return;}
+  const amtINR2=amt/(state.currencyRate||1);  // convert display currency back to INR
   const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
-  // Reverse original real-account balance effect
+  // Reverse original real-account balance effect (origAmt is already in INR)
   if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
   // Apply all updated fields
-  tx.type=editTxType;tx.amount=amt;
+  tx.type=editTxType;tx.amount=amtINR2;
   tx.desc=desc||(cat||'Transaction');
   tx.date=date;tx.notes=notes;tx.account=acct;
   tx.category=cat||tx.category||'Other';
@@ -2481,7 +2502,7 @@ function saveEditTx(){
   tx.payMethod=payMethod;
   tx.member=member;
   // Balance moves only on the real bank/cash account
-  if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amt:-amt);}
+  if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amtINR2:-amtINR2);}
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
   if(curPage==='analytics')renderAnalytics();
   showToast('Transaction updated!','green');
@@ -2510,14 +2531,14 @@ function updateDashboard(){
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
   const netWorth=totalAssets+net-totalLiab;
   const savRate=income>0?Math.round((income-expense)/income*100):0;
-  document.getElementById('netWorthAmt').textContent=fmt(Math.abs(netWorth));
-  document.getElementById('incAmt').textContent=fmt(income);
-  document.getElementById('expAmt').textContent=fmt(expense);
+  document.getElementById('netWorthAmt').textContent=fmt(cv(Math.abs(netWorth)));
+  document.getElementById('incAmt').textContent=fmt(cv(income));
+  document.getElementById('expAmt').textContent=fmt(cv(expense));
   document.getElementById('saveRate').textContent=Math.max(0,savRate)+'%';
   document.getElementById('saveBarFill').style.width=Math.max(0,Math.min(100,savRate))+'%';
   const badge=document.getElementById('netBadge');
-  if(net>=0){badge.className='hero-badge badge-up';badge.textContent=tr('surplus')+' '+state.currSymbol+fmt(net);}
-  else{badge.className='hero-badge badge-dn';badge.textContent=tr('deficit')+' '+state.currSymbol+fmt(Math.abs(net));}
+  if(net>=0){badge.className='hero-badge badge-up';badge.textContent=tr('surplus')+' '+state.currSymbol+fmt(cv(net));}
+  else{badge.className='hero-badge badge-dn';badge.textContent=tr('deficit')+' '+state.currSymbol+fmt(cv(Math.abs(net)));}
   const rc=document.getElementById('recentList');
   const recent=state.transactions.slice(0,5);
   rc.innerHTML=recent.length?recent.map(tx=>txHTML(tx)).join(''):`<div class="empty"><div class="empty-big">💸</div><div class="empty-title">${tr('noTx')}</div><div class="empty-desc">${tr('noTxDesc')}</div></div>`;
@@ -2574,15 +2595,15 @@ function filterHistory(){renderHistory();}
 
 // ======== GOALS ========
 function selGoalIcon(el,icon){document.querySelectorAll('#goalModal .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');goalIcon=icon;}
-function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseFloat(document.getElementById('goalTarget').value);const current=parseFloat(document.getElementById('goalCurrent').value||'0');const date=document.getElementById('goalDate').value;if(!name||!target){showToast('Fill goal name and target amount','yellow');return;}const editId=document.getElementById('goalModal').dataset.editId;if(editId){const g=state.goals.find(g=>g.id===parseInt(editId));if(g){g.name=name;g.target=target;g.current=current;g.date=date;g.icon=goalIcon;}}else{state.goals.push({id:Date.now(),name,target,current,date,icon:goalIcon});}saveState();closeModal('goalModal');renderGoals();if(curPage==='wealth')renderWealth();['goalName','goalTarget','goalCurrent'].forEach(id=>document.getElementById(id).value='');document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';}
-function renderGoals(){const c=document.getElementById('goalsList');if(!state.goals.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎯</div><div class="empty-title">${tr('noGoals')}</div><div class="empty-desc">${tr('noGoalsDesc')}</div></div>`;return;}c.innerHTML=state.goals.map(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));const rem=g.target-g.current;return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon">${g.icon}</div><div><div class="goal-name">${g.name}</div><div class="goal-amt">${state.currSymbol}${fmt(g.current)} of ${state.currSymbol}${fmt(g.target)}${g.date?' · '+formatDate(g.date):''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div class="goal-pct">${pct}%</div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editGoal(${g.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteGoal(${g.id})">✕</div></div></div><div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div><div class="goal-foot"><span>${pct<100?state.currSymbol+fmt(rem)+' '+tr('toGo'):tr('goalReached')}</span><span onclick="addToGoal(${g.id})" style="color:var(--green);cursor:pointer;font-weight:900">➕ Add</span></div></div>`;}).join('');}
+function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseFloat(document.getElementById('goalTarget').value);const current=parseFloat(document.getElementById('goalCurrent').value||'0');const date=document.getElementById('goalDate').value;if(!name||!target){showToast('Fill goal name and target amount','yellow');return;}const tgtINR=target/(state.currencyRate||1);const curINR=current/(state.currencyRate||1);const editId=document.getElementById('goalModal').dataset.editId;if(editId){const g=state.goals.find(g=>g.id===parseInt(editId));if(g){g.name=name;g.target=tgtINR;g.current=curINR;g.date=date;g.icon=goalIcon;}}else{state.goals.push({id:Date.now(),name,target:tgtINR,current:curINR,date,icon:goalIcon});}saveState();closeModal('goalModal');renderGoals();if(curPage==='wealth')renderWealth();['goalName','goalTarget','goalCurrent'].forEach(id=>document.getElementById(id).value='');document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';}
+function renderGoals(){const c=document.getElementById('goalsList');if(!state.goals.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎯</div><div class="empty-title">${tr('noGoals')}</div><div class="empty-desc">${tr('noGoalsDesc')}</div></div>`;return;}c.innerHTML=state.goals.map(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));const rem=g.target-g.current;return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon">${g.icon}</div><div><div class="goal-name">${g.name}</div><div class="goal-amt">${state.currSymbol}${fmt(cv(g.current))} of ${state.currSymbol}${fmt(cv(g.target))}${g.date?' · '+formatDate(g.date):''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div class="goal-pct">${pct}%</div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editGoal(${g.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteGoal(${g.id})">✕</div></div></div><div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div><div class="goal-foot"><span>${pct<100?state.currSymbol+fmt(cv(rem))+' '+tr('toGo'):tr('goalReached')}</span><span onclick="addToGoal(${g.id})" style="color:var(--green);cursor:pointer;font-weight:900">➕ Add</span></div></div>`;}).join('');}
 function deleteGoal(id){customConfirm('🎯','Delete Goal','This cannot be undone.',function(){state.goals=state.goals.filter(g=>g.id!==id);saveState();renderGoals();});}
 function editGoal(id){
   const g=state.goals.find(g=>g.id===id);
   if(!g)return;
   document.getElementById('goalName').value=g.name;
-  document.getElementById('goalTarget').value=g.target;
-  document.getElementById('goalCurrent').value=g.current;
+  document.getElementById('goalTarget').value=parseFloat((g.target*(state.currencyRate||1)).toFixed(2));
+  document.getElementById('goalCurrent').value=parseFloat((g.current*(state.currencyRate||1)).toFixed(2));
   document.getElementById('goalDate').value=g.date||'';
   goalIcon=g.icon;
   document.querySelectorAll('#goalModal .chip').forEach(c=>{c.classList.toggle('on',c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+g.icon+"'"));});
@@ -2591,14 +2612,14 @@ function editGoal(id){
   document.querySelector('#goalModal .btn-go').textContent='✅ Update Goal';
   showModal('goalModal');
 }
-function addToGoal(id){const amt=parseFloat(prompt('Amount to add:'));if(!amt)return;const g=state.goals.find(g=>g.id===id);if(g){g.current=Math.min(g.target,g.current+amt);saveState();renderGoals();}}
+function addToGoal(id){const amt=parseFloat(prompt('Amount to add (in '+state.currency+'):'));if(!amt)return;const amtINR=amt/(state.currencyRate||1);const g=state.goals.find(g=>g.id===id);if(g){g.current=Math.min(g.target,g.current+amtINR);saveState();renderGoals();}}
 function autoFillGoalSaved(){
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalAccts=state.accounts.reduce((s,a)=>s+(a.balance>0?a.balance:0),0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
   const netAvailable=totalAssets+totalAccts-totalLiab;
-  document.getElementById('goalCurrent').value=Math.max(0,Math.round(netAvailable));
-  showToast('Auto-filled: Assets '+state.currSymbol+fmt(totalAssets)+' + Savings '+state.currSymbol+fmt(totalAccts)+' - Debts '+state.currSymbol+fmt(totalLiab),'blue');
+  document.getElementById('goalCurrent').value=parseFloat((Math.max(0,netAvailable)*(state.currencyRate||1)).toFixed(2));
+  showToast('Auto-filled: Assets '+state.currSymbol+fmt(cv(totalAssets))+' + Savings '+state.currSymbol+fmt(cv(totalAccts))+' - Debts '+state.currSymbol+fmt(cv(totalLiab)),'blue');
 }
 
 // ======== ASSETS ========
@@ -2776,11 +2797,23 @@ function allocWarnForce(){
 }
 
 function _commitAsset(name,scheme,invested,value,details,editId,editColor){
+  // Normalize monetary values to INR base for storage
+  var r2=state.currencyRate||1;
+  var investedINR=invested/r2;
+  var valueINR=value/r2;
+  // Also normalize numeric detail fields (prices, NAV, principal etc)
+  var detailsINR={};
+  var NUMERIC_DETAIL_KEYS=['buyPrice','currentPrice','buyNav','currentNav','principal','faceValue','interestRate'];
+  // interestRate is a %, not a currency — skip it
+  var SKIP_KEYS=['interestRate','qty','units','tenure'];
+  Object.keys(details).forEach(function(k){
+    detailsINR[k]=(typeof details[k]==='number'&&!SKIP_KEYS.includes(k))?(details[k]/r2):details[k];
+  });
   if(editId){
     var idx=state.assets.findIndex(function(a){return a.id===parseInt(editId);});
-    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:invested,value:value,details:details,color:editColor||state.assets[idx].color});}
+    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:investedINR,value:valueINR,details:detailsINR,color:editColor||state.assets[idx].color});}
   } else {
-    state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:invested,value:value,details:details,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
+    state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:investedINR,value:valueINR,details:detailsINR,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
   }
   var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
   state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});
@@ -3019,10 +3052,10 @@ function resetAllocTargets(){
 // Show alloc target inputs when settings page renders
 function assetDetailLine(a){
   const d=a.details||{};const s=a.scheme;
-  if(s==='Stocks'||s==='ETF'){const p=[];if(d.qty>0)p.push(d.qty+' shares');if(d.buyPrice>0)p.push('Avg: '+state.currSymbol+fmt(d.buyPrice));if(d.currentPrice>0)p.push('CMP: '+state.currSymbol+fmt(d.currentPrice));if(d.exchange)p.push(d.exchange);return p.join(' · ');}
-  if(s==='Mutual Fund'){const p=[];if(d.units>0)p.push(parseFloat(d.units).toFixed(3)+' units');if(d.buyNav>0)p.push('NAV: '+state.currSymbol+fmt(d.buyNav)+' to '+state.currSymbol+fmt(d.currentNav||d.buyNav));if(d.fundHouse)p.push(d.fundHouse);return p.join(' · ');}
-  if(s==='Cryptocurrency'){const p=[];if(d.qty>0)p.push(d.qty+' coins');if(d.currentPrice>0)p.push('Price: '+state.currSymbol+fmt(d.currentPrice));if(d.exchange)p.push(d.exchange);return p.join(' · ');}
-  if(s==='Gold'){const p=[];if(d.qty>0)p.push(d.qty+'g');if(d.currentPrice>0)p.push(state.currSymbol+fmt(d.currentPrice)+'/g');if(d.goldType)p.push(d.goldType);return p.join(' · ');}
+  if(s==='Stocks'||s==='ETF'){const p=[];if(d.qty>0)p.push(d.qty+' shares');if(d.buyPrice>0)p.push('Avg: '+state.currSymbol+fmt(cv(d.buyPrice)));if(d.currentPrice>0)p.push('CMP: '+state.currSymbol+fmt(cv(d.currentPrice)));if(d.exchange)p.push(d.exchange);return p.join(' · ');}
+  if(s==='Mutual Fund'){const p=[];if(d.units>0)p.push(parseFloat(d.units).toFixed(3)+' units');if(d.buyNav>0)p.push('NAV: '+state.currSymbol+fmt(cv(d.buyNav))+' to '+state.currSymbol+fmt(cv(d.currentNav||d.buyNav)));if(d.fundHouse)p.push(d.fundHouse);return p.join(' · ');}
+  if(s==='Cryptocurrency'){const p=[];if(d.qty>0)p.push(d.qty+' coins');if(d.currentPrice>0)p.push('Price: '+state.currSymbol+fmt(cv(d.currentPrice)));if(d.exchange)p.push(d.exchange);return p.join(' · ');}
+  if(s==='Gold'){const p=[];if(d.qty>0)p.push(d.qty+'g');if(d.currentPrice>0)p.push(state.currSymbol+fmt(cv(d.currentPrice))+'/g');if(d.goldType)p.push(d.goldType);return p.join(' · ');}
   if(s==='Fixed Deposit'){const p=[];if(d.interestRate>0)p.push(d.interestRate+'% p.a.');if(d.tenure>0)p.push(d.tenure+'mo');if(d.maturityDate)p.push('Matures: '+d.maturityDate);if(d.bankName)p.push(d.bankName);return p.join(' · ');}
   if(s==='Real Estate'){const p=[];if(d.area>0)p.push(d.area+' sq.ft');if(d.location)p.push(d.location);return p.join(' · ');}
   if(s==='Bonds'){const p=[];if(d.qty>0)p.push(d.qty+' bonds');if(d.interestRate>0)p.push(d.interestRate+'% coupon');if(d.issuer)p.push(d.issuer);return p.join(' · ');}
@@ -3030,7 +3063,7 @@ function assetDetailLine(a){
 }
 
 function renderAssets(){
-  const total=state.assets.reduce((s,a)=>s+a.value,0);const tv=state.currSymbol+fmt(total);
+  const total=state.assets.reduce((s,a)=>s+a.value,0);const tv=state.currSymbol+fmt(cv(total));
   document.getElementById('totalAssetVal').textContent=tv;document.getElementById('assetTotal2').textContent=tv;
   const allocTotal=state.assets.reduce((s,a)=>s+(a.alloc||0),0);
   const badge=document.getElementById('allocSummaryBadge');
@@ -3044,7 +3077,7 @@ function renderAssets(){
   let warningHTML='';
   if(warnings.length){const critical=warnings.filter(w=>w.status.type!=='ok');const col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';const bcol=critical.length?'rgba(239,68,68,0.4)':'rgba(234,179,8,0.4)';warningHTML=`<div style="background:${col};border:2px solid ${bcol};border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:14px;font-weight:900;margin-bottom:10px">${critical.length?'🚨':'⚠️'} Allocation Warnings</div>${warnings.map(w=>{const wc=w.status.type==='high'?'var(--orange)':'var(--yellow)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><div><div style="font-size:13px;font-weight:900">${SCHEME_INFO[w.scheme]?.emoji||'💼'} ${w.scheme}${w.custom?'<span style="font-size:9px;background:rgba(124,92,252,0.2);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px">custom</span>':''}</div><div style="font-size:11px;color:${wc};font-weight:700">${w.status.msg}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${wc}">${w.pct}%</div><div style="font-size:10px;color:var(--text3);font-weight:700">target ${w.target}%</div></div></div>`;}).join('')}<div style="margin-top:10px;font-size:11px;color:var(--text3);font-weight:700;text-align:center;cursor:pointer" onclick="closeModal('allocModal');showModal('allocModal')">🎯 Edit Targets →</div></div>`;
   }else if(state.assets.length>0&&Object.keys(state.allocTargets||{}).length>0){warningHTML=`<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio on target!</div></div>`;}
-  c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const t=getEffectiveTarget(a.scheme);const idealPct=t?.ideal||0;const isCustomTarget=t?.custom||false;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(a.value)+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editAsset('+a.id+')">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteAsset('+a.id+')">✕ Remove</span></div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>'+(isCustomTarget?'Target':'Ideal')+': '+idealPct+'% (±'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
+  c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const t=getEffectiveTarget(a.scheme);const idealPct=t?.ideal||0;const isCustomTarget=t?.custom||false;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(cv(a.value))+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editAsset('+a.id+')">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteAsset('+a.id+')">✕ Remove</span></div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>'+(isCustomTarget?'Target':'Ideal')+': '+idealPct+'% (±'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
   renderSchemeList();
 }
 function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
@@ -3055,16 +3088,23 @@ function editAsset(id){
   document.getElementById('assetScheme').value=a.scheme;
   document.getElementById('assetName').value=a.name;
   modal.dataset.editId=id;
+  // Store raw INR values in dataset (used by _commitAsset before normalization)
   modal.dataset.invested=a.invested||0;
   modal.dataset.value=a.value||0;
   modal.dataset.editColor=a.color||'';
+  const r5=state.currencyRate||1;
+  const SKIP_ASSET_KEYS=['interestRate','qty','units','tenure','exchange','fundHouse','goldType'];
   setTimeout(function(){
     updateAssetFields();
-    // Restore dynamic fields from saved details
+    // Restore dynamic fields from saved details, converting monetary ones to display currency
     if(a.details){
       Object.entries(a.details).forEach(function([k,v]){
         var el=document.getElementById('af_'+k);
-        if(el&&v!=null) el.value=v;
+        if(el&&v!=null){
+          el.value=(typeof v==='number'&&!SKIP_ASSET_KEYS.includes(k))
+            ? parseFloat((v*r5).toFixed(2))
+            : v;
+        }
       });
     }
     // Trigger preview recalculation
@@ -3093,24 +3133,25 @@ function autoCalcEMI(){
     var calcEMI=document.getElementById('calcEMIAmt');
     var calcInt=document.getElementById('calcTotalInterest');
     var calcPay=document.getElementById('calcTotalPayable');
-    if(calcEMI)calcEMI.textContent=state.currSymbol+fmt(emi);
-    if(calcInt)calcInt.textContent=state.currSymbol+fmt(totalInterest);
-    if(calcPay)calcPay.textContent=state.currSymbol+fmt(totalPayable);
+    if(calcEMI)calcEMI.textContent=state.currSymbol+fmt(cv(emi));
+    if(calcInt)calcInt.textContent=state.currSymbol+fmt(cv(totalInterest));
+    if(calcPay)calcPay.textContent=state.currSymbol+fmt(cv(totalPayable));
     if(box)box.style.display='block';
   } else {
     if(box)box.style.display='none';
   }
 }
-function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){showToast('Enter loan name and outstanding amount','yellow');return;}const editId=document.getElementById('liabModal').dataset.editId;if(editId){const l=state.liabilities.find(l=>l.id===parseInt(editId));if(l){l.name=name;l.type=type;l.total=total;l.remaining=remaining;l.emi=emi;l.rate=rate;l.color=LIAB_TYPES[type]?.color||'#ef4444';}}else{state.liabilities.push({id:Date.now(),name,type,total,remaining,emi,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});}saveState();closeModal('liabModal');renderLiabilities();updateDashboard();if(curPage==='wealth')renderWealth();['liabName','liabTotal','liabRemaining','liabEMI','liabRate','liabTenure'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});var b=document.getElementById('emiAutoCalcBox');if(b)b.style.display='none';document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
-function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(totalDebt);document.getElementById('totalEMI').textContent=fmt(totalEMI);document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(l.remaining)}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editLiab(${l.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(l.total)} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(l.emi)}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
+function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){showToast('Enter loan name and outstanding amount','yellow');return;}const rate2=state.currencyRate||1;const totalINR=total/rate2;const remINR=remaining/rate2;const emiINR=emi/rate2;const editId=document.getElementById('liabModal').dataset.editId;if(editId){const l=state.liabilities.find(l=>l.id===parseInt(editId));if(l){l.name=name;l.type=type;l.total=totalINR;l.remaining=remINR;l.emi=emiINR;l.rate=rate;l.color=LIAB_TYPES[type]?.color||'#ef4444';}}else{state.liabilities.push({id:Date.now(),name,type,total:totalINR,remaining:remINR,emi:emiINR,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});}saveState();closeModal('liabModal');renderLiabilities();updateDashboard();if(curPage==='wealth')renderWealth();['liabName','liabTotal','liabRemaining','liabEMI','liabRate','liabTenure'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});var b=document.getElementById('emiAutoCalcBox');if(b)b.style.display='none';document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
+function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(cv(totalDebt));document.getElementById('totalEMI').textContent=fmt(cv(totalEMI));document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(cv(l.remaining))}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editLiab(${l.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(cv(l.total))} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(cv(l.emi))}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
 function deleteLiab(id){customConfirm('💸','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();});}
 function editLiab(id){
   const l=state.liabilities.find(l=>l.id===id);if(!l)return;
   document.getElementById('liabName').value=l.name;
   document.getElementById('liabType').value=l.type;
-  document.getElementById('liabTotal').value=l.total||'';
-  document.getElementById('liabRemaining').value=l.remaining||'';
-  document.getElementById('liabEMI').value=l.emi||'';
+  const r4=state.currencyRate||1;
+  document.getElementById('liabTotal').value=l.total?parseFloat((l.total*r4).toFixed(2)):'';
+  document.getElementById('liabRemaining').value=l.remaining?parseFloat((l.remaining*r4).toFixed(2)):'';
+  document.getElementById('liabEMI').value=l.emi?parseFloat((l.emi*r4).toFixed(2)):'';
   document.getElementById('liabRate').value=l.rate||'';
   document.getElementById('liabModal').dataset.editId=id;
   document.querySelector('#liabModal .btn-go').textContent='✅ Update Debt';
@@ -3140,14 +3181,14 @@ function renderInlineBudgetInputs(){
   if(!c)return;
   c.innerHTML=EXPENSE_CATS.map(function(cat){
     return '<div class="field"><div class="field-label">'+CAT_EMOJI[cat]+' '+cat+'</div>'
-      +'<input type="number" class="field-input" id="ibudget_'+cat+'" placeholder="0 = no limit" value="'+(state.budgets[cat]||'')+'" inputmode="numeric"></div>';
+      +'<input type="number" class="field-input" id="ibudget_'+cat+'" placeholder="0 = no limit" value="'+(state.budgets[cat]?parseFloat((state.budgets[cat]*(state.currencyRate||1)).toFixed(2)):'')+'" inputmode="numeric"></div>';
   }).join('');
 }
 function saveInlineBudgets(){
   EXPENSE_CATS.forEach(function(cat){
     var el=document.getElementById('ibudget_'+cat);
     var v=el?parseFloat(el.value||'0'):0;
-    if(v>0)state.budgets[cat]=v;
+    if(v>0)state.budgets[cat]=v/(state.currencyRate||1);
     else delete state.budgets[cat];
   });
   saveState();
@@ -3160,15 +3201,15 @@ function saveInlineBudgets(){
   updateBudget();updateBudgetAlertBar();
   showToast('Budgets saved!','green');
 }
-function renderBudgetInputs(){const c=document.getElementById('budgetInputs');c.innerHTML=EXPENSE_CATS.map(cat=>`<div class="field"><div class="field-label">${CAT_EMOJI[cat]} ${cat}</div><input type="number" class="field-input" id="budget_${cat}" placeholder="0 = no limit" value="${state.budgets[cat]||''}"></div>`).join('');}
-function saveBudgets(){EXPENSE_CATS.forEach(cat=>{const v=parseFloat(document.getElementById('budget_'+cat)?.value||'0');if(v>0)state.budgets[cat]=v;else delete state.budgets[cat];});saveState();closeModal('budgetModal');updateBudget();updateBudgetAlertBar();}
+function renderBudgetInputs(){const c=document.getElementById('budgetInputs');c.innerHTML=EXPENSE_CATS.map(cat=>`<div class="field"><div class="field-label">${CAT_EMOJI[cat]} ${cat}</div><input type="number" class="field-input" id="budget_${cat}" placeholder="0 = no limit" value="${state.budgets[cat]?parseFloat((state.budgets[cat]*(state.currencyRate||1)).toFixed(2)):''}"></div>`).join('');}
+function saveBudgets(){const r3=state.currencyRate||1;EXPENSE_CATS.forEach(cat=>{const v=parseFloat(document.getElementById('budget_'+cat)?.value||'0');if(v>0)state.budgets[cat]=v/r3;else delete state.budgets[cat];});saveState();closeModal('budgetModal');updateBudget();updateBudgetAlertBar();}
 function updateBudget(){
   const txs=getMonthTxs().filter(t=>t.type==='expense');
   const spent={};txs.forEach(t=>{spent[t.category]=(spent[t.category]||0)+t.amount;});
   const c=document.getElementById('budgetList');
   if(!Object.keys(state.budgets).length){c.innerHTML=`<div class="empty"><div class="empty-big">🎯</div><div class="empty-desc">No budgets set. Tap ✏️ Edit to add limits.</div></div>`;document.getElementById('budgetOkCount').textContent='0';document.getElementById('budgetOverCount').textContent='0';return;}
   let ok=0,over=0;
-  c.innerHTML=Object.entries(state.budgets).map(([cat,limit])=>{const s=spent[cat]||0;const pct=Math.min(100,(s/limit*100));const isOver=s>limit;if(isOver)over++;else ok++;const col=isOver?'var(--red)':pct>80?'var(--yellow)':'var(--green)';return`<div class="budget-row"><div class="budget-emoji">${CAT_EMOJI[cat]||'🌀'}</div><div class="budget-info"><div class="budget-name"><span>${cat}</span><span style="color:${col};font-family:var(--font)">${state.currSymbol}${fmt(s)} / ${state.currSymbol}${fmt(limit)}</span></div><div class="budget-bar-track"><div class="budget-bar-fill" style="width:${pct}%;background:${col}"></div></div><div class="budget-nums"><span>${pct.toFixed(0)}% used</span><span style="color:${isOver?'var(--red)':'var(--text3)'}">${isOver?'Over by '+state.currSymbol+fmt(s-limit):(state.currSymbol+fmt(limit-s)+' left')}</span></div></div></div>`;}).join('');
+  c.innerHTML=Object.entries(state.budgets).map(([cat,limit])=>{const s=spent[cat]||0;const pct=Math.min(100,(s/limit*100));const isOver=s>limit;if(isOver)over++;else ok++;const col=isOver?'var(--red)':pct>80?'var(--yellow)':'var(--green)';return`<div class="budget-row"><div class="budget-emoji">${CAT_EMOJI[cat]||'🌀'}</div><div class="budget-info"><div class="budget-name"><span>${cat}</span><span style="color:${col};font-family:var(--font)">${state.currSymbol}${fmt(cv(s))} / ${state.currSymbol}${fmt(cv(limit))}</span></div><div class="budget-bar-track"><div class="budget-bar-fill" style="width:${pct}%;background:${col}"></div></div><div class="budget-nums"><span>${pct.toFixed(0)}% used</span><span style="color:${isOver?'var(--red)':'var(--text3)'}">${isOver?'Over by '+state.currSymbol+fmt(cv(s-limit)):(state.currSymbol+fmt(cv(limit-s))+' left')}</span></div></div></div>`;}).join('');
   document.getElementById('budgetOkCount').textContent=ok;
   document.getElementById('budgetOverCount').textContent=over;
 }
@@ -3177,7 +3218,7 @@ function updateBudgetAlertBar(){const txs=getMonthTxs().filter(t=>t.type==='expe
 
 // ======== BILL REMINDERS ========
 function renderBillCatChips(){const c=document.getElementById('billCatChips');c.innerHTML='';EXPENSE_CATS.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===4?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');selectedBillCat=cat;};c.appendChild(ch);});selectedBillCat='Bills';}
-function saveBill(){const name=document.getElementById('billName').value.trim();const amt=parseFloat(document.getElementById('billAmt').value||'0');const dueDay=parseInt(document.getElementById('billDueDay').value||'1');const freq=document.getElementById('billFreq').value;if(!name){showToast('Enter bill name','yellow');return;}const cat=document.querySelector('#billCatChips .chip.on')?.dataset.cat||'Bills';state.bills.push({id:Date.now(),name,amt,dueDay,freq,category:cat,emoji:CAT_EMOJI[cat]||'💡',paid:false});saveState();closeModal('billModal');renderBills();updateBillsBadge();['billName','billAmt','billDueDay'].forEach(id=>document.getElementById(id).value='');}
+function saveBill(){const name=document.getElementById('billName').value.trim();const amt=parseFloat(document.getElementById('billAmt').value||'0');const dueDay=parseInt(document.getElementById('billDueDay').value||'1');const freq=document.getElementById('billFreq').value;if(!name){showToast('Enter bill name','yellow');return;}const cat=document.querySelector('#billCatChips .chip.on')?.dataset.cat||'Bills';const amtBillINR=amt/(state.currencyRate||1);state.bills.push({id:Date.now(),name,amt:amtBillINR,dueDay,freq,category:cat,emoji:CAT_EMOJI[cat]||'💡',paid:false});saveState();closeModal('billModal');renderBills();updateBillsBadge();['billName','billAmt','billDueDay'].forEach(id=>document.getElementById(id).value='');}
 function renderBills(){
   const c=document.getElementById('billList');
   if(!state.bills.length){c.innerHTML=`<div class="empty"><div class="empty-big">🔔</div><div class="empty-title">No bills added</div><div class="empty-desc">Add recurring bills & due dates</div></div>`;document.getElementById('billAlertBox').innerHTML='';return;}
@@ -3188,7 +3229,7 @@ function renderBills(){
   if(overdue.length)alertHTML+=`<div style="background:rgba(239,68,68,0.1);border:2px solid rgba(239,68,68,0.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-size:20px">🚨</span><div><div style="font-size:12px;font-weight:900;color:var(--red)">${overdue.length} bill${overdue.length>1?'s':''} overdue!</div><div style="font-size:11px;color:var(--text3);font-weight:700">${overdue.map(b=>b.name).join(', ')}</div></div></div>`;
   if(upcoming.length)alertHTML+=`<div style="background:rgba(234,179,8,0.1);border:2px solid rgba(234,179,8,0.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-size:20px">⚠️</span><div><div style="font-size:12px;font-weight:900;color:var(--yellow)">${upcoming.length} bill${upcoming.length>1?'s':''} due soon</div><div style="font-size:11px;color:var(--text3);font-weight:700">${upcoming.map(b=>b.name+' (day '+b.dueDay+')').join(', ')}</div></div></div>`;
   document.getElementById('billAlertBox').innerHTML=alertHTML;
-  c.innerHTML=state.bills.map(b=>{const daysLeft=b.dueDay-currentDay;const isOverdue=daysLeft<0&&!b.paid;const isUpcoming=daysLeft>=0&&daysLeft<=7&&!b.paid;const statusColor=isOverdue?'var(--red)':isUpcoming?'var(--yellow)':'var(--text3)';const statusText=b.paid?'✅ Paid':isOverdue?'🚨 Overdue':isUpcoming?`⚠️ Due in ${daysLeft}d`:`📅 Day ${b.dueDay}`;return`<div class="bill-row"><div class="bill-ico" style="background:${isOverdue?'rgba(239,68,68,0.1)':'var(--bg3)'}">${b.emoji}</div><div class="bill-info"><div class="bill-name">${b.name}</div><div class="bill-due" style="color:${statusColor}">${statusText} · ${b.freq}</div></div><div><div class="bill-amt" style="color:var(--text)">${state.currSymbol}${fmt(b.amt)}</div><div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end"><span style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900" onclick="markBillPaid(${b.id})">${b.paid?'↩️':'✅'}</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteBill(${b.id})">✕</span></div></div></div>`;}).join('');
+  c.innerHTML=state.bills.map(b=>{const daysLeft=b.dueDay-currentDay;const isOverdue=daysLeft<0&&!b.paid;const isUpcoming=daysLeft>=0&&daysLeft<=7&&!b.paid;const statusColor=isOverdue?'var(--red)':isUpcoming?'var(--yellow)':'var(--text3)';const statusText=b.paid?'✅ Paid':isOverdue?'🚨 Overdue':isUpcoming?`⚠️ Due in ${daysLeft}d`:`📅 Day ${b.dueDay}`;return`<div class="bill-row"><div class="bill-ico" style="background:${isOverdue?'rgba(239,68,68,0.1)':'var(--bg3)'}">${b.emoji}</div><div class="bill-info"><div class="bill-name">${b.name}</div><div class="bill-due" style="color:${statusColor}">${statusText} · ${b.freq}</div></div><div><div class="bill-amt" style="color:var(--text)">${state.currSymbol}${fmt(cv(b.amt))}</div><div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end"><span style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900" onclick="markBillPaid(${b.id})">${b.paid?'↩️':'✅'}</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteBill(${b.id})">✕</span></div></div></div>`;}).join('');
 }
 function markBillPaid(id){const b=state.bills.find(b=>b.id===id);if(b){b.paid=!b.paid;}saveState();renderBills();updateBillsBadge();}
 function deleteBill(id){customConfirm('🔔','Delete Bill','This cannot be undone.',function(){state.bills=state.bills.filter(b=>b.id!==id);saveState();renderBills();updateBillsBadge();});}
@@ -3211,11 +3252,12 @@ function saveAcct(){
   const balance=parseFloat(document.getElementById('acctBalance').value||'0');
   if(!name){showToast('Enter account name','yellow');return;}
   const editId=document.getElementById('acctModal').dataset.editId;
+  const balINR=balance/(state.currencyRate||1);
   if(editId){
     const a=state.accounts.find(a=>a.id===editId);
-    if(a){a.name=name;a.type=type;a.balance=balance;a.color=acctColor;}
+    if(a){a.name=name;a.type=type;a.balance=balINR;a.color=acctColor;}
   }else{
-    state.accounts.push({id:String(Date.now()),name,type,balance,color:acctColor});
+    state.accounts.push({id:String(Date.now()),name,type,balance:balINR,color:acctColor});
   }
   saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();
   document.getElementById('acctModal').dataset.editId='';
@@ -3226,10 +3268,10 @@ function saveAcct(){
 function renderAccounts(){
   const totalBal=state.accounts.reduce((s,a)=>s+a.balance,0);
   const c=document.getElementById('acctSummary');
-  c.innerHTML=`<div class="stat-grid" style="margin-bottom:0"><div class="stat-box sg"><span class="stat-emoji">🏦</span><div class="stat-lbl">Total Balance</div><div class="stat-val" style="font-size:16px">${state.currSymbol}${fmt(totalBal)}</div></div><div class="stat-box sb"><span class="stat-emoji">💳</span><div class="stat-lbl">Accounts</div><div class="stat-val">${state.accounts.length}</div></div></div>`;
+  c.innerHTML=`<div class="stat-grid" style="margin-bottom:0"><div class="stat-box sg"><span class="stat-emoji">🏦</span><div class="stat-lbl">Total Balance</div><div class="stat-val" style="font-size:16px">${state.currSymbol}${fmt(cv(totalBal))}</div></div><div class="stat-box sb"><span class="stat-emoji">💳</span><div class="stat-lbl">Accounts</div><div class="stat-val">${state.accounts.length}</div></div></div>`;
   const al=document.getElementById('acctList');
   if(!state.accounts.length){al.innerHTML=`<div class="empty"><div class="empty-big">🏦</div><div class="empty-title">No accounts yet</div><div class="empty-desc">Add Cash, Bank, UPI, Credit Card</div></div>`;return;}
-  al.innerHTML=state.accounts.map(a=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(Math.abs(a.balance))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;}).join('');
+  al.innerHTML=state.accounts.map(a=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;}).join('');
   // Update history filter dropdown
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
@@ -3260,7 +3302,7 @@ function updateTxAccountSelect(){
   sel.innerHTML='<option value="">-- '+(txType==='income'?'Select Account':'Select Account') +' --</option>'+
     filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
-      var bal=a.balance!==0?' · '+state.currSymbol+fmt(Math.abs(a.balance)):'';
+      var bal=a.balance!==0?' · '+state.currSymbol+fmt(cv(Math.abs(a.balance))):'';
       var typeLabel=a.type!==a.name?' ['+a.type+']':'';
       return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
     }).join('');
@@ -3279,7 +3321,7 @@ function updateTxLiabSelect(){
   sel.innerHTML='<option value="">-- None --</option>'+
     state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
       var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
-      return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(l.remaining)+' left)</option>';
+      return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
     }).join('');
 }
 
@@ -3322,28 +3364,28 @@ async function generateInsights(){
   const prompt=`You are an expert personal finance advisor for Indian users. Analyse this user's complete financial data and provide 6-8 specific, actionable insights in JSON format.
 
 FINANCIAL SNAPSHOT:
-Income (recent txns): ${state.currSymbol}${fmt(income)}
-Expenses: ${state.currSymbol}${fmt(expense)}
+Income (recent txns): ${state.currSymbol}${fmt(cv(income))}
+Expenses: ${state.currSymbol}${fmt(cv(expense))}
 Savings rate: ${savRate}%
-Net Worth: ${state.currSymbol}${fmt(netWorth)}
-Total Assets: ${state.currSymbol}${fmt(totalAssets)}
-Total Debt: ${state.currSymbol}${fmt(totalDebt)} | EMI/month: ${state.currSymbol}${fmt(totalEMI)}
+Net Worth: ${state.currSymbol}${fmt(cv(netWorth))}
+Total Assets: ${state.currSymbol}${fmt(cv(totalAssets))}
+Total Debt: ${state.currSymbol}${fmt(cv(totalDebt))} | EMI/month: ${state.currSymbol}${fmt(cv(totalEMI))}
 Debt-to-Asset ratio: ${debtRatio}%
-Cash & Bank: ${state.currSymbol}${fmt(totalAccts)}
-Top spending: ${topCats.map(([c,a])=>c+' '+state.currSymbol+fmt(a)).join(', ')||'none'}
+Cash & Bank: ${state.currSymbol}${fmt(cv(totalAccts))}
+Top spending: ${topCats.map(([c,a])=>c+' '+state.currSymbol+fmt(cv(a))).join(', ')||'none'}
 Over-budget categories: ${overBudget.join(', ')||'none'}
 Overdue bills: ${overdueCount}
 Active goals: ${state.goals.length}
 
 ASSET PORTFOLIO (${state.assets.length} assets, ${schemes.size} types):
-${state.assets.map(a=>`  ${a.name} (${a.scheme}): ${state.currSymbol}${fmt(a.value)}, alloc ${a.alloc?.toFixed(1)||0}%${a.invested>0?', gain '+(((a.value-a.invested)/a.invested)*100).toFixed(1)+'%':''}`).join('\n')||'  No assets'}
+${state.assets.map(a=>`  ${a.name} (${a.scheme}): ${state.currSymbol}${fmt(cv(a.value))}, alloc ${a.alloc?.toFixed(1)||0}%${a.invested>0?', gain '+(((a.value-a.invested)/a.invested)*100).toFixed(1)+'%':''}`).join('\n')||'  No assets'}
 ${highestGain?`Best performer: ${highestGain.name} at +${highestGain.gain}%`:''}
 
 ALLOCATION GAPS (vs targets):
 ${allocGaps.length?allocGaps.map(g=>`  ${g.scheme}: actual ${g.actual}% vs target ${g.target}% → ${g.status==='over'?'OVER by':'UNDER by'} ${Math.abs(g.diff)}%`).join('\n'):'All within targets'}
 
 LIABILITIES:
-${state.liabilities.map(l=>`  ${l.name}: ${state.currSymbol}${fmt(l.remaining)} remaining at ${l.rate||0}% p.a., EMI ${state.currSymbol}${fmt(l.emi)}/mo`).join('\n')||'  Debt-free'}
+${state.liabilities.map(l=>`  ${l.name}: ${state.currSymbol}${fmt(cv(l.remaining))} remaining at ${l.rate||0}% p.a., EMI ${state.currSymbol}${fmt(cv(l.emi))}/mo`).join('\n')||'  Debt-free'}
 
 Provide insights covering: savings rate, allocation gaps, debt management, emergency fund, tax-saving instruments (PPF/EPFO/NPS), portfolio diversification, and specific action steps.
 
@@ -3397,7 +3439,7 @@ function generateLocalInsights(savRate,topCats,overBudget,totalDebt,income,expen
   if(totalDebt>0&&income>0){
     const emiRatio=state.liabilities.reduce((s,l)=>s+l.emi,0)/income*100;
     if(debtRatio>40||emiRatio>40)insights.push({type:'bad',icon:'🏧',title:'High debt burden',text:`Your debt-to-asset ratio is ${debtRatio}% and EMI is ${emiRatio.toFixed(0)}% of income — both above healthy limits. Use the avalanche method: pay minimums on all loans, then attack the highest-rate debt first to minimise total interest paid.`});
-    else insights.push({type:'warn',icon:'🏦',title:'Manage debt proactively',text:`You have ${sym}${fmt(totalDebt)} in outstanding debt. Making even one extra EMI per year can significantly cut your loan tenure. Review high-interest loans (credit cards, personal loans) for prepayment.`});
+    else insights.push({type:'warn',icon:'🏦',title:'Manage debt proactively',text:`You have ${sym}${fmt(cv(totalDebt))} in outstanding debt. Making even one extra EMI per year can significantly cut your loan tenure. Review high-interest loans (credit cards, personal loans) for prepayment.`});
   }
 
   // 6. Emergency fund
@@ -3414,7 +3456,7 @@ function generateLocalInsights(savRate,topCats,overBudget,totalDebt,income,expen
   if(!hasPPF&&!hasNPS)insights.push({type:'info',icon:'🏛️',title:'Consider tax-saving instruments',text:`You currently have no PPF or NPS investments. PPF offers 7.1% tax-free returns under Section 80C (max ${sym}1.5L/year). NPS gives an additional ${sym}50,000 deduction under 80CCD(1B). Both are excellent low-risk long-term options.`});
 
   // 8. Net worth trend
-  if(netWorth>0)insights.push({type:'good',icon:'📈',title:'Positive net worth',text:`Your net worth is ${sym}${fmt(netWorth)} — assets exceed liabilities. Focus on growing this gap by increasing investments and reducing debt. Even a 10% annual growth in net worth creates significant long-term wealth.`});
+  if(netWorth>0)insights.push({type:'good',icon:'📈',title:'Positive net worth',text:`Your net worth is ${sym}${fmt(cv(netWorth))} — assets exceed liabilities. Focus on growing this gap by increasing investments and reducing debt. Even a 10% annual growth in net worth creates significant long-term wealth.`});
   else if(netWorth<0)insights.push({type:'bad',icon:'📉',title:'Negative net worth — act now',text:`Your liabilities exceed your assets by ${sym}${fmt(Math.abs(netWorth))}. Create a debt paydown plan immediately. Stop taking new debt and redirect all surplus income to the highest-interest obligation first.`});
 
   // 9. Goals check
@@ -3426,8 +3468,8 @@ function generateLocalInsights(savRate,topCats,overBudget,totalDebt,income,expen
 // ======== RECURRING TRANSACTIONS ========
 function setRecurType(t){recurType=t;document.getElementById('recurTypeInc').classList.toggle('on',t==='income');document.getElementById('recurTypeExp').classList.toggle('on',t==='expense');renderRecurCatChips();}
 function renderRecurCatChips(){const cats=recurType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
-function saveRecur(){const desc=document.getElementById('recurDesc').value.trim();const amt=parseFloat(document.getElementById('recurAmt').value||'0');const day=parseInt(document.getElementById('recurDay').value||'1');const freq=document.getElementById('recurFreq').value;const cat=document.querySelector('#recurCatChips .chip.on')?.dataset.cat||'Other';if(!desc||!amt){showToast('Fill description and amount','yellow');return;}state.recurring.push({id:Date.now(),type:recurType,desc,amount:amt,day,freq,category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:''});saveState();closeModal('recurModal');renderRecurring();['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');}
-function renderRecurring(){const c=document.getElementById('recurList');if(!state.recurring.length){c.innerHTML=`<div class="empty"><div class="empty-big">📅</div><div class="empty-title">No recurring transactions</div><div class="empty-desc">Add salary, EMI, subscriptions</div></div>`;return;}c.innerHTML=state.recurring.map(r=>`<div class="tx"><div class="tx-ico" style="background:${r.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)'}">${r.emoji}</div><div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${r.freq==='monthly'?'Every month on day '+r.day:r.freq==='weekly'?'Every week':'Every year'} · ${r.category}</div></div><div style="text-align:right"><div class="tx-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">${r.type==='income'?'＋':'－'}${state.currSymbol}${fmt(r.amount)}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteRecur(${r.id})">Remove</div></div></div>`).join('');}
+function saveRecur(){const desc=document.getElementById('recurDesc').value.trim();const amt=parseFloat(document.getElementById('recurAmt').value||'0');const day=parseInt(document.getElementById('recurDay').value||'1');const freq=document.getElementById('recurFreq').value;const cat=document.querySelector('#recurCatChips .chip.on')?.dataset.cat||'Other';if(!desc||!amt){showToast('Fill description and amount','yellow');return;}const amtRecurINR=amt/(state.currencyRate||1);state.recurring.push({id:Date.now(),type:recurType,desc,amount:amtRecurINR,day,freq,category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:''});saveState();closeModal('recurModal');renderRecurring();['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');}
+function renderRecurring(){const c=document.getElementById('recurList');if(!state.recurring.length){c.innerHTML=`<div class="empty"><div class="empty-big">📅</div><div class="empty-title">No recurring transactions</div><div class="empty-desc">Add salary, EMI, subscriptions</div></div>`;return;}c.innerHTML=state.recurring.map(r=>`<div class="tx"><div class="tx-ico" style="background:${r.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)'}">${r.emoji}</div><div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${r.freq==='monthly'?'Every month on day '+r.day:r.freq==='weekly'?'Every week':'Every year'} · ${r.category}</div></div><div style="text-align:right"><div class="tx-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">${r.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(r.amount))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteRecur(${r.id})">Remove</div></div></div>`).join('');}
 function deleteRecur(id){customConfirm('📅','Remove Recurring','This cannot be undone.',function(){state.recurring=state.recurring.filter(r=>r.id!==id);saveState();renderRecurring();});}
 // ═══ LOAN ADVISOR ═══════════════════════════════════════════════════════════
 function renderLoanAdvisor(){
@@ -3465,9 +3507,9 @@ function renderLoanAdvisor(){
   var html='<div style="background:var(--card);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">';
   html+='<div style="font-size:13px;font-weight:900;color:var(--red);margin-bottom:10px">📊 Your Debt Overview</div>';
   html+='<div class="stat-grid" style="margin-bottom:10px">';
-  html+='<div class="stat-box sr"><span class="stat-emoji">🏧</span><div class="stat-lbl">Total Debt</div><div class="stat-val" style="font-size:14px">'+state.currSymbol+fmt(loans.reduce(function(s,l){return s+l.remaining;},0))+'</div></div>';
-  html+='<div class="stat-box sy"><span class="stat-emoji">💸</span><div class="stat-lbl">Total EMI</div><div class="stat-val" style="font-size:14px">'+state.currSymbol+fmt(totalEMI)+'</div></div>';
-  html+='<div class="stat-box sp"><span class="stat-emoji">📈</span><div class="stat-lbl">Total Interest</div><div class="stat-val" style="font-size:14px">'+state.currSymbol+fmt(totalInterest)+'</div></div>';
+  html+='<div class="stat-box sr"><span class="stat-emoji">🏧</span><div class="stat-lbl">Total Debt</div><div class="stat-val" style="font-size:14px">'+state.currSymbol+fmt(cv(loans.reduce(function(s,l){return s+l.remaining;},0)))+'</div></div>';
+  html+='<div class="stat-box sy"><span class="stat-emoji">💸</span><div class="stat-lbl">Total EMI</div><div class="stat-val" style="font-size:14px">'+state.currSymbol+fmt(cv(totalEMI))+'</div></div>';
+  html+='<div class="stat-box sp"><span class="stat-emoji">📈</span><div class="stat-lbl">Total Interest</div><div class="stat-val" style="font-size:14px">'+state.currSymbol+fmt(cv(totalInterest))+'</div></div>';
   html+='</div></div>';
 
   // Avalanche strategy
@@ -3478,11 +3520,11 @@ function renderLoanAdvisor(){
     html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">';
     html+='<span style="font-size:18px;width:30px;flex-shrink:0;text-align:center">'+(i===0?'🎯':'→')+'</span>';
     html+='<div style="flex:1"><div style="font-size:13px;font-weight:900">'+l.name+'</div>';
-    html+='<div style="font-size:11px;color:var(--text3);font-weight:700">'+l.rate+'% p.a. · '+state.currSymbol+fmt(l.remaining)+' remaining</div></div>';
+    html+='<div style="font-size:11px;color:var(--text3);font-weight:700">'+l.rate+'% p.a. · '+state.currSymbol+fmt(cv(l.remaining))+' remaining</div></div>';
     if(i===0)html+='<span style="background:rgba(239,68,68,0.15);color:var(--red);padding:3px 8px;border-radius:8px;font-size:10px;font-weight:900">PAY EXTRA HERE</span>';
     html+='</div>';
   });
-  html+='<div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--green)">✅ Saves ~'+state.currSymbol+fmt(totalInterest*0.15)+'+ in interest</div>';
+  html+='<div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--green)">✅ Saves ~'+state.currSymbol+fmt(cv(totalInterest*0.15))+'+ in interest</div>';
   html+='</div>';
 
   // Snowball strategy
@@ -3493,7 +3535,7 @@ function renderLoanAdvisor(){
     html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">';
     html+='<span style="font-size:18px;width:30px;flex-shrink:0;text-align:center">'+(i===0?'🎯':'→')+'</span>';
     html+='<div style="flex:1"><div style="font-size:13px;font-weight:900">'+l.name+'</div>';
-    html+='<div style="font-size:11px;color:var(--text3);font-weight:700">'+state.currSymbol+fmt(l.remaining)+' · '+l.monthsLeft+' months left</div></div>';
+    html+='<div style="font-size:11px;color:var(--text3);font-weight:700">'+state.currSymbol+fmt(cv(l.remaining))+' · '+l.monthsLeft+' months left</div></div>';
     if(i===0)html+='<span style="background:rgba(59,130,246,0.15);color:var(--blue);padding:3px 8px;border-radius:8px;font-size:10px;font-weight:900">PAY EXTRA HERE</span>';
     html+='</div>';
   });
@@ -3536,7 +3578,7 @@ function generateMonthlyPlan(){
   var emergency=Math.round(income*0.05);
 
   var html='<div style="background:var(--card);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">';
-  html+='<div style="font-size:14px;font-weight:900;margin-bottom:12px">📅 Your '+state.currSymbol+fmt(income)+' Monthly Plan</div>';
+  html+='<div style="font-size:14px;font-weight:900;margin-bottom:12px">📅 Your '+state.currSymbol+fmt(cv(income))+' Monthly Plan</div>';
 
   var items=[
     {label:'🍱 Needs (Food, Bills, Rent)',amt:needs,color:'var(--blue)',pct:50},
@@ -3549,7 +3591,7 @@ function generateMonthlyPlan(){
   items.forEach(function(item){
     html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
     html+='<div style="font-size:12px;font-weight:700;flex:1">'+item.label+'</div>';
-    html+='<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+item.color+';min-width:70px;text-align:right">'+state.currSymbol+fmt(item.amt)+'</div>';
+    html+='<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+item.color+';min-width:70px;text-align:right">'+state.currSymbol+fmt(cv(item.amt))+'</div>';
     html+='</div>';
     html+='<div style="height:6px;background:var(--bg3);border-radius:3px;margin-bottom:12px"><div style="height:100%;width:'+item.pct+'%;background:'+item.color+';border-radius:3px"></div></div>';
   });
@@ -3558,7 +3600,7 @@ function generateMonthlyPlan(){
   var leftover=income-total;
   html+='<div style="border-top:2px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;align-items:center">';
   html+='<span style="font-size:13px;font-weight:900">Remaining / Buffer</span>';
-  html+='<span style="font-family:var(--font);font-size:15px;font-weight:900;color:'+(leftover>=0?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmt(Math.abs(leftover))+(leftover<0?' OVER':' left')+'</span>';
+  html+='<span style="font-family:var(--font);font-size:15px;font-weight:900;color:'+(leftover>=0?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmt(cv(Math.abs(leftover)))+(leftover<0?' OVER':' left')+'</span>';
   html+='</div></div>';
 
   // Smart loan suggestion
@@ -3566,7 +3608,7 @@ function generateMonthlyPlan(){
     html+='<div style="background:rgba(34,197,94,0.08);border:2px solid rgba(34,197,94,0.2);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px">';
     html+='<div style="font-size:13px;font-weight:900;color:var(--green);margin-bottom:6px">💡 Smart Suggestion for This Month</div>';
     html+='<div style="font-size:12px;font-weight:700;color:var(--text2);line-height:1.7">';
-    html+='You have <b>'+state.currSymbol+fmt(leftover)+'</b> buffer. Put <b>'+state.currSymbol+fmt(Math.round(leftover*0.7))+'</b> as extra loan payment to reduce interest. Keep '+state.currSymbol+fmt(Math.round(leftover*0.3))+' as emergency.';
+    html+='You have <b>'+state.currSymbol+fmt(cv(leftover))+'</b> buffer. Put <b>'+state.currSymbol+fmt(cv(Math.round(leftover*0.7)))+'</b> as extra loan payment to reduce interest. Keep '+state.currSymbol+fmt(cv(Math.round(leftover*0.3)))+' as emergency.';
     html+='</div></div>';
   }
 
@@ -3610,7 +3652,7 @@ async function handleReceiptUpload(event){
       const raw=data.content?.[0]?.text||'{}';
       const clean=raw.replace(/```json|```/g,'').trim();
       scanResult=JSON.parse(clean);
-      document.getElementById('scanData').innerHTML=`<div class="tx" style="cursor:default"><div class="tx-ico" style="background:rgba(59,130,246,0.1)">${CAT_EMOJI[scanResult.category]||'🧾'}</div><div class="tx-body"><div class="tx-name">${scanResult.description||'Receipt'}</div><div class="tx-meta">${scanResult.category} · ${scanResult.date||'Today'}</div></div><div class="tx-amt" style="color:var(--red)">－${state.currSymbol}${fmt(scanResult.amount||0)}</div></div>`;
+      document.getElementById('scanData').innerHTML=`<div class="tx" style="cursor:default"><div class="tx-ico" style="background:rgba(59,130,246,0.1)">${CAT_EMOJI[scanResult.category]||'🧾'}</div><div class="tx-body"><div class="tx-name">${scanResult.description||'Receipt'}</div><div class="tx-meta">${scanResult.category} · ${scanResult.date||'Today'}</div></div><div class="tx-amt" style="color:var(--red)">－${state.currSymbol}${fmt(cv(scanResult.amount||0))}</div></div>`;
     }catch(e){scanResult=null;document.getElementById('scanData').innerHTML=`<div style="text-align:center;padding:16px;color:var(--text3);font-weight:700">❌ Could not read receipt. Please enter manually.</div>`;}
   };
   reader.readAsDataURL(file);
@@ -3620,15 +3662,15 @@ function clearScan(){scanResult=null;document.getElementById('scanResult').style
 
 // ======== CHARTS ========
 function initCharts(){renderMiniChart();}
-function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));eD.push(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));}const type=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'bar';charts.mini=new Chart(ctx,{type,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const type=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'bar';charts.mini=new Chart(ctx,{type,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
 function setMini(type,el){document.querySelectorAll('#miniCtrl .cpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');el.setAttribute('data-type',type);renderMiniChart();}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();renderYearlySummary();renderCatBreakdown();}
-function renderNetWorthTimeline(){const ctx=document.getElementById('netWorthChart');if(!ctx)return;if(charts.nw)charts.nw.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[];const data=[];for(let i=11;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()<=m&&d.getFullYear()<=y;});const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);data.push(inc-exp+state.assets.reduce((s,a)=>s+a.value,0));}charts.nw=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Net Worth',data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
-function renderYearlySummary(){const c=document.getElementById('yearlySummary');const now=new Date();const year=now.getFullYear();const monthly=[];for(let m=0;m<12;m++){const txs=state.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===year&&d.getMonth()===m;});const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);monthly.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m],inc,exp,net:inc-exp});}const totalInc=monthly.reduce((s,m)=>s+m.inc,0);const totalExp=monthly.reduce((s,m)=>s+m.exp,0);c.innerHTML=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Year Income</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(totalInc)}</div></div><div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Year Spend</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(totalExp)}</div></div></div>${monthly.filter(m=>m.inc>0||m.exp>0).map(m=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="min-width:32px;font-size:11px;font-weight:900;color:var(--text3)">${m.month}</div><div style="flex:1"><div style="display:flex;gap:3px;height:6px"><div style="height:100%;background:var(--green);border-radius:3px;flex:${m.inc}"></div><div style="height:100%;background:var(--red);border-radius:3px;flex:${m.exp}"></div></div></div><div style="font-family:var(--font);font-size:11px;font-weight:700;color:${m.net>=0?'var(--green)':'var(--red)'};min-width:60px;text-align:right">${m.net>=0?'+':'-'}${state.currSymbol}${fmt(Math.abs(m.net))}</div></div>`).join('')}`;}
+function renderNetWorthTimeline(){const ctx=document.getElementById('netWorthChart');if(!ctx)return;if(charts.nw)charts.nw.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[];const data=[];for(let i=11;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()<=m&&d.getFullYear()<=y;});const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);data.push(cv(inc-exp+state.assets.reduce((s,a)=>s+a.value,0)));}charts.nw=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Net Worth',data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+function renderYearlySummary(){const c=document.getElementById('yearlySummary');const now=new Date();const year=now.getFullYear();const monthly=[];for(let m=0;m<12;m++){const txs=state.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===year&&d.getMonth()===m;});const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);monthly.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m],inc,exp,net:inc-exp});}const totalInc=monthly.reduce((s,m)=>s+m.inc,0);const totalExp=monthly.reduce((s,m)=>s+m.exp,0);c.innerHTML=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Year Income</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalInc))}</div></div><div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Year Spend</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalExp))}</div></div></div>${monthly.filter(m=>m.inc>0||m.exp>0).map(m=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="min-width:32px;font-size:11px;font-weight:900;color:var(--text3)">${m.month}</div><div style="flex:1"><div style="display:flex;gap:3px;height:6px"><div style="height:100%;background:var(--green);border-radius:3px;flex:${m.inc}"></div><div style="height:100%;background:var(--red);border-radius:3px;flex:${m.exp}"></div></div></div><div style="font-family:var(--font);font-size:11px;font-weight:700;color:${m.net>=0?'var(--green)':'var(--red)'};min-width:60px;text-align:right">${m.net>=0?'+':'-'}${state.currSymbol}${fmt(cv(Math.abs(m.net)))}</div></div>`).join('')}`;}
 function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');chartType=type;renderMainChart();}
-function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(total);charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'bb'),borderColor:colors,borderWidth:2,borderRadius:['bar'].includes(chartType)?8:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12,padding:10}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}:undefined}});}
-function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));eD.push(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));}charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
-function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(amt)+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
+function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'bb'),borderColor:colors,borderWidth:2,borderRadius:['bar'].includes(chartType)?8:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12,padding:10}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}:undefined}});}
+function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
 function renderAssetChart(){const ctx=document.getElementById('assetChart');if(!ctx||!state.assets.length)return;if(charts.asset)charts.asset.destroy();charts.asset=new Chart(ctx,{type:'doughnut',data:{labels:state.assets.map(a=>a.name),datasets:[{data:state.assets.map(a=>a.value),backgroundColor:state.assets.map(a=>a.color+'bb'),borderColor:state.assets.map(a=>a.color),borderWidth:2,hoverOffset:12}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12,padding:10}}}}});}
 
 // ======== SETTINGS ========
@@ -3696,7 +3738,69 @@ function syncLangBtn(){
   state.lang='en';
 }
 function syncFontBtn(){document.querySelectorAll('#fontGrid .font-btn').forEach(b=>b.classList.remove('on'));const match=[...document.querySelectorAll('#fontGrid .font-btn')].find(b=>b.getAttribute('onclick')?.includes("'"+state.font+"'"));if(match)match.classList.add('on');}
-function setCurr(c,sym,el){state.currency=c;state.currSymbol=sym;saveState();updateCurrSymbols();document.querySelectorAll('#currGrid .curr-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');updateDashboard();renderGoals();renderAssets();renderLiabilities();}
+function updateCurrRateInfo(){
+  var el=document.getElementById('currRateInfo');
+  if(!el)return;
+  if(!state.currency||state.currency==='INR'){el.textContent='Base currency — all amounts stored in INR';return;}
+  var rate=state.currencyRate||1;
+  el.textContent='Live rate: 1 ₹ = '+rate.toFixed(4)+' '+state.currency+' · Tap another currency to refresh';
+}
+async function setCurr(c,sym,el){
+  // Update symbol immediately for instant UI feedback
+  state.currency=c;state.currSymbol=sym;
+  document.querySelectorAll('#currGrid .curr-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+
+  // Show loading state on the button
+  const origText=el.textContent;
+  el.textContent='⏳';
+  el.style.opacity='0.6';
+
+  if(c==='INR'){
+    // INR is the base — no conversion needed
+    state.currencyRate=1;
+    state.baseCurrency='INR';
+    el.textContent=origText;
+    el.style.opacity='';
+    saveState();updateCurrSymbols();updateDashboard();renderGoals();renderAssets();renderLiabilities();
+    updateCurrRateInfo();
+    showToast('Currency set to ₹ INR','green');
+    return;
+  }
+
+  try{
+    // Fetch live rates with INR as base (free API, no key required)
+    const res=await fetch('https://open.er-api.com/v6/latest/INR');
+    if(!res.ok) throw new Error('Rate fetch failed');
+    const data=await res.json();
+    const rate=data.rates&&data.rates[c];
+    if(!rate) throw new Error('Rate not found for '+c);
+    state.currencyRate=rate;
+    state.baseCurrency='INR';
+    el.textContent=origText;
+    el.style.opacity='';
+    saveState();updateCurrSymbols();updateDashboard();renderGoals();renderAssets();renderLiabilities();
+    updateCurrRateInfo();
+    showToast('Live rate: 1 ₹ = '+rate.toFixed(4)+' '+c,'green');
+  }catch(e){
+    // Fallback to offline approximate rates if API fails
+    const FALLBACK_RATES={USD:0.012,EUR:0.011,GBP:0.0095,JPY:1.79,AED:0.044};
+    const fallback=FALLBACK_RATES[c];
+    if(fallback){
+      state.currencyRate=fallback;
+      state.baseCurrency='INR';
+      el.textContent=origText;
+      el.style.opacity='';
+      saveState();updateCurrSymbols();updateDashboard();renderGoals();renderAssets();renderLiabilities();
+      updateCurrRateInfo();
+      showToast('Offline rate used for '+c+' (approx)','yellow');
+    } else {
+      el.textContent=origText;
+      el.style.opacity='';
+      showToast('Could not fetch rate for '+c,'red');
+    }
+  }
+}
 function updateCurrSymbols(){document.querySelectorAll('.curr').forEach(el=>el.textContent=state.currSymbol);}
 function setLang(lang,el){
   state.lang='en';saveState();
@@ -4609,8 +4713,8 @@ function renderWealthSection(type){
         +(gain?'<div style="font-size:11px;font-weight:900;color:'+gainColor+';margin-top:2px">'+(parseFloat(gain)>=0?'📈 +':'📉 ')+gain+'%</div>':'')
       +'</div>'
       +'<div style="text-align:right">'
-        +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+a.color+'">'+state.currSymbol+fmt(a.value)+'</div>'
-        +(a.invested>0?'<div style="font-size:10px;color:var(--text3);font-weight:700">invested: '+state.currSymbol+fmt(a.invested)+'</div>':'')
+        +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+a.color+'">'+state.currSymbol+fmt(cv(a.value))+'</div>'
+        +(a.invested>0?'<div style="font-size:10px;color:var(--text3);font-weight:700">invested: '+state.currSymbol+fmt(cv(a.invested))+'</div>':'')
       +'</div></div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
         +'<button onclick="editAsset('+a.id+')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
@@ -4625,7 +4729,7 @@ function renderWealthSection(type){
         +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'
         +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'
       +'</div>'
-      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(Math.abs(ac.balance))+'</div>'
+      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
         +'<button onclick="editAcct(\''+ac.id+'\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
@@ -4640,10 +4744,10 @@ function renderWealthSection(type){
       +'<div style="flex:1">'
         +'<div style="font-size:14px;font-weight:900">'+l.name+'</div>'
         +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+l.type+(l.rate?' · '+l.rate+'% p.a.':'')+(paid>0?' · '+paid+'% paid':'')+'</div>'
-        +(l.emi>0?'<div style="font-size:11px;color:var(--yellow);font-weight:900;margin-top:2px">EMI: '+state.currSymbol+fmt(l.emi)+'/mo</div>':'')
+        +(l.emi>0?'<div style="font-size:11px;color:var(--yellow);font-weight:900;margin-top:2px">EMI: '+state.currSymbol+fmt(cv(l.emi))+'/mo</div>':'')
       +'</div>'
       +'<div style="text-align:right">'
-        +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">'+state.currSymbol+fmt(l.remaining)+'</div>'
+        +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">'+state.currSymbol+fmt(cv(l.remaining))+'</div>'
         +'<div style="font-size:10px;color:var(--text3);font-weight:700">remaining</div>'
       +'</div></div>'
       +(l.total>0?'<div class="goal-bar" style="margin:6px 0"><div class="goal-fill" style="width:'+paid+'%;background:linear-gradient(90deg,'+l.color+','+l.color+'88)"></div></div>':'')
@@ -4660,12 +4764,12 @@ function renderWealthSection(type){
         +'<div style="display:flex;align-items:center;gap:10px">'
           +'<span style="font-size:26px">'+g.icon+'</span>'
           +'<div><div style="font-size:14px;font-weight:900">'+g.name+'</div>'
-          +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+state.currSymbol+fmt(g.current)+' of '+state.currSymbol+fmt(g.target)+(g.date?' · '+formatDate(g.date):'')+'</div></div>'
+          +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+state.currSymbol+fmt(cv(g.current))+' of '+state.currSymbol+fmt(cv(g.target))+(g.date?' · '+formatDate(g.date):'')+'</div></div>'
         +'</div>'
         +'<span style="font-family:var(--font);font-size:18px;font-weight:700;color:'+(pct>=100?'var(--green)':'var(--yellow)')+'">'+pct+'%</span>'
       +'</div>'
       +'<div class="goal-bar"><div class="goal-fill" style="width:'+pct+'%"></div></div>'
-      +(pct<100?'<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:4px">'+state.currSymbol+fmt(rem)+' to go</div>':'<div style="font-size:11px;color:var(--green);font-weight:900;margin-top:4px">🎉 Goal reached!</div>')
+      +(pct<100?'<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:4px">'+state.currSymbol+fmt(cv(rem))+' to go</div>':'<div style="font-size:11px;color:var(--green);font-weight:900;margin-top:4px">🎉 Goal reached!</div>')
       +'</div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
         +'<button onclick="editGoal('+g.id+')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
@@ -4692,7 +4796,7 @@ function editAcct(id){
   var a=state.accounts.find(a=>a.id===id);if(!a)return;
   document.getElementById('acctName').value=a.name;
   document.getElementById('acctType').value=a.type;
-  document.getElementById('acctBalance').value=a.balance||0;
+  document.getElementById('acctBalance').value=parseFloat(((a.balance||0)*(state.currencyRate||1)).toFixed(2));
   acctColor=a.color||'#22c55e';
   document.getElementById('acctModal').dataset.editId=id;
   document.querySelector('#acctModal .btn-go').textContent='✅ Update Account';
@@ -4706,22 +4810,22 @@ function renderWealth(){
   const netWorth=totalAssets+totalAccts-totalLiab;
 
   var nwEl=document.getElementById('wealthNetWorth');
-  nwEl.textContent=(netWorth<0?'－':'')+fmt(Math.abs(netWorth));
+  nwEl.textContent=(netWorth<0?'－':'')+fmt(cv(Math.abs(netWorth)));
   nwEl.style.color=netWorth<0?'var(--red)':netWorth>0?'var(--green)':'var(--text)';
-  document.getElementById('wealthTotalAssets').textContent=fmt(totalAssets);
-  document.getElementById('wealthTotalDebts').textContent=fmt(totalLiab);
+  document.getElementById('wealthTotalAssets').textContent=fmt(cv(totalAssets));
+  document.getElementById('wealthTotalDebts').textContent=fmt(cv(totalLiab));
   // Cash & Bank stat box: show sign + switch color green/red
   var acctStatEl=document.getElementById('wealthTotalAccts');
-  acctStatEl.textContent=(totalAccts<0?'－':'')+fmt(Math.abs(totalAccts));
+  acctStatEl.textContent=(totalAccts<0?'－':'')+fmt(cv(Math.abs(totalAccts)));
   var acctBox=acctStatEl.closest('.stat-box');
   if(acctBox){
     acctBox.className='stat-box '+(totalAccts<0?'sr':'sb');
     var acctEmoji=acctBox.querySelector('.stat-emoji');
     if(acctEmoji)acctEmoji.textContent=totalAccts<0?'⚠️':'🏦';
   }
-  document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(totalAssets);
-  document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(Math.abs(totalAccts));
-  document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(totalLiab);
+  document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(cv(totalAssets));
+  document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(totalAccts)));
+  document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(cv(totalLiab));
 
   const badge=document.getElementById('wealthBadge');
   if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent='📈 Surplus';}
@@ -4781,15 +4885,15 @@ function exportWealth(){
   const netWorth=totalAssets+totalAccts-totalLiab;
   const date=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
   let txt=`FINANCE TRACKER — ASSERT STATEMENT\nDate: ${date}\n${'='.repeat(40)}\n\n`;
-  txt+=`NET WORTH: ${state.currSymbol}${fmt(netWorth)}\n\n`;
-  txt+=`ASSETS (${state.currSymbol}${fmt(totalAssets)})\n${'-'.repeat(30)}\n`;
-  state.assets.forEach(a=>{txt+=`  ${a.name} (${a.scheme}): ${state.currSymbol}${fmt(a.value)}\n`;});
-  txt+=`\nACCOUNTS & CASH (${state.currSymbol}${fmt(totalAccts)})\n${'-'.repeat(30)}\n`;
-  state.accounts.forEach(a=>{txt+=`  ${a.name} (${a.type}): ${state.currSymbol}${fmt(a.balance)}\n`;});
-  txt+=`\nLIABILITIES (${state.currSymbol}${fmt(totalLiab)})\n${'-'.repeat(30)}\n`;
-  state.liabilities.forEach(l=>{txt+=`  ${l.name} (${l.type}): ${state.currSymbol}${fmt(l.remaining)} remaining${l.emi?' | EMI: '+state.currSymbol+fmt(l.emi)+'/mo':''}\n`;});
+  txt+=`NET WORTH: ${state.currSymbol}${fmt(cv(netWorth))}\n\n`;
+  txt+=`ASSETS (${state.currSymbol}${fmt(cv(totalAssets))})\n${'-'.repeat(30)}\n`;
+  state.assets.forEach(a=>{txt+=`  ${a.name} (${a.scheme}): ${state.currSymbol}${fmt(cv(a.value))}\n`;});
+  txt+=`\nACCOUNTS & CASH (${state.currSymbol}${fmt(cv(totalAccts))})\n${'-'.repeat(30)}\n`;
+  state.accounts.forEach(a=>{txt+=`  ${a.name} (${a.type}): ${state.currSymbol}${fmt(cv(a.balance))}\n`;});
+  txt+=`\nLIABILITIES (${state.currSymbol}${fmt(cv(totalLiab))})\n${'-'.repeat(30)}\n`;
+  state.liabilities.forEach(l=>{txt+=`  ${l.name} (${l.type}): ${state.currSymbol}${fmt(cv(l.remaining))} remaining${l.emi?' | EMI: '+state.currSymbol+fmt(cv(l.emi))+'/mo':''}\n`;});
   txt+=`\nGOALS\n${'-'.repeat(30)}\n`;
-  state.goals.forEach(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));txt+=`  ${g.icon} ${g.name}: ${state.currSymbol}${fmt(g.current)} / ${state.currSymbol}${fmt(g.target)} (${pct}%)\n`;});
+  state.goals.forEach(g=>{const pct=Math.min(100,Math.round(g.current/g.target*100));txt+=`  ${g.icon} ${g.name}: ${state.currSymbol}${fmt(cv(g.current))} / ${state.currSymbol}${fmt(cv(g.target))} (${pct}%)\n`;});
   const blob=new Blob([txt],{type:'text/plain'});
   const filename='wealth-statement-'+new Date().toISOString().split('T')[0]+'.txt';
   const ok=triggerDownload(blob,filename);
@@ -4799,7 +4903,23 @@ function exportWealth(){
     else showToast('Allow pop-ups and try again','red');
   } else showToast('✅ Wealth statement exported!','green');
 }
-function fmt(n){if(!n||isNaN(n))return'0';const abs=Math.abs(n);if(abs>=10000000)return(abs/10000000).toFixed(2)+'Cr';if(abs>=100000)return(abs/100000).toFixed(2)+'L';if(abs>=1000)return(abs/1000).toFixed(1)+'K';return Math.round(abs).toLocaleString();}
+function fmt(n){
+  if(!n||isNaN(n))return'0';
+  const abs=Math.abs(n);
+  if((state.currency||'INR')==='INR'){
+    if(abs>=10000000)return(abs/10000000).toFixed(2)+'Cr';
+    if(abs>=100000)return(abs/100000).toFixed(2)+'L';
+    if(abs>=1000)return(abs/1000).toFixed(1)+'K';
+    return Math.round(abs).toLocaleString();
+  }
+  if(abs>=1000000000)return(abs/1000000000).toFixed(2)+'B';
+  if(abs>=1000000)return(abs/1000000).toFixed(2)+'M';
+  if(abs>=1000)return(abs/1000).toFixed(1)+'K';
+  if(abs<10)return abs.toFixed(2);
+  return Math.round(abs).toLocaleString();
+}
+// cv: convert stored INR amount to current display currency
+function cv(n){return(n||0)*(state.currencyRate||1);}
 function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
 
 // ======== PWA MANIFEST + ICON ========
