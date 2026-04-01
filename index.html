@@ -2492,6 +2492,12 @@ async function fpAuth(){
     setTimeout(()=>document.getElementById('lockErr').textContent='',2500);
     return;
   }
+  if(!state.fpCredentialId){
+    // No credential registered yet — guide user to re-register
+    document.getElementById('lockErr').textContent='⚠️ Re-register fingerprint in Settings';
+    setTimeout(()=>document.getElementById('lockErr').textContent='',3000);
+    return;
+  }
   if(!window.PublicKeyCredential){
     document.getElementById('lockErr').textContent='Biometrics not supported on this browser';
     setTimeout(()=>document.getElementById('lockErr').textContent='',2500);
@@ -2504,9 +2510,18 @@ async function fpAuth(){
   try {
     const challenge=new Uint8Array(32);
     crypto.getRandomValues(challenge);
-    const opts={publicKey:{challenge,timeout:60000,userVerification:'required',
-      allowCredentials:state.fpCredentialId?[{id:base64ToBuffer(state.fpCredentialId),type:'public-key',transports:['internal']}]:[]}};
-    await navigator.credentials.get(opts);
+    // Pass exact credential ID + rpId to bypass passkey picker and go direct to fingerprint
+    await navigator.credentials.get({publicKey:{
+      challenge,
+      timeout:60000,
+      userVerification:'required',
+      rpId: location.hostname,
+      allowCredentials:[{
+        id:base64ToBuffer(state.fpCredentialId),
+        type:'public-key',
+        transports:['internal']
+      }]
+    }});
     if(icon){icon.textContent='🔐';icon.style.boxShadow='';}
     sub.textContent='✅ VERIFIED';
     setTimeout(function(){sub.textContent='Enter your PIN';unlock();},300);
@@ -2515,6 +2530,8 @@ async function fpAuth(){
     sub.textContent='Enter your PIN';
     if(e.name==='NotAllowedError'){
       document.getElementById('lockErr').textContent='❌ Biometric cancelled — use PIN';
+    } else if(e.name==='SecurityError'){
+      document.getElementById('lockErr').textContent='❌ Re-register fingerprint in Settings';
     } else {
       document.getElementById('lockErr').textContent='❌ '+e.message;
     }
@@ -2522,9 +2539,9 @@ async function fpAuth(){
   }
 }
 
+
 async function toggleFingerprint(el){
   if(state.fpEnabled){
-    // Disable — clear stored credential
     state.fpEnabled=false;
     state.fpCredentialId=null;
     saveState();
@@ -2535,25 +2552,27 @@ async function toggleFingerprint(el){
     showToast('Fingerprint unlock disabled','yellow');
     return;
   }
-  // Enable — register a real platform credential (requires HTTPS)
-  document.getElementById('fpStatusLabel').textContent='⏳ Registering fingerprint…';
   if(!window.PublicKeyCredential){
     showToast('WebAuthn not supported on this browser','red');
-    document.getElementById('fpStatusLabel').textContent='Use biometrics to unlock the app';
     return;
   }
+  document.getElementById('fpStatusLabel').textContent='⏳ Touch your fingerprint sensor…';
   try {
     const challenge=new Uint8Array(32); crypto.getRandomValues(challenge);
     const userId=new Uint8Array(16); crypto.getRandomValues(userId);
+    // Register with explicit rpId = current hostname (e.g. yourname.github.io)
     const cred=await navigator.credentials.create({publicKey:{
       challenge,
-      rp:{name:'Finance Tracker'},
+      rp:{id:location.hostname, name:'Finance Tracker'},
       user:{id:userId, name:'finance-user', displayName:'Finance User'},
       pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
-      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+      authenticatorSelection:{
+        authenticatorAttachment:'platform',
+        userVerification:'required',
+        residentKey:'discouraged'
+      },
       timeout:60000
     }});
-    // Store the credential ID so lock screen can assert against it
     state.fpCredentialId=bufferToBase64(cred.rawId);
     state.fpEnabled=true;
     saveState();
@@ -2565,16 +2584,7 @@ async function toggleFingerprint(el){
   } catch(e){
     document.getElementById('fpStatusLabel').textContent='Use biometrics to unlock the app';
     if(e.name==='NotAllowedError'){
-      showToast('Registration cancelled — please try again','yellow');
-    } else if(e.name==='InvalidStateError'){
-      // Credential already exists — just enable without re-registering
-      state.fpEnabled=true;
-      saveState();
-      el.classList.add('on');
-      el.querySelector('.tog-knob').style.transform='translateX(22px)';
-      document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
-      initFpButton();
-      showToast('Fingerprint unlock enabled! ✅','green');
+      showToast('Cancelled — please try again','yellow');
     } else {
       showToast('Error: '+e.message,'red');
     }
