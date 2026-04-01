@@ -2483,40 +2483,50 @@ function pinPress(d){if(pinBuf.length>=4)return;pinBuf+=d;updateDots();if(pinBuf
 function pinBack(){pinBuf=pinBuf.slice(0,-1);updateDots();}
 function updateDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuf.length);}
 function checkPin(){if(pinBuf===state.pin){unlock();}else{document.getElementById('lockErr').textContent='❌ Wrong PIN — try again';pinBuf='';updateDots();setTimeout(()=>document.getElementById('lockErr').textContent='',2000);}}
+function base64ToBuffer(b64){var bin=atob(b64);var buf=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);return buf;}
+function bufferToBase64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
+
 async function fpAuth(){
   if(!state.fpEnabled){
-    document.getElementById('lockErr').textContent='☝️ Fingerprint not enabled — use PIN';
+    document.getElementById('lockErr').textContent='☝️ Fingerprint not enabled in Settings';
     setTimeout(()=>document.getElementById('lockErr').textContent='',2500);
     return;
   }
-  document.getElementById('lockErr').textContent='';
-  document.getElementById('lock-sub').textContent='☝️ Touch fingerprint sensor…';
+  if(!window.PublicKeyCredential){
+    document.getElementById('lockErr').textContent='Biometrics not supported on this browser';
+    setTimeout(()=>document.getElementById('lockErr').textContent='',2500);
+    return;
+  }
+  var sub=document.getElementById('lock-sub');
+  var icon=document.querySelector('.lock-icon');
+  sub.textContent='TOUCH SENSOR…';
+  if(icon){icon.textContent='👆';icon.style.boxShadow='0 0 60px var(--accent-glow),0 0 120px var(--accent-glow)';}
   try {
-    if(window.PublicKeyCredential){
-      const challenge = new Uint8Array(32);
-      crypto.getRandomValues(challenge);
-      await navigator.credentials.get({
-        publicKey: { challenge, timeout: 30000, userVerification: 'required', allowCredentials: [] }
-      });
-    }
-    document.getElementById('lock-sub').textContent='Enter your PIN';
-    unlock();
+    const challenge=new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const opts={publicKey:{challenge,timeout:60000,userVerification:'required',
+      allowCredentials:state.fpCredentialId?[{id:base64ToBuffer(state.fpCredentialId),type:'public-key',transports:['internal']}]:[]}};
+    await navigator.credentials.get(opts);
+    if(icon){icon.textContent='🔐';icon.style.boxShadow='';}
+    sub.textContent='✅ VERIFIED';
+    setTimeout(function(){sub.textContent='Enter your PIN';unlock();},300);
   } catch(e){
-    document.getElementById('lock-sub').textContent='Enter your PIN';
+    if(icon){icon.textContent='🔐';icon.style.boxShadow='';}
+    sub.textContent='Enter your PIN';
     if(e.name==='NotAllowedError'){
       document.getElementById('lockErr').textContent='❌ Biometric cancelled — use PIN';
     } else {
-      // WebAuthn not available (file://, HTTP) — unlock directly since user enabled it
-      unlock();
+      document.getElementById('lockErr').textContent='❌ '+e.message;
     }
-    setTimeout(()=>document.getElementById('lockErr').textContent='',2500);
+    setTimeout(()=>document.getElementById('lockErr').textContent='',3000);
   }
 }
 
 async function toggleFingerprint(el){
   if(state.fpEnabled){
-    // Disable
+    // Disable — clear stored credential
     state.fpEnabled=false;
+    state.fpCredentialId=null;
     saveState();
     el.classList.remove('on');
     el.querySelector('.tog-knob').style.transform='translateX(0)';
@@ -2525,56 +2535,53 @@ async function toggleFingerprint(el){
     showToast('Fingerprint unlock disabled','yellow');
     return;
   }
-  // Try to enable — first verify biometrics work on this device
-  document.getElementById('fpStatusLabel').textContent='⏳ Verifying biometric support…';
-  // Use Android/iOS native biometric prompt via window.confirm fallback chain:
-  // 1) Try WebAuthn userVerification (works on HTTPS + supported devices)
-  // 2) Fall back to enabling directly (user confirmed intent by tapping toggle)
-  var supported = false;
-  if(window.PublicKeyCredential){
-    try {
-      supported = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    } catch(e){ supported = false; }
-  }
-  if(!supported){
-    // Fallback: enable anyway — the lock screen fpAuth will show the OS prompt at unlock time
-    // This supports devices where the check fails outside HTTPS but biometrics still work
-    state.fpEnabled=true;
-    saveState();
-    el.classList.add('on');
-    el.querySelector('.tog-knob').style.transform='translateX(22px)';
-    document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
-    initFpButton();
-    showToast('Fingerprint unlock enabled! ✅','green');
+  // Enable — register a real platform credential (requires HTTPS)
+  document.getElementById('fpStatusLabel').textContent='⏳ Registering fingerprint…';
+  if(!window.PublicKeyCredential){
+    showToast('WebAuthn not supported on this browser','red');
+    document.getElementById('fpStatusLabel').textContent='Use biometrics to unlock the app';
     return;
   }
-  // Device supports it — do a quick verification to confirm before enabling
   try {
-    const challenge = new Uint8Array(32);
-    crypto.getRandomValues(challenge);
-    await navigator.credentials.get({
-      publicKey: { challenge, timeout: 30000, userVerification: 'required', allowCredentials: [] }
-    });
+    const challenge=new Uint8Array(32); crypto.getRandomValues(challenge);
+    const userId=new Uint8Array(16); crypto.getRandomValues(userId);
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge,
+      rp:{name:'Finance Tracker'},
+      user:{id:userId, name:'finance-user', displayName:'Finance User'},
+      pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+      timeout:60000
+    }});
+    // Store the credential ID so lock screen can assert against it
+    state.fpCredentialId=bufferToBase64(cred.rawId);
     state.fpEnabled=true;
     saveState();
     el.classList.add('on');
     el.querySelector('.tog-knob').style.transform='translateX(22px)';
-    document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
+    document.getElementById('fpStatusLabel').textContent='✅ Registered — tap ☝️ on lock screen';
     initFpButton();
-    showToast('Fingerprint unlock enabled! ✅','green');
+    showToast('Fingerprint registered! ✅','green');
   } catch(e){
-    // Verification failed — still enable, user clearly has intent
-    state.fpEnabled=true;
-    saveState();
-    el.classList.add('on');
-    el.querySelector('.tog-knob').style.transform='translateX(22px)';
-    document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
-    initFpButton();
-    showToast('Fingerprint unlock enabled! ✅','green');
+    document.getElementById('fpStatusLabel').textContent='Use biometrics to unlock the app';
+    if(e.name==='NotAllowedError'){
+      showToast('Registration cancelled — please try again','yellow');
+    } else if(e.name==='InvalidStateError'){
+      // Credential already exists — just enable without re-registering
+      state.fpEnabled=true;
+      saveState();
+      el.classList.add('on');
+      el.querySelector('.tog-knob').style.transform='translateX(22px)';
+      document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
+      initFpButton();
+      showToast('Fingerprint unlock enabled! ✅','green');
+    } else {
+      showToast('Error: '+e.message,'red');
+    }
   }
 }
 function unlock(){initFpButton();document.getElementById('lock').style.display='none';document.getElementById('app').classList.add('on');pinBuf='';updateDots();document.getElementById('lockErr').textContent='';initApp();}
-function lockApp(){document.getElementById('app').classList.remove('on');document.getElementById('lock').style.display='flex';pinBuf='';updateDots();if(state.fpEnabled)setTimeout(fpAuth,400);}
+function lockApp(){document.getElementById('app').classList.remove('on');document.getElementById('lock').style.display='flex';pinBuf='';updateDots();if(state.fpEnabled)setTimeout(fpAuth,600);}
 
 // ======== INIT ========
 function initApp(){
