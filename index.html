@@ -930,7 +930,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div id="pnlSummaryContent"></div>
       </div>
       <div class="box"><div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📋 My Assets</div><div id="assetList"><div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div></div></div>
-      <div class="box"><div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📚 Investment Schemes</div><div id="schemeList"></div></div>
+      <div id="schemeList" style="display:none"></div>
     </div>
 
     <!-- LIABILITIES -->
@@ -2611,7 +2611,9 @@ async function toggleFingerprint(el){
     // Always reset label immediately — never leave "Registering…" stuck
     fpLbl.textContent='Use biometrics to unlock the app';
     if(e.name==='NotAllowedError'||e.name==='AbortError'){
-      // User cancelled or timed out — toggle stays OFF, no state change
+      // User cancelled or timed out — reset toggle visually to OFF
+      el.classList.remove('on');
+      el.querySelector('.tog-knob').style.transform='translateX(0)';
       showToast('Cancelled — try again','yellow');
     } else if(e.name==='InvalidStateError'){
       // Credential already registered on this device — just mark enabled
@@ -2623,6 +2625,8 @@ async function toggleFingerprint(el){
       initFpButton();
       showToast('Fingerprint enabled! ✅','green');
     } else {
+      el.classList.remove('on');
+      el.querySelector('.tog-knob').style.transform='translateX(0)';
       showToast('Error: '+e.message,'red');
     }
   }
@@ -3596,6 +3600,20 @@ function assetDetailLine(a){
   if(s==='Fixed Deposit'){const p=[];if(d.interestRate>0)p.push(d.interestRate+'% p.a.');if(d.tenure>0)p.push(d.tenure+'mo');if(d.maturityDate)p.push('Matures: '+d.maturityDate);if(d.bankName)p.push(d.bankName);return p.join(' · ');}
   if(s==='Real Estate'){const p=[];if(d.area>0)p.push(d.area+' sq.ft');if(d.location)p.push(d.location);return p.join(' · ');}
   if(s==='Bonds'){const p=[];if(d.qty>0)p.push(d.qty+' bonds');if(d.interestRate>0)p.push(d.interestRate+'% coupon');if(d.issuer)p.push(d.issuer);return p.join(' · ');}
+  if(s==='EPFO'){
+    const p=[];
+    const hasBreakdown=(a.epfoEmpShare!=null||a.epfoEmplShare!=null||a.epfoPension!=null);
+    if(hasBreakdown){
+      const sym=state.currSymbol;
+      const ee=a.epfoEmpShare||0,er=a.epfoEmplShare||0,ps=a.epfoPension||0,ix=a.epfoInterest||0;
+      if(ee>0||er>0) p.push('EE: '+sym+fmt(cv(ee))+' · ER: '+sym+fmt(cv(er)));
+      else if(ps>0) p.push('EE/ER transferred');
+      if(ps>0) p.push('Pension: '+sym+fmt(cv(ps)));
+      if(ix>0) p.push('Interest: '+sym+fmt(cv(ix)));
+    }
+    if(a.notes&&!hasBreakdown) p.push(a.notes);
+    return p.join(' · ');
+  }
   if(d.bankName)return d.bankName;if(d.notes)return d.notes;return'';
 }
 
@@ -3624,7 +3642,7 @@ function importEPFOPDF(event){
       Promise.all(pagePromises).then(function(pages){
         var allText=pages.join('\n');
         var result=parseEPFOText(allText);
-        if(!result){showToast('Could not read EPFO data. Check it is a valid EPFO passbook PDF.','red');return;}
+        if(!result){showEPFODebug(allText);return;}
         showEPFOPreview(result);
       });
     }).catch(function(err){showToast('Could not open PDF: '+err.message,'red');});
@@ -3634,30 +3652,154 @@ function importEPFOPDF(event){
 
 function parseEPFOText(text){
   var t=text.replace(/\s+/g,' ');
-  var uanMatch=t.match(/UAN\s*[:\-]?\s*(\d{12})/i);
-  var uan=uanMatch?uanMatch[1]:'';
-  var nameMatch=t.match(/Member\s*Name\s*[:\-]?\s*([A-Z][A-Z\s\.]+?)(?=\s{2,}|\s*UAN|\s*Date|\s*Establishment|$)/i);
-  var memberName=nameMatch?nameMatch[1].trim():'';
-  var estMatch=t.match(/Establishment\s*Name\s*[:\-]?\s*([^\n,;]{3,50}?)(?=\s{2,}|\s*UAN|\s*Date|\s*Member|$)/i);
-  var employer=estMatch?estMatch[1].trim():'';
-  var empShareMatch=t.match(/Employee\s*(?:Share|Contribution)[^\d]*?([\d,]+(?:\.\d{2})?)/i);
-  var emplShareMatch=t.match(/Employer\s*(?:Share|Contribution)[^\d]*?([\d,]+(?:\.\d{2})?)/i);
-  var pensionMatch=t.match(/Pension\s*(?:Fund|Contribution)[^\d]*?([\d,]+(?:\.\d{2})?)/i);
-  var closingMatch=t.match(/(?:Net|Closing|Total)\s*Balance[^\d]*?([\d,]+(?:\.\d{2})?)/i);
-  function parseAmt(m){return m?parseFloat(m[1].replace(/,/g,'')):0;}
-  var empShare=parseAmt(empShareMatch);
-  var emplShare=parseAmt(emplShareMatch);
-  var pension=parseAmt(pensionMatch);
-  var closing=parseAmt(closingMatch);
-  var total=closing>0?closing:(empShare+emplShare+pension);
-  if(total<=0){
-    var allAmts=[];var amtRe=/([\d,]+\.\d{2})/g;var m;
-    while((m=amtRe.exec(t))!==null){var v=parseFloat(m[1].replace(/,/g,''));if(v>1000)allAmts.push(v);}
-    allAmts.sort(function(a,b){return b-a;});
-    total=allAmts[0]||0;
+  function pa(m){return m?parseFloat(m[1].replace(/,/g,'')):0;}
+  function pn(s){return s?parseFloat(String(s).replace(/,/g,'')):0;}
+  var uan='',memberName='',employer='',empShare=null,emplShare=null,pension=0,interest=0,total=0;
+  var depositEE=0,depositER=0; // historical Grand Total deposits (for display only)
+
+  // UAN — 12-digit number after "UAN"
+  var um=t.match(/UAN\s*[:\-\/]?\s*(\d{12})/i);
+  if(um) uan=um[1];
+
+  // Member name
+  var nm=t.match(/Member\s*(?:Id\s*\/\s*)?Name\s*[:\-]?\s*[\w\/\s]*?\/\s*([A-Z][A-Z\s]+?)(?=\s{2,}|\s*Employee|\s*Employer|\s*Office|\s*Establishment)/i);
+  if(nm) memberName=nm[1].trim();
+  if(!memberName){
+    var nm2=t.match(/(?:Member\s*)?Name\s*[:\-]?\s*([A-Z][A-Z\s\.]{2,40}?)(?=\s{2,}|\s*UAN|\s*Date|\s*DOB|\s*Establishment)/i);
+    if(nm2) memberName=nm2[1].trim();
   }
-  if(total<=0) return null;
-  return{uan:uan,memberName:memberName,employer:employer,empShare:empShare,emplShare:emplShare,pension:pension,total:total};
+
+  // Employer
+  var em=t.match(/Establishment\s*(?:Id\s*\/\s*)?Name\s*[:\-]?\s*[\w\/\s]*?\/\s*([A-Z0-9][A-Z0-9\s]+?)(?=\s{2,}|\s*Employee|\s*Member|\s*Office)/i);
+  if(em) employer=em[1].trim();
+  if(!employer){
+    var em2=t.match(/(?:Establishment|Employer)\s*(?:Name)?\s*[:\-]?\s*([A-Z0-9][^,;\n]{3,60}?)(?=\s{2,}|\s*UAN|\s*Date|\s*Member)/i);
+    if(em2) employer=em2[1].trim();
+  }
+
+  // === PRIORITY 1: Header-level balance fields ===
+  // The EPFO passbook header shows:
+  //   "Employee Share : 0"  and  "Employer Share : 0"
+  // These reflect the ACTUAL current balance (0 = transferred to new employer).
+  // We must read these FIRST, before falling through to Grand Total.
+  var hdrEE=t.match(/Employee\s*Share\s*[:\-]\s*(\d[\d,]*)/i);
+  var hdrER=t.match(/Employer\s*Share\s*[:\-]\s*(\d[\d,]*)/i);
+  if(hdrEE) empShare=pn(hdrEE[1]);
+  if(hdrER) emplShare=pn(hdrER[1]);
+
+  // === PRIORITY 2: Grand Total row — historical deposit sum (for informational display) ===
+  // Pattern (pdfjs): "54,103 18,371 Grand Total 5"  — numbers BEFORE label
+  var gt=t.match(/([\d,]+)\s+([\d,]+)\s+Grand\s*Total\s*([\d,]+)?/i);
+  if(gt){depositEE=pn(gt[1]);depositER=pn(gt[2]);pension=pn(gt[3]||'0');}
+  if(!gt){
+    var gt2=t.match(/Grand\s*Total\s*([\d,]+)\s+([\d,]+)\s*([\d,]+)?/i);
+    if(gt2){depositEE=pn(gt2[1]);depositER=pn(gt2[2]);pension=pn(gt2[3]||'0');}
+  }
+
+  // If header values not found, fall back to Grand Total as current balance
+  if(empShare===null) empShare=depositEE;
+  if(emplShare===null) emplShare=depositER;
+
+  // === Extract interest: sum all "Int. Updated upto" / "Int. given against Claim" rows ===
+  // PDF row format (pdfjs): "EE_amt ER_amt [0 0 [pension]] Int. Updated upto DD/MM/YYYY"
+  // The two deposit amounts come first, possibly followed by zeros for withdraw cols
+  var intRegex=/([\d,]+)\s+([\d,]+)(?:\s+[\d,]+)*\s+Int\.?\s*(?:Updated|given)/gi;
+  var im;
+  while((im=intRegex.exec(t))!==null){interest+=pn(im[1])+pn(im[2]);}
+
+  // Fallback A: label comes BEFORE numbers — "Int. Updated upto 31/03/2022 966 320"
+  if(interest===0){
+    var intRegex2=/Int\.?\s*(?:Updated\s*upto|given\s*against\s*Claim)[^\d]*([\d,]+)\s+([\d,]+)/gi;
+    while((im=intRegex2.exec(t))!==null){interest+=pn(im[1])+pn(im[2]);}
+  }
+
+  // Fallback B: single number per Int. row — "Int. Updated upto 31/03/2022 1,286"
+  if(interest===0){
+    var intRegex3=/Int\.?\s*Updated\s*upto[^\d]*([\d,]+)/gi;
+    while((im=intRegex3.exec(t))!==null){interest+=pn(im[1]);}
+    var intRegex4=/Int\.?\s*given\s*against[^\d]*([\d,]+)/gi;
+    while((im=intRegex4.exec(t))!==null){interest+=pn(im[1]);}
+  }
+
+  // === Closing Balance fallback (3-col passbook) ===
+  if(empShare===null&&emplShare===null){
+    var cr=t.match(/Closing\s*Balance\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)/i);
+    if(cr){empShare=pn(cr[1]);emplShare=pn(cr[2]);pension=pn(cr[3]);}
+  }
+
+  // === Strategy: individually labelled fields ===
+  if(empShare===null||emplShare===null){
+    var ee=t.match(/(?:Employee|EE)\s*(?:Share|Contribution|Balance)\s*[:\-]?\s*([\d,]+\.?\d{0,2})/i);
+    var er=t.match(/(?:Employer|ER)\s*(?:Share|Contribution|Balance)\s*[:\-]?\s*([\d,]+\.?\d{0,2})/i);
+    var ep=t.match(/(?:EPS|Pension)\s*(?:Fund|Balance|Amount|Contribution|Share)?\s*[:\-]?\s*([\d,]+\.?\d{0,2})/i);
+    if(empShare===null) empShare=pa(ee);
+    if(emplShare===null) emplShare=pa(er);
+    if(!pension) pension=pa(ep);
+  }
+
+  empShare=empShare||0; emplShare=emplShare||0;
+  total=empShare+emplShare+pension;
+
+  // Fallback: largest plausible amount
+  if(total<=0){
+    var aa=[];var re2=/([\d,]+)/g;var fm;
+    while((fm=re2.exec(t))!==null){var v=pn(fm[1]);if(v>1000&&v<99000000)aa.push(v);}
+    aa.sort(function(a,b){return b-a;});if(aa.length)total=aa[0];
+  }
+
+  if(total<=0&&pension<=0) return null;
+  if(total<=0&&pension>0) total=pension;
+
+  return{uan:uan,memberName:memberName,employer:employer,
+    empShare:empShare,emplShare:emplShare,pension:pension,
+    interest:interest,depositEE:depositEE,depositER:depositER,total:total};
+}
+function showEPFODebug(rawText){
+  var prev=document.getElementById('epfoPreviewModal');if(prev)prev.remove();
+  var overlay=document.createElement('div');
+  overlay.className='modal-bg';overlay.id='epfoPreviewModal';overlay.style.cssText='display:flex;z-index:1000';
+  overlay.addEventListener('click',function(e){if(e.target===overlay){var m=document.getElementById('epfoPreviewModal');if(m)m.remove();}});
+  var box=document.createElement('div');box.className='modal-box';overlay.appendChild(box);
+
+  var title=document.createElement('div');title.className='modal-title';title.textContent='🔍 PDF Debug — Raw Text';box.appendChild(title);
+
+  var info=document.createElement('div');
+  info.style.cssText='font-size:11px;color:var(--text3);font-weight:600;margin-bottom:8px;line-height:1.5';
+  info.textContent='Parser could not find balance data. Share the text below (screenshot or copy) so the parser can be fixed for your PDF format.';
+  box.appendChild(info);
+
+  var pre=document.createElement('textarea');
+  pre.style.cssText='width:100%;height:160px;font-size:10px;font-family:monospace;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);resize:vertical;box-sizing:border-box';
+  pre.readOnly=true;
+  pre.value=rawText.substring(0,2000);
+  box.appendChild(pre);
+
+  var manualWrap=document.createElement('div');manualWrap.style.marginTop='12px';
+  var manualLbl=document.createElement('div');manualLbl.className='field-label';manualLbl.textContent='💰 Enter Balance Manually (₹)';
+  var manualInput=document.createElement('input');
+  manualInput.type='number';manualInput.className='field-input';manualInput.id='epfoManualAmount';manualInput.placeholder='e.g. 25000';
+  var nameLbl=document.createElement('div');nameLbl.className='field-label';nameLbl.style.marginTop='8px';nameLbl.textContent='📝 Asset Name';
+  var nameInput=document.createElement('input');
+  nameInput.type='text';nameInput.className='field-input';nameInput.id='epfoAssetName';nameInput.value='My EPFO';nameInput.placeholder='e.g. EPF - Previous Employer';
+  manualWrap.appendChild(manualLbl);manualWrap.appendChild(manualInput);
+  manualWrap.appendChild(nameLbl);manualWrap.appendChild(nameInput);
+  box.appendChild(manualWrap);
+
+  var btnAdd=document.createElement('button');
+  btnAdd.className='btn-go';btnAdd.style.marginTop='10px';btnAdd.textContent='✅ Add Manually';
+  btnAdd.onclick=function(){
+    var amt=parseFloat(document.getElementById('epfoManualAmount').value||'0');
+    if(!amt||amt<=0){showToast('Enter a valid amount','red');return;}
+    confirmEPFOImport(amt);
+  };
+  box.appendChild(btnAdd);
+
+  var btnCancel=document.createElement('button');
+  btnCancel.className='btn-cancel';btnCancel.style.marginTop='6px';btnCancel.textContent='Cancel';
+  btnCancel.onclick=function(){var m=document.getElementById('epfoPreviewModal');if(m)m.remove();};
+  box.appendChild(btnCancel);
+
+  document.body.appendChild(overlay);
 }
 
 function showEPFOPreview(data){
@@ -3673,7 +3815,7 @@ function showEPFOPreview(data){
   overlay.className='modal-bg';
   overlay.id='epfoPreviewModal';
   overlay.style.cssText='display:flex;z-index:1000';
-  overlay.addEventListener('click',function(e){if(e.target===overlay)closeModal('epfoPreviewModal');});
+  overlay.addEventListener('click',function(e){if(e.target===overlay){var m=document.getElementById('epfoPreviewModal');if(m)m.remove();}});
 
   var box=document.createElement('div');
   box.className='modal-box';
@@ -3703,21 +3845,65 @@ function showEPFOPreview(data){
   if(data.employer){var em=document.createElement('div');em.style.cssText='font-size:12px;color:var(--text3);margin-bottom:3px';em.textContent='🏢 '+data.employer;card.appendChild(em);}
   if(data.uan){var un=document.createElement('div');un.style.cssText='font-size:11px;color:var(--text3);margin-bottom:8px';un.textContent='UAN: '+data.uan;card.appendChild(un);}
 
-  function makeRow(label,amount){
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)';
-    var lbl=document.createElement('span');lbl.style.cssText='font-size:12px;color:var(--text3)';lbl.textContent=label;
-    var val=document.createElement('span');val.style.cssText='font-size:12px;font-weight:700';val.textContent='₹'+amount.toLocaleString('en-IN',{maximumFractionDigits:2});
-    row.appendChild(lbl);row.appendChild(val);card.appendChild(row);
-  }
-  if(data.empShare>0) makeRow('👤 Employee Share',data.empShare);
-  if(data.emplShare>0) makeRow('🏢 Employer Share',data.emplShare);
-  if(data.pension>0) makeRow('👴 Pension Fund',data.pension);
+  // Detect transferred PF: both EE and ER are 0 (transferred) but there's deposit history
+  var isTransferred=(data.empShare===0&&data.emplShare===0&&(data.depositEE>0||data.depositER>0||data.pension>0));
 
+  function makeRow(label,amount,dimZero,note){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)';
+    var left=document.createElement('div');
+    var lbl=document.createElement('span');lbl.style.cssText='font-size:12px;color:var(--text3)';lbl.textContent=label;
+    left.appendChild(lbl);
+    if(note){var nt=document.createElement('div');nt.style.cssText='font-size:10px;color:var(--accent);font-weight:700;margin-top:1px';nt.textContent=note;left.appendChild(nt);}
+    var val=document.createElement('span');
+    var isZero=(amount===0);
+    val.style.cssText='font-size:12px;font-weight:700'+(isZero&&dimZero?';color:var(--text3)':'');
+    val.textContent='₹'+amount.toLocaleString('en-IN',{maximumFractionDigits:2});
+    row.appendChild(left);row.appendChild(val);card.appendChild(row);
+  }
+
+  // --- Current Balance section ---
+  var balHdr=document.createElement('div');
+  balHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:4px;text-transform:uppercase';
+  balHdr.textContent='Current Balance';
+  card.appendChild(balHdr);
+
+  makeRow('👤 Employee Share (EE)',data.empShare,true,isTransferred?'↗ Transferred to new employer':null);
+  makeRow('🏢 Employer Share (ER)',data.emplShare,true,isTransferred?'↗ Transferred to new employer':null);
+  if(data.pension>0) makeRow('👴 Pension (EPS)',data.pension,false,null);
+
+  // --- Contributions (principal) ---
+  var principal=isTransferred?(data.depositEE+data.depositER):(data.empShare+data.emplShare);
+  if(isTransferred&&(data.depositEE>0||data.depositER>0)){
+    var histHdr=document.createElement('div');
+    histHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
+    histHdr.textContent='Total Contributions (Principal)';
+    card.appendChild(histHdr);
+    makeRow('👤 Employee Deposited (EE)',data.depositEE,false,null);
+    makeRow('🏢 Employer Deposited (ER)',data.depositER,false,null);
+    var prinRow=document.createElement('div');
+    prinRow.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)';
+    prinRow.innerHTML='<span style="font-size:12px;font-weight:800;color:var(--text)">💼 Total Principal</span><span style="font-size:12px;font-weight:900;color:var(--text)">₹'+principal.toLocaleString('en-IN',{maximumFractionDigits:2})+'</span>';
+    card.appendChild(prinRow);
+  }
+
+  // --- Interest earned ---
+  if(data.interest>0){
+    var intHdr=document.createElement('div');
+    intHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
+    intHdr.textContent='Interest Earned';
+    card.appendChild(intHdr);
+    var intPct=principal>0?((data.interest/principal)*100).toFixed(1):'';
+    makeRow('📈 Interest (all years)',data.interest,false,intPct?intPct+'% on principal':null);
+  }
+
+  // --- Corpus total ---
+  var corpus=principal+(data.interest||0)+(data.pension||0);
   var totalRow=document.createElement('div');
-  totalRow.style.cssText='display:flex;justify-content:space-between;padding:8px 0';
-  var tl=document.createElement('span');tl.style.cssText='font-size:13px;font-weight:700;color:var(--green)';tl.textContent='💰 Total Balance';
-  var tv=document.createElement('span');tv.style.cssText='font-size:14px;font-weight:900;color:var(--green)';tv.textContent='₹'+data.total.toLocaleString('en-IN',{maximumFractionDigits:2});
+  totalRow.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:6px;border-top:2px solid var(--border2)';
+  var tl=document.createElement('div');
+  tl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green)">💰 Total Corpus</div>'+(principal>0?'<div style="font-size:10px;color:var(--text3);font-weight:700">Principal + Interest'+(data.pension>0?' + Pension':'')+'</div>':'');
+  var tv=document.createElement('span');tv.style.cssText='font-size:15px;font-weight:900;color:var(--green)';tv.textContent='₹'+corpus.toLocaleString('en-IN',{maximumFractionDigits:2});
   totalRow.appendChild(tl);totalRow.appendChild(tv);card.appendChild(totalRow);
   box.appendChild(card);
 
@@ -3739,28 +3925,49 @@ function showEPFOPreview(data){
   // Buttons
   var btnAdd=document.createElement('button');
   btnAdd.className='btn-go';btnAdd.textContent='✅ Add / Update Asset';
-  btnAdd.onclick=function(){confirmEPFOImport(data.total);};
+  btnAdd.onclick=function(){confirmEPFOImport(data.total,data);};
   box.appendChild(btnAdd);
 
   var btnCancel=document.createElement('button');
   btnCancel.className='btn-cancel';btnCancel.style.marginTop='6px';btnCancel.textContent='Cancel';
-  btnCancel.onclick=function(){closeModal('epfoPreviewModal');};
+  btnCancel.onclick=function(){var m=document.getElementById('epfoPreviewModal');if(m)m.remove();};
   box.appendChild(btnCancel);
 
   document.body.appendChild(overlay);
 }
 
-function confirmEPFOImport(total){
+function confirmEPFOImport(total,data){
   var name=(document.getElementById('epfoAssetName').value||'').trim()||'My EPFO';
   if(!state.assets) state.assets=[];
   var idx=state.assets.findIndex(function(a){return a.scheme==='EPFO'&&a.name===name;});
   var isUpdate=idx>=0;
-  if(isUpdate){
-    state.assets[idx]=Object.assign(state.assets[idx],{value:total,notes:'Updated from EPFO passbook PDF'});
-  } else {
-    state.assets.push({id:Date.now(),scheme:'EPFO',name:name,value:total,units:'',nav:'',notes:'Imported from EPFO passbook PDF'});
+
+  var extra={};
+  if(data){
+    var isTransferred=(data.empShare===0&&data.emplShare===0);
+    // Principal = total deposits (Grand Total row from passbook)
+    var principal=isTransferred?(data.depositEE+data.depositER):(data.empShare+data.emplShare);
+    // Full corpus = principal + interest + pension (what you actually have / had)
+    var corpus=principal+(data.interest||0)+(data.pension||0);
+    extra={
+      epfoEmpShare:data.empShare||0,
+      epfoEmplShare:data.emplShare||0,
+      epfoPension:data.pension||0,
+      epfoInterest:data.interest||0,
+      epfoPrincipal:principal,
+      epfoDepositEE:data.depositEE||0,
+      epfoDepositER:data.depositER||0,
+      invested:principal,           // used by wealth statement / AI
+      value:corpus                  // override total with full corpus
+    };
+    total=corpus;
   }
-  saveState();renderAssets();closeModal('epfoPreviewModal');
+  if(isUpdate){
+    state.assets[idx]=Object.assign(state.assets[idx],{notes:'Updated from EPFO passbook PDF'},extra,{value:total});
+  } else {
+    state.assets.push(Object.assign({id:Date.now(),scheme:'EPFO',name:name,value:total,units:'',nav:'',notes:'Imported from EPFO passbook PDF'},extra));
+  }
+  saveState();renderAssets();var _em=document.getElementById('epfoPreviewModal');if(_em)_em.remove();
   showToast((isUpdate?'Updated':'Added')+': '+name+' — ₹'+total.toLocaleString('en-IN',{maximumFractionDigits:2}),'green');
 }
 
@@ -4241,7 +4448,7 @@ function renderAssets(){
     html+='<div style="font-size:15px;font-weight:800;color:'+schemeColor+'">'+state.currSymbol+fmt(cv(g.value))+'</div>';
     html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">'+schemePct+'% of portfolio</div>';
     html+='</div>';
-    html+='<div id="'+groupId+'_arrow" style="font-size:14px;color:var(--text3);margin-left:8px;transition:transform .3s;flex-shrink:0">▼</div>';
+    html+='<div id="'+groupId+'_arrow" style="font-size:14px;color:var(--text3);margin-left:8px;transition:transform .3s;flex-shrink:0;transform:rotate(-90deg)">▼</div>';
     html+='</div>'; // end header
 
     // Progress bar
@@ -4249,38 +4456,124 @@ function renderAssets(){
     html+='<div style="height:100%;width:'+Math.min(100,schemePct)+'%;background:'+schemeColor+';border-radius:3px;transition:width .6s"></div>';
     html+='</div>';
 
-    // Collapsible holdings list — default collapsed if > 3 assets, else open
-    var defaultOpen = g.assets.length <= 3;
-    html+='<div id="'+groupId+'" style="display:'+(defaultOpen?'block':'none')+'">';
+    // Collapsible holdings list — all collapsed by default
+    var defaultOpen = false;
+    html+='<div id="'+groupId+'" style="display:none">';
 
     g.assets.forEach(function(a){
       var pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);
-      var gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;
-      var gainColor2=gain!==null?(parseFloat(gain)>=0?'var(--green)':'var(--red)'):'var(--text3)';
-      var gainAmt=a.invested>0?(a.value-a.invested):null;
       var detailLine=assetDetailLine(a);
+      var d=a.details||{};
 
-      html+='<div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">';
-      // Left dot
-      html+='<div style="width:3px;height:36px;border-radius:3px;background:'+schemeColor+';flex-shrink:0;margin-top:4px"></div>';
-      // Info
+      // ── Compute P&L / interest per scheme ──────────────────────────────
+      var plAmt=null,plPct=null,plLabel='P&L',plIsInterest=false;
+      var s=a.scheme;
+
+      if(s==='Stocks'||s==='ETF'){
+        if(d.qty>0&&d.buyPrice>0&&d.currentPrice>0){
+          var invested=d.qty*d.buyPrice,current=d.qty*d.currentPrice;
+          plAmt=current-invested;plPct=(plAmt/invested*100);plLabel='P&L';
+        }
+      } else if(s==='Mutual Fund'){
+        if(d.units>0&&d.buyNav>0&&d.currentNav>0){
+          var inv=d.units*d.buyNav,cur=d.units*d.currentNav;
+          plAmt=cur-inv;plPct=(plAmt/inv*100);plLabel='P&L';
+        }
+      } else if(s==='Cryptocurrency'){
+        if(d.qty>0&&d.buyPrice>0&&d.currentPrice>0){
+          var inv2=d.qty*d.buyPrice,cur2=d.qty*d.currentPrice;
+          plAmt=cur2-inv2;plPct=(plAmt/inv2*100);plLabel='P&L';
+        }
+      } else if(s==='Gold'){
+        if(d.qty>0&&d.buyPrice>0&&d.currentPrice>0){
+          var inv3=d.qty*d.buyPrice,cur3=d.qty*d.currentPrice;
+          plAmt=cur3-inv3;plPct=(plAmt/inv3*100);plLabel='P&L';
+        }
+      } else if(s==='Real Estate'){
+        if(d.buyPrice>0&&d.currentPrice>0){
+          plAmt=d.currentPrice-d.buyPrice;plPct=(plAmt/d.buyPrice*100);plLabel='Appreciation';
+        }
+      } else if(s==='Fixed Deposit'){
+        if(d.principal>0&&a.value>d.principal){
+          plAmt=a.value-d.principal;plPct=(plAmt/d.principal*100);plLabel='Interest';plIsInterest=true;
+        }
+      } else if(s==='PPF'){
+        if(d.principal>0&&d.currentValue>0&&d.currentValue>d.principal){
+          plAmt=d.currentValue-d.principal;plPct=(plAmt/d.principal*100);plLabel='Interest';plIsInterest=true;
+        }
+      } else if(s==='NPS'){
+        if(d.principal>0&&d.currentValue>0){
+          plAmt=d.currentValue-d.principal;plPct=(plAmt/d.principal*100);plLabel='Returns';
+        }
+      } else if(s==='Bonds'){
+        if(d.qty>0&&d.faceValue>0&&d.interestRate>0){
+          plAmt=d.qty*d.faceValue*(d.interestRate/100);plLabel='Annual Interest';plIsInterest=true;
+        }
+      } else if(s==='EPFO'){
+        var principal=a.epfoPrincipal||(( a.epfoDepositEE||0)+(a.epfoDepositER||0));
+        var ix=a.epfoInterest||0;
+        if(ix>0&&principal>0){plAmt=ix;plPct=(ix/principal*100);plLabel='Interest Earned';plIsInterest=true;}
+        else if(ix>0){plAmt=ix;plLabel='Interest Earned';plIsInterest=true;}
+      } else if(s==='Other'){
+        if(d.principal>0&&d.currentValue>0){
+          plAmt=d.currentValue-d.principal;plPct=(plAmt/d.principal*100);plLabel='Returns';
+        }
+      }
+      // fallback: use stored invested field
+      if(plAmt===null&&a.invested>0&&a.value>0){
+        plAmt=a.value-a.invested;plPct=(plAmt/a.invested*100);plLabel='P&L';
+      }
+
+      var plPositive=plAmt===null||plAmt>=0;
+      var plColor=plPositive?'var(--green)':'var(--red)';
+      var plBg=plPositive?'rgba(34,197,94,0.10)':'rgba(255,69,105,0.10)';
+      var plBorder=plPositive?'rgba(34,197,94,0.25)':'rgba(255,69,105,0.25)';
+      var plIcon=plIsInterest?'📈':(plPositive?'▲':'▼');
+
+      html+='<div style="padding:12px 16px;border-top:1px solid var(--border)">';
+
+      // ── Top row: dot + name + value ──
+      html+='<div style="display:flex;align-items:flex-start;gap:10px">';
+      html+='<div style="width:3px;min-height:36px;border-radius:3px;background:'+schemeColor+';flex-shrink:0;margin-top:3px"></div>';
       html+='<div style="flex:1;min-width:0">';
       html+='<div style="font-size:13px;font-weight:700;color:var(--text)">'+a.name+'</div>';
-      if(detailLine) html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">'+detailLine+'</div>';
-      html+='<div style="display:flex;gap:8px;margin-top:6px">';
+      if(detailLine) html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:1px">'+detailLine+'</div>';
+      html+='<div style="display:flex;gap:8px;margin-top:5px">';
       html+='<span style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:800" onclick="editAsset('+a.id+')">✏️ Edit</span>';
       html+='<span style="font-size:10px;color:var(--red);cursor:pointer;font-weight:800" onclick="deleteAsset('+a.id+')">✕ Remove</span>';
       html+='</div>';
       html+='</div>';
-      // Right values
+      // Right: current value + alloc %
       html+='<div style="text-align:right;flex-shrink:0">';
       html+='<div style="font-size:14px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(a.value))+'</div>';
-      if(gain!==null){
-        html+='<div style="font-size:11px;font-weight:700;color:'+gainColor2+';margin-top:2px">'+(parseFloat(gain)>=0?'+':'')+gain+'%</div>';
-        if(gainAmt!==null) html+='<div style="font-size:10px;color:'+gainColor2+';font-weight:600">'+(gainAmt>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(gainAmt)))+'</div>';
-      }
       html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">'+pct.toFixed(1)+'% of total</div>';
       html+='</div>';
+      html+='</div>'; // end top row
+
+      // ── P&L / Interest bar ──────────────────────────────────────────────
+      if(plAmt!==null){
+        var plAmtDisp=(plAmt>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(plAmt)));
+        var plPctDisp=plPct!=null?(' ('+(plPct>=0?'+':'')+plPct.toFixed(1)+'%)'):'';
+        // EPFO: show pension chip too
+        var epfoPensionChip='';
+        if(s==='EPFO'&&a.epfoPension>0) epfoPensionChip='<span style="font-size:10px;font-weight:800;background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:3px 8px">👴 EPS '+state.currSymbol+fmt(cv(a.epfoPension))+'</span>';
+        html+='<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+        html+='<div style="display:flex;align-items:center;gap:6px;background:'+plBg+';border:1px solid '+plBorder+';border-radius:20px;padding:4px 10px;flex-shrink:0">';
+        html+='<span style="font-size:11px">'+plIcon+'</span>';
+        html+='<span style="font-size:11px;font-weight:800;color:'+plColor+'">'+plLabel+'</span>';
+        html+='<span style="font-size:12px;font-weight:900;color:'+plColor+'">'+plAmtDisp+'</span>';
+        if(plPctDisp) html+='<span style="font-size:10px;font-weight:700;color:'+plColor+'">'+plPctDisp+'</span>';
+        html+='</div>';
+        if(epfoPensionChip) html+=epfoPensionChip;
+        html+='</div>';
+      } else {
+        // No P&L data — show a neutral "Add buy price to track P&L" hint only for trackable types
+        var trackable=['Stocks','ETF','Mutual Fund','Cryptocurrency','Gold','Real Estate'];
+        if(trackable.indexOf(s)>=0){
+          html+='<div style="margin-top:6px;font-size:10px;color:var(--text3);font-weight:600">💡 Add buy price to track P&L</div>';
+        }
+      }
+
       html+='</div>'; // end holding row
     });
 
