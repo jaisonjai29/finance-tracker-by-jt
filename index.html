@@ -910,7 +910,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- ASSETS -->
     <div class="page" id="page-assets">
-      <div class="sec-head"><div class="sec-title">💼 Assets</div><button class="sec-btn" onclick="showModal('assetModal')">➕ Add</button></div>
+      <div class="sec-head"><div class="sec-title">💼 Assets</div><div style="display:flex;gap:8px"><button class="sec-btn" onclick="triggerDematCSV()" style="color:var(--teal)">📂 Import</button><button class="sec-btn" onclick="showModal('assetModal')">➕ Add</button></div></div>
+      <input type="file" id="dematCSVInput" accept=".csv,.txt" style="display:none" onchange="importDematCSV(event)">
       <div class="box" style="text-align:center">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">📦 Total Assets</div>
         <div style="font-family:var(--font);font-size:28px;font-weight:700;color:var(--green);margin-bottom:8px" id="totalAssetVal">₹0</div>
@@ -1553,6 +1554,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <!-- NEW TOOLS SECTION -->
       <div class="set-sec">
         <div class="set-sec-title">🧰 Tools & Calculators</div>
+        <div class="set-row" onclick="showPage('assets')">
+          <div class="set-row-left"><span class="set-row-icon">💼</span><div><div class="set-row-label">Assets & Portfolio</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">View investments, import demat CSV</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('goals')">
+          <div class="set-row-left"><span class="set-row-icon">🎯</span><div><div class="set-row-label">Goals & Savings</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Track your financial goals</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
         <div class="set-row" onclick="showPage('calendar')">
           <div class="set-row-left"><span class="set-row-icon">📅</span><div><div class="set-row-label">Bill Calendar</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Visual monthly bill due dates</div></div></div>
           <div class="set-row-right">Open ▶</div>
@@ -1599,7 +1608,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="nav">
     <div class="nav-btn on" id="nav-home" onclick="showPage('home')"><span class="nav-emoji">🏠</span><span class="nav-lbl">Home</span></div>
     <div class="nav-btn" id="nav-analytics" onclick="showPage('analytics')"><span class="nav-emoji">📊</span><span class="nav-lbl">Charts</span></div>
-    <div class="nav-btn" id="nav-history" onclick="showPage('history')"><span class="nav-emoji">📝</span><span class="nav-lbl">History</span></div>
+    <div class="nav-btn" id="nav-assets" onclick="showPage('assets')"><span class="nav-emoji">💼</span><span class="nav-lbl">Assets</span></div>
     <div class="nav-btn" id="nav-wealth" onclick="showPage('wealth')"><span class="nav-emoji">💎</span><span class="nav-lbl">Wealth</span></div>
     <div class="nav-btn" id="nav-settings" onclick="showPage('settings')"><span class="nav-emoji">⚙️</span><span class="nav-lbl">Settings</span></div>
   </div>
@@ -1609,6 +1618,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div id="addMenu" style="display:none;position:fixed;bottom:152px;right:12px;z-index:98;width:220px;max-height:60vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;flex-direction:column;gap:8px;align-items:flex-end;border-radius:16px;padding:8px;">
     <div onclick="closeAddMenu();showModal('txModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">💸</span><span style="font-size:13px;font-weight:900">Add Transaction</span></div>
     <div onclick="closeAddMenu();showModal('assetModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">💼</span><span style="font-size:13px;font-weight:900">Add Asset</span></div>
+    <div onclick="closeAddMenu();showPage('assets')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid rgba(168,85,247,0.3);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">📈</span><span style="font-size:13px;font-weight:900" style="color:var(--purple)">View Assets & Portfolio</span></div>
     <div onclick="closeAddMenu();showModal('goalModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🎯</span><span style="font-size:13px;font-weight:900">Add Goal</span></div>
     <div onclick="closeAddMenu();showPage('loanadvisor')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🧮</span><span style="font-size:13px;font-weight:900">Loan Advisor</span></div>
     <div onclick="closeAddMenu();showModal('liabModal')" style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:10px 16px;cursor:pointer;width:100%;box-sizing:border-box;"><span style="font-size:18px">🏧</span><span style="font-size:13px;font-weight:900">Add Debt</span></div>
@@ -3560,6 +3570,191 @@ function assetDetailLine(a){
   if(s==='Real Estate'){const p=[];if(d.area>0)p.push(d.area+' sq.ft');if(d.location)p.push(d.location);return p.join(' · ');}
   if(s==='Bonds'){const p=[];if(d.qty>0)p.push(d.qty+' bonds');if(d.interestRate>0)p.push(d.interestRate+'% coupon');if(d.issuer)p.push(d.issuer);return p.join(' · ');}
   if(d.bankName)return d.bankName;if(d.notes)return d.notes;return'';
+}
+
+// ======== DEMAT CSV IMPORT ========
+function triggerDematCSV(){document.getElementById('dematCSVInput').click();}
+
+function importDematCSV(event){
+  var file=event.target.files[0];
+  if(!file){return;}
+  event.target.value='';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var text=e.target.result;
+    var result=parseDematCSV(text);
+    if(!result.rows.length){showToast('No holdings found in CSV. Check file format.','red');return;}
+    showDematPreview(result);
+  };
+  reader.readAsText(file);
+}
+
+function parseDematCSV(text){
+  // Normalize line endings
+  var lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  // Find header row — look for a line with stock/symbol related keywords
+  var headerIdx=-1;
+  var headerRow=[];
+  for(var i=0;i<lines.length;i++){
+    var low=lines[i].toLowerCase();
+    if((low.includes('symbol')||low.includes('isin')||low.includes('scrip')||low.includes('stock')||low.includes('instrument')||low.includes('security'))
+      &&(low.includes('qty')||low.includes('quantity')||low.includes('shares'))){
+      headerIdx=i;
+      headerRow=splitCSVLine(lines[i]);
+      break;
+    }
+  }
+  if(headerIdx===-1){
+    // Try finding any row with common column combos
+    for(var i=0;i<lines.length;i++){
+      var low=lines[i].toLowerCase();
+      if(low.includes('name')&&(low.includes('value')||low.includes('amount')||low.includes('price'))){
+        headerIdx=i;
+        headerRow=splitCSVLine(lines[i]);
+        break;
+      }
+    }
+  }
+  if(headerIdx===-1){return {rows:[],headers:[]};}
+
+  // Map column names flexibly
+  function findCol(arr,keywords){
+    for(var k=0;k<keywords.length;k++){
+      for(var j=0;j<arr.length;j++){
+        if(arr[j].toLowerCase().includes(keywords[k])) return j;
+      }
+    }
+    return -1;
+  }
+
+  var h=headerRow.map(function(x){return x.replace(/["\']/g,'').trim();});
+  var colName   = findCol(h,['symbol','scrip','instrument','stock','security','name','isin']);
+  var colQty    = findCol(h,['qty','quantity','shares','holding','unit']);
+  var colAvg    = findCol(h,['avg','average','cost','buy price','purchase price','buy avg']);
+  var colLtp    = findCol(h,['ltp','last price','current price','market price','close','price','cmp']);
+  var colValue  = findCol(h,['current value','market value','present value','cur val','mkt val','value','amount']);
+  var colPnl    = findCol(h,['p&l','pnl','profit','gain','returns','unrealised','unrealized']);
+
+  var rows=[];
+  for(var i=headerIdx+1;i<lines.length;i++){
+    var line=lines[i].trim();
+    if(!line) continue;
+    var cols=splitCSVLine(line);
+    if(cols.length<2) continue;
+
+    function getVal(idx){
+      if(idx===-1||!cols[idx]) return '';
+      return cols[idx].replace(/[",\s₹$€£]/g,'').replace(/[()]/g,'').trim();
+    }
+
+    var name   = colName>-1  ? cols[colName].replace(/["\']/g,'').trim() : '';
+    var qty    = parseFloat(getVal(colQty))   || 0;
+    var avg    = parseFloat(getVal(colAvg))   || 0;
+    var ltp    = parseFloat(getVal(colLtp))   || 0;
+    var value  = parseFloat(getVal(colValue)) || 0;
+    var pnl    = parseFloat(getVal(colPnl))   || 0;
+
+    // Skip empty or header-like rows
+    if(!name || name.toLowerCase()==='total' || name.toLowerCase()==='grand total') continue;
+    if(!qty && !value && !avg && !ltp) continue;
+
+    // Derive missing values
+    var invested = (avg && qty) ? avg*qty : (value - pnl) || 0;
+    var curValue = value || (ltp && qty ? ltp*qty : invested);
+    if(!curValue && !invested) continue;
+
+    rows.push({name:name, qty:qty, avg:avg, ltp:ltp, invested:invested, value:curValue, pnl:pnl});
+  }
+  return {rows:rows, headers:h};
+}
+
+function splitCSVLine(line){
+  var result=[];
+  var cur='';
+  var inQ=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else{cur+=c;}
+  }
+  result.push(cur);
+  return result;
+}
+
+function showDematPreview(result){
+  var rows=result.rows;
+  var total=rows.reduce(function(s,r){return s+r.value;},0);
+  var totalInv=rows.reduce(function(s,r){return s+r.invested;},0);
+  var totalPnl=total-totalInv;
+
+  var html='<div style="max-height:300px;overflow-y:auto;margin-bottom:16px">';
+  html+='<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:6px 4px;font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1px;border-bottom:1px solid var(--border);text-transform:uppercase">';
+  html+='<div>Stock</div><div style="text-align:right">Invested</div><div style="text-align:right">Value</div></div>';
+  rows.forEach(function(r){
+    var gain=r.value-r.invested;
+    var gainColor=gain>=0?'var(--green)':'var(--red)';
+    html+='<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:8px 4px;border-bottom:1px solid var(--border);align-items:center">';
+    html+='<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+r.name+'</div>';
+    if(r.qty) html+='<div style="font-size:10px;color:var(--text3)">Qty: '+r.qty+(r.ltp?' · LTP: '+r.ltp.toFixed(2):'')+'</div>';
+    html+='</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--text2);text-align:right">'+(r.invested?'₹'+fmt(r.invested):'—')+'</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:'+gainColor+';text-align:right">₹'+fmt(r.value)+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  // Summary
+  var pnlColor=totalPnl>=0?'var(--green)':'var(--red)';
+  html+='<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">';
+  html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Holdings</div><div style="font-size:16px;font-weight:900;color:var(--text)">'+rows.length+'</div></div>';
+  html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Invested</div><div style="font-size:13px;font-weight:900;color:var(--text)">₹'+fmt(totalInv)+'</div></div>';
+  html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">P&L</div><div style="font-size:13px;font-weight:900;color:'+pnlColor+'">'+(totalPnl>=0?'+':'')+'₹'+fmt(Math.abs(totalPnl))+'</div></div>';
+  html+='</div>';
+
+  html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;text-align:center">Each holding will be added as an Equity asset. Existing assets are not affected.</div>';
+
+  // Store rows for import
+  window._dematImportRows=rows;
+
+  // Show in a modal-like toast — use existing modal system
+  var m=document.getElementById('dematPreviewModal');
+  if(m){
+    document.getElementById('dematPreviewBody').innerHTML=html;
+    showModal('dematPreviewModal');
+  }
+}
+
+function confirmDematImport(){
+  var rows=window._dematImportRows||[];
+  if(!rows.length){closeModal('dematPreviewModal');return;}
+  var colors=['#22c55e','#3b82f6','#f97316','#ef4444','#a855f7','#06b6d4','#eab308','#ec4899','#14b8a6','#f59e0b'];
+  var added=0;
+  rows.forEach(function(r,i){
+    var invested=Math.round(r.invested)||0;
+    var value=Math.round(r.value)||0;
+    if(!value&&!invested) return;
+    state.assets.push({
+      id:Date.now()+i,
+      name:r.name,
+      scheme:'Equity',
+      invested:invested,
+      value:value,
+      details:{qty:r.qty,avgPrice:r.avg,ltp:r.ltp},
+      color:colors[state.assets.length%colors.length],
+      alloc:0,
+      source:'demat'
+    });
+    added++;
+  });
+  // Recalculate allocations
+  var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
+  state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});
+  saveState();
+  closeModal('dematPreviewModal');
+  renderAssets();
+  showToast(added+' holdings imported from demat CSV ✅','green');
+  window._dematImportRows=[];
 }
 
 function renderAssets(){
@@ -6570,6 +6765,18 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
   </div>
 </div>
 
+
+
+<!-- DEMAT CSV PREVIEW MODAL -->
+<div class="modal-bg" id="dematPreviewModal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📂 Import Demat Holdings</div>
+    <div id="dematPreviewBody"></div>
+    <button class="btn-go" onclick="confirmDematImport()" style="margin-bottom:8px">✅ Import All Holdings</button>
+    <button class="btn-cancel" onclick="closeModal('dematPreviewModal');window._dematImportRows=[];" style="width:100%">✕ Cancel</button>
+  </div>
+</div>
 
 </body>
 </html>
