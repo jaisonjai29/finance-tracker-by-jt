@@ -919,7 +919,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div id="allocSummaryBadge" style="display:none;margin-bottom:12px"></div>
         <div style="position:relative;height:220px">
           <canvas id="assetChart"></canvas>
-          <div class="donut-center"><div class="donut-val" id="assetTotal2">₹0</div><div class="donut-lbl">Total</div></div>
+          <div class="donut-center"><div class="donut-val" id="assetTotal2" style="font-size:13px;color:var(--text2)"></div><div class="donut-lbl" id="assetDonutLbl"></div></div>
         </div>
       </div>
       <div class="box"><div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📋 My Assets</div><div id="assetList"><div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div></div></div>
@@ -2219,7 +2219,7 @@ const CAT_COLOR={
 };
 const RISK_BG={'Very Low':'rgba(34,197,94,.15)','Low':'rgba(34,197,94,.1)','Medium':'rgba(234,179,8,.15)','High':'rgba(249,115,22,.15)','Very High':'rgba(239,68,68,.15)','None':'rgba(148,163,184,.1)','Varies':'rgba(148,163,184,.1)'};
 const RISK_COLOR={'Very Low':'#22c55e','Low':'#86efac','Medium':'#eab308','High':'#f97316','Very High':'#ef4444','None':'#94a3b8','Varies':'#94a3b8'};
-const ASSET_COLORS=['#22c55e','#ef4444','#3b82f6','#eab308','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#f59e0b'];
+const ASSET_COLORS=['#6366f1','#22d3ee','#34d399','#f472b6','#fb923c','#a78bfa','#38bdf8','#4ade80','#fbbf24','#e879f9','#2dd4bf','#f87171','#818cf8','#86efac','#fdba74'];
 const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium',returns:'10-15%',emoji:'📈'},'Stocks':{desc:'Direct equity investments',risk:'High',returns:'12-20%',emoji:'📊'},'Cryptocurrency':{desc:'Digital assets & DeFi',risk:'Very High',returns:'Variable',emoji:'₿'},'Gold':{desc:'Gold & precious metals',risk:'Low',returns:'6-10%',emoji:'🥇'},'Real Estate':{desc:'Property & REITs',risk:'Medium',returns:'8-14%',emoji:'🏠'},'ETF':{desc:'Exchange traded funds',risk:'Medium',returns:'10-14%',emoji:'📉'},'PPF':{desc:'Public Provident Fund',risk:'Very Low',returns:'7.1%',emoji:'🏛️'},'EPFO':{desc:'Employee Provident Fund',risk:'Very Low',returns:'8.1%',emoji:'🏢'},'NPS':{desc:'National Pension System',risk:'Low',returns:'8-10%',emoji:'👴'},'Fixed Deposit':{desc:'Bank fixed deposits',risk:'Very Low',returns:'6-7.5%',emoji:'🏦'},'Bonds':{desc:'Govt & corporate bonds',risk:'Low',returns:'6-8%',emoji:'📜'},'Cash':{desc:'Liquid savings',risk:'None',returns:'3-4%',emoji:'💵'},'Other':{desc:'Other investments',risk:'Varies',returns:'Varies',emoji:'💼'}};
 const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'EPFO':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
 const THRESHOLD=2;
@@ -3744,53 +3744,109 @@ function splitCSVLine(line){
   return result;
 }
 
+// Auto-detect scheme from holding name
+function detectScheme(name){
+  var n=name.toLowerCase();
+  // Mutual Fund patterns
+  if(n.includes('fund')||n.includes('mf ')||n.includes(' mf')||n.includes('flexi')||
+     n.includes('bluechip')||n.includes('midcap')||n.includes('smallcap')||
+     n.includes('largecap')||n.includes('multicap')||n.includes('elss')||
+     n.includes('debt')||n.includes('liquid')||n.includes('hybrid')||
+     n.includes('folio')||n.includes('nav ')||n.includes('direct')||n.includes('growth')||
+     n.includes('dividend')||n.includes(' plan')){
+    return 'Mutual Fund';
+  }
+  // ETF patterns
+  if(n.includes('etf')||n.includes('bees')||n.includes('nifty')||n.includes('sensex')||
+     n.includes('index')||n.includes('niftybees')||n.includes('goldbees')||
+     n.includes('bankbees')){
+    return 'ETF';
+  }
+  // Gold patterns
+  if(n.includes('gold')||n.includes('sgb')||n.includes('sovereign')||n.includes('silver')){
+    return 'Gold';
+  }
+  // Crypto patterns
+  if(n.includes('btc')||n.includes('eth')||n.includes('bitcoin')||n.includes('ethereum')||
+     n.includes('crypto')||n.includes('usdt')||n.includes('bnb')){
+    return 'Cryptocurrency';
+  }
+  // Default: Stocks (direct equity)
+  return 'Stocks';
+}
+
 function showDematPreview(result){
   var rows=result.rows;
+  // Auto-detect scheme for each row
+  rows.forEach(function(r){ r.scheme=detectScheme(r.name); });
+
   var total=rows.reduce(function(s,r){return s+r.value;},0);
   var totalInv=rows.reduce(function(s,r){return s+r.invested;},0);
   var totalPnl=total-totalInv;
 
-  var html='<div style="max-height:300px;overflow-y:auto;margin-bottom:16px">';
-  html+='<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:6px 4px;font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1px;border-bottom:1px solid var(--border);text-transform:uppercase">';
-  html+='<div>Stock</div><div style="text-align:right">Invested</div><div style="text-align:right">Value</div></div>';
+  // Group summary
+  var groups={};
   rows.forEach(function(r){
-    var gain=r.value-r.invested;
-    var gainColor=gain>=0?'var(--green)':'var(--red)';
-    html+='<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:8px 4px;border-bottom:1px solid var(--border);align-items:center">';
-    html+='<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+r.name+'</div>';
-    if(r.qty) html+='<div style="font-size:10px;color:var(--text3)">Qty: '+r.qty+(r.ltp?' · LTP: '+r.ltp.toFixed(2):'')+'</div>';
-    html+='</div>';
-    html+='<div style="font-size:12px;font-weight:700;color:var(--text2);text-align:right">'+(r.invested?'₹'+fmt(r.invested):'—')+'</div>';
-    html+='<div style="font-size:12px;font-weight:700;color:'+gainColor+';text-align:right">₹'+fmt(r.value)+'</div>';
+    if(!groups[r.scheme]) groups[r.scheme]={count:0,value:0,invested:0};
+    groups[r.scheme].count++;
+    groups[r.scheme].value+=r.value;
+    groups[r.scheme].invested+=r.invested;
+  });
+
+  var schemeEmoji={'Stocks':'📊','Mutual Fund':'📈','ETF':'📉','Gold':'🥇','Cryptocurrency':'₿','Other':'💼'};
+
+  var html='';
+
+  // Group summary chips
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+  Object.keys(groups).forEach(function(s){
+    var g=groups[s];
+    html+='<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:700">';
+    html+=(schemeEmoji[s]||'💼')+' '+s+' <span style="color:var(--accent)">×'+g.count+'</span>';
     html+='</div>';
   });
   html+='</div>';
 
-  // Summary
+  // Holdings list grouped by scheme
+  var schemeOrder=['Stocks','Mutual Fund','ETF','Gold','Cryptocurrency','Other'];
+  schemeOrder.forEach(function(scheme){
+    var schemeRows=rows.filter(function(r){return r.scheme===scheme;});
+    if(!schemeRows.length) return;
+    html+='<div style="font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:10px 0 4px">';
+    html+=(schemeEmoji[scheme]||'💼')+' '+scheme+' ('+schemeRows.length+')</div>';
+    html+='<div style="margin-bottom:8px">';
+    schemeRows.forEach(function(r){
+      var gain=r.value-r.invested;
+      var gainColor=gain>=0?'var(--green)':'var(--red)';
+      html+='<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:7px 4px;border-bottom:1px solid var(--border);align-items:center">';
+      html+='<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+r.name+'</div>';
+      if(r.qty) html+='<div style="font-size:10px;color:var(--text3)">Qty: '+r.qty+(r.ltp?' · LTP: ₹'+r.ltp.toFixed(2):'')+'</div>';
+      html+='</div>';
+      html+='<div style="font-size:11px;font-weight:700;color:var(--text2);text-align:right">'+(r.invested?'₹'+fmt(r.invested):'—')+'</div>';
+      html+='<div style="font-size:11px;font-weight:700;color:'+gainColor+';text-align:right">₹'+fmt(r.value)+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+
+  // Summary bar
   var pnlColor=totalPnl>=0?'var(--green)':'var(--red)';
-  html+='<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">';
+  html+='<div style="background:var(--bg3);border-radius:12px;padding:12px;margin:12px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">';
   html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Holdings</div><div style="font-size:16px;font-weight:900;color:var(--text)">'+rows.length+'</div></div>';
   html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Invested</div><div style="font-size:13px;font-weight:900;color:var(--text)">₹'+fmt(totalInv)+'</div></div>';
   html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">P&L</div><div style="font-size:13px;font-weight:900;color:'+pnlColor+'">'+(totalPnl>=0?'+':'')+'₹'+fmt(Math.abs(totalPnl))+'</div></div>';
   html+='</div>';
+  html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:4px;text-align:center">Holdings grouped by type. Existing assets are not affected.</div>';
 
-  html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px;text-align:center">Each holding will be added as an Equity asset. Existing assets are not affected.</div>';
-
-  // Store rows for import
   window._dematImportRows=rows;
-
-  // Show in a modal-like toast — use existing modal system
   var m=document.getElementById('dematPreviewModal');
-  if(m){
-    document.getElementById('dematPreviewBody').innerHTML=html;
-    showModal('dematPreviewModal');
-  }
+  if(m){ document.getElementById('dematPreviewBody').innerHTML=html; showModal('dematPreviewModal'); }
 }
 
 function confirmDematImport(){
   var rows=window._dematImportRows||[];
   if(!rows.length){closeModal('dematPreviewModal');return;}
-  var colors=['#22c55e','#3b82f6','#f97316','#ef4444','#a855f7','#06b6d4','#eab308','#ec4899','#14b8a6','#f59e0b'];
+  var colors=['#6366f1','#22d3ee','#34d399','#f472b6','#fb923c','#a78bfa','#38bdf8','#4ade80','#fbbf24','#e879f9','#2dd4bf','#f87171','#818cf8','#86efac','#fdba74'];
   var added=0;
   rows.forEach(function(r,i){
     var invested=Math.round(r.invested)||0;
@@ -3799,7 +3855,7 @@ function confirmDematImport(){
     state.assets.push({
       id:Date.now()+i,
       name:r.name,
-      scheme:'Equity',
+      scheme:r.scheme||'Stocks',
       invested:invested,
       value:value,
       details:{qty:r.qty,avgPrice:r.avg,ltp:r.ltp},
@@ -3815,7 +3871,7 @@ function confirmDematImport(){
   saveState();
   closeModal('dematPreviewModal');
   renderAssets();
-  showToast(added+' holdings imported from demat CSV ✅','green');
+  showToast(added+' holdings imported ✅','green');
   window._dematImportRows=[];
 }
 
@@ -3826,16 +3882,145 @@ function renderAssets(){
   const badge=document.getElementById('allocSummaryBadge');
   if(badge&&state.assets.length){badge.style.display='inline-block';const diff=allocTotal-100;let bg,color,icon,msg;if(Math.abs(diff)<0.01){bg='rgba(34,197,94,0.15)';color='var(--green)';icon='✅';msg='Portfolio 100% allocated';}else if(diff>0){bg='rgba(239,68,68,0.15)';color='var(--red)';icon='❌';msg='Over by '+diff.toFixed(1)+'%';}else{bg='rgba(234,179,8,0.15)';color='var(--yellow)';icon='⚠️';msg='Under by '+Math.abs(diff).toFixed(1)+'%';}badge.innerHTML=`<span style="background:${bg};color:${color};border:1.5px solid ${color};padding:5px 12px;border-radius:20px;font-size:12px;font-weight:900">${icon} ${allocTotal.toFixed(1)}% — ${msg}</span>`;}else if(badge){badge.style.display='none';}
   const c=document.getElementById('assetList');
-  if(!state.assets.length){c.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div>`;renderSchemeList();return;}
-  const schemeMap={};state.assets.forEach(a=>{if(!schemeMap[a.scheme])schemeMap[a.scheme]=0;schemeMap[a.scheme]+=(a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0));});
-  // Also include schemes that have a configured target but zero actual assets
-  if(state.allocTargets){Object.keys(state.allocTargets).forEach(s=>{if(!(s in schemeMap))schemeMap[s]=0;});}
-  const warnings=[];Object.entries(schemeMap).forEach(([scheme,pctVal])=>{const s=getAllocStatus(scheme,pctVal);const t=getEffectiveTarget(scheme);if(s&&s.type!=='ok')warnings.push({scheme,pct:pctVal.toFixed(1),status:s,target:t?.ideal||0,custom:t?.custom||false});});
-  let warningHTML='';
-  if(warnings.length){const critical=warnings.filter(w=>w.status.type!=='ok');const col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';const bcol=critical.length?'rgba(239,68,68,0.4)':'rgba(234,179,8,0.4)';warningHTML=`<div style="background:${col};border:2px solid ${bcol};border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:14px;font-weight:900;margin-bottom:10px">${critical.length?'🚨':'⚠️'} Allocation Warnings</div>${warnings.map(w=>{const wc=w.status.type==='high'?'var(--orange)':'var(--yellow)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><div><div style="font-size:13px;font-weight:900">${SCHEME_INFO[w.scheme]?.emoji||'💼'} ${w.scheme}${w.custom?'<span style="font-size:9px;background:rgba(124,92,252,0.2);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px">custom</span>':''}</div><div style="font-size:11px;color:${wc};font-weight:700">${w.status.msg}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${wc}">${w.pct}%</div><div style="font-size:10px;color:var(--text3);font-weight:700">target ${w.target}%</div></div></div>`;}).join('')}<div style="margin-top:10px;font-size:11px;color:var(--text3);font-weight:700;text-align:center;cursor:pointer" onclick="closeModal('allocModal');showModal('allocModal')">🎯 Edit Targets →</div></div>`;
-  }else if(state.assets.length>0&&Object.keys(state.allocTargets||{}).length>0){warningHTML=`<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio on target!</div></div>`;}
-  c.innerHTML=warningHTML+state.assets.map(a=>{const pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);const gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;const status=getAllocStatus(a.scheme,pct);const t=getEffectiveTarget(a.scheme);const idealPct=t?.ideal||0;const isCustomTarget=t?.custom||false;let statusBadge='';let barColor=a.color;if(status){if(status.type==='ok')statusBadge='<span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:8px;font-weight:900">OK</span>';else if(status.type==='high'){statusBadge='<span style="font-size:10px;background:rgba(249,115,22,0.15);color:var(--orange);border:1px solid rgba(249,115,22,0.3);padding:2px 7px;border-radius:8px;font-weight:900">High</span>';barColor='#f97316';}else if(status.type==='low'){statusBadge='<span style="font-size:10px;background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);padding:2px 7px;border-radius:8px;font-weight:900">Low</span>';barColor='#eab308';}}const detailLine=assetDetailLine(a);const detailHTML=detailLine?'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+detailLine+'</div>':'';return'<div class="asset-row" style="flex-direction:column;align-items:stretch;padding:14px 0"><div style="display:flex;align-items:center;gap:12px"><div class="asset-dot" style="background:'+barColor+';align-self:flex-start;margin-top:4px"></div><div class="asset-info"><div class="asset-name">'+a.name+'</div><div class="asset-type">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(gain!==null?' - '+(parseFloat(gain)>=0?'+':'')+gain+'%':'')+'</div>'+detailHTML+'</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+barColor+'">'+state.currSymbol+fmt(cv(a.value))+'</div><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px"><span style="font-family:var(--font);font-size:12px;color:'+barColor+'">'+pct.toFixed(1)+'%</span>'+statusBadge+'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editAsset('+a.id+')">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteAsset('+a.id+')">✕ Remove</span></div></div></div><div style="margin-top:8px;padding-left:16px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text3);margin-bottom:4px"><span>Actual: '+pct.toFixed(1)+'%</span><span>'+(isCustomTarget?'Target':'Ideal')+': '+idealPct+'% (±'+THRESHOLD+'%)</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;position:relative;overflow:visible"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barColor+';border-radius:5px;transition:width .6s"></div><div style="position:absolute;top:-2px;left:'+Math.min(98,idealPct)+'%;width:2px;height:12px;background:rgba(255,255,255,0.5);border-radius:1px"></div></div><div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:3px">'+(status?status.msg:'')+'</div></div></div>';}).join('');
+  if(!state.assets.length){c.innerHTML='<div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div>';renderSchemeList();return;}
+
+  // Build allocation warnings (schemeMap for warning calc)
+  var schemeMap={};
+  state.assets.forEach(function(a){
+    if(!schemeMap[a.scheme]) schemeMap[a.scheme]=0;
+    schemeMap[a.scheme]+=(a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0));
+  });
+  if(state.allocTargets){Object.keys(state.allocTargets).forEach(function(s){if(!(s in schemeMap))schemeMap[s]=0;});}
+  var warnings=[];
+  Object.entries(schemeMap).forEach(function([scheme,pctVal]){
+    var s=getAllocStatus(scheme,pctVal);
+    var t=getEffectiveTarget(scheme);
+    if(s&&s.type!=='ok') warnings.push({scheme,pct:pctVal.toFixed(1),status:s,target:t?.ideal||0,custom:t?.custom||false});
+  });
+  var warningHTML='';
+  if(warnings.length){
+    var critical=warnings.filter(function(w){return w.status.type!=='ok';});
+    var col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';
+    var bcol=critical.length?'rgba(239,68,68,0.4)':'rgba(234,179,8,0.4)';
+    warningHTML='<div style="background:'+col+';border:2px solid '+bcol+';border-radius:14px;padding:14px;margin-bottom:14px">'
+      +'<div style="font-size:14px;font-weight:900;margin-bottom:10px">'+(critical.length?'🚨':'⚠️')+' Allocation Warnings</div>'
+      +warnings.map(function(w){
+        var wc=w.status.type==='high'?'var(--orange)':'var(--yellow)';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+          +'<div><div style="font-size:13px;font-weight:900">'+(SCHEME_INFO[w.scheme]&&SCHEME_INFO[w.scheme].emoji||'💼')+' '+w.scheme+'</div>'
+          +'<div style="font-size:11px;color:'+wc+';font-weight:700">'+w.status.msg+'</div></div>'
+          +'<div style="text-align:right"><div style="font-size:15px;font-weight:700;color:'+wc+'">'+w.pct+'%</div>'
+          +'<div style="font-size:10px;color:var(--text3);font-weight:700">target '+w.target+'%</div></div></div>';
+      }).join('')
+      +'</div>';
+  } else if(state.assets.length>0&&Object.keys(state.allocTargets||{}).length>0){
+    warningHTML='<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio on target!</div></div>';
+  }
+
+  // Group assets by scheme
+  var groups={};
+  var schemeOrder=['Stocks','Mutual Fund','ETF','Gold','Cryptocurrency','Fixed Deposit','PPF','EPFO','NPS','Real Estate','Bonds','Cash','Other'];
+  var schemeColors={'Stocks':'#6366f1','Mutual Fund':'#22d3ee','ETF':'#34d399','Gold':'#fbbf24','Cryptocurrency':'#f472b6','Fixed Deposit':'#38bdf8','PPF':'#4ade80','EPFO':'#a78bfa','NPS':'#fb923c','Real Estate':'#2dd4bf','Bonds':'#818cf8','Cash':'#86efac','Other':'#e879f9'};
+  state.assets.forEach(function(a){
+    var s=a.scheme||'Other';
+    if(!groups[s]) groups[s]={assets:[],value:0,invested:0};
+    groups[s].assets.push(a);
+    groups[s].value+=a.value;
+    groups[s].invested+=a.invested||0;
+  });
+
+  // Build grouped HTML
+  var html=warningHTML;
+  schemeOrder.forEach(function(scheme){
+    var g=groups[scheme];
+    if(!g) return;
+    var schemeColor=schemeColors[scheme]||'#6366f1';
+    var schemeEmoji=(SCHEME_INFO[scheme]&&SCHEME_INFO[scheme].emoji)||'💼';
+    var schemePct=total>0?(g.value/total*100).toFixed(1):0;
+    var schemeGain=g.invested>0?((g.value-g.invested)/g.invested*100).toFixed(1):null;
+    var gainColor=schemeGain>=0?'var(--green)':'var(--red)';
+    var groupId='grp_'+scheme.replace(/[^a-z0-9]/gi,'_');
+
+    // Group header — tap to expand/collapse
+    html+='<div style="border:1px solid '+schemeColor+'33;border-radius:16px;margin-bottom:10px;overflow:hidden">';
+    // Header row
+    html+='<div onclick="toggleAssetGroup(\''+groupId+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;background:'+schemeColor+'11;user-select:none">';
+    html+='<div style="width:38px;height:38px;border-radius:12px;background:'+schemeColor+'22;border:1.5px solid '+schemeColor+'55;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+schemeEmoji+'</div>';
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:14px;font-weight:800;color:var(--text)">'+scheme+'</div>';
+    html+='<div style="font-size:11px;color:var(--text3);font-weight:600;margin-top:2px">'+g.assets.length+' holding'+(g.assets.length>1?'s':'')+(schemeGain!==null?' · '+(schemeGain>=0?'+':'')+schemeGain+'% overall':'')+'</div>';
+    html+='</div>';
+    html+='<div style="text-align:right;flex-shrink:0">';
+    html+='<div style="font-size:15px;font-weight:800;color:'+schemeColor+'">'+state.currSymbol+fmt(cv(g.value))+'</div>';
+    html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">'+schemePct+'% of portfolio</div>';
+    html+='</div>';
+    html+='<div id="'+groupId+'_arrow" style="font-size:14px;color:var(--text3);margin-left:8px;transition:transform .3s;flex-shrink:0">▼</div>';
+    html+='</div>'; // end header
+
+    // Progress bar
+    html+='<div style="height:3px;background:var(--bg3);margin:0 16px">';
+    html+='<div style="height:100%;width:'+Math.min(100,schemePct)+'%;background:'+schemeColor+';border-radius:3px;transition:width .6s"></div>';
+    html+='</div>';
+
+    // Collapsible holdings list — default collapsed if > 3 assets, else open
+    var defaultOpen = g.assets.length <= 3;
+    html+='<div id="'+groupId+'" style="display:'+(defaultOpen?'block':'none')+'">';
+
+    g.assets.forEach(function(a){
+      var pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);
+      var gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;
+      var gainColor2=gain!==null?(parseFloat(gain)>=0?'var(--green)':'var(--red)'):'var(--text3)';
+      var gainAmt=a.invested>0?(a.value-a.invested):null;
+      var detailLine=assetDetailLine(a);
+
+      html+='<div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">';
+      // Left dot
+      html+='<div style="width:3px;height:36px;border-radius:3px;background:'+schemeColor+';flex-shrink:0;margin-top:4px"></div>';
+      // Info
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--text)">'+a.name+'</div>';
+      if(detailLine) html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">'+detailLine+'</div>';
+      html+='<div style="display:flex;gap:8px;margin-top:6px">';
+      html+='<span style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:800" onclick="editAsset('+a.id+')">✏️ Edit</span>';
+      html+='<span style="font-size:10px;color:var(--red);cursor:pointer;font-weight:800" onclick="deleteAsset('+a.id+')">✕ Remove</span>';
+      html+='</div>';
+      html+='</div>';
+      // Right values
+      html+='<div style="text-align:right;flex-shrink:0">';
+      html+='<div style="font-size:14px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(a.value))+'</div>';
+      if(gain!==null){
+        html+='<div style="font-size:11px;font-weight:700;color:'+gainColor2+';margin-top:2px">'+(parseFloat(gain)>=0?'+':'')+gain+'%</div>';
+        if(gainAmt!==null) html+='<div style="font-size:10px;color:'+gainColor2+';font-weight:600">'+(gainAmt>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(gainAmt)))+'</div>';
+      }
+      html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">'+pct.toFixed(1)+'% of total</div>';
+      html+='</div>';
+      html+='</div>'; // end holding row
+    });
+
+    // Group footer — summary
+    if(g.assets.length > 1){
+      var groupGainAmt=g.value-g.invested;
+      var groupGainColor=groupGainAmt>=0?'var(--green)':'var(--red)';
+      html+='<div style="padding:10px 16px;background:'+schemeColor+'08;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
+      html+='<div style="font-size:11px;color:var(--text3);font-weight:700">Total invested: '+state.currSymbol+fmt(cv(g.invested))+'</div>';
+      html+='<div style="font-size:11px;font-weight:800;color:'+groupGainColor+'">'+(groupGainAmt>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(groupGainAmt)))+' P&L</div>';
+      html+='</div>';
+    }
+
+    html+='</div>'; // end collapsible
+    html+='</div>'; // end group card
+  });
+
+  c.innerHTML=html;
   renderSchemeList();
+}
+function toggleAssetGroup(id){
+  var el=document.getElementById(id);
+  var arrow=document.getElementById(id+'_arrow');
+  if(!el) return;
+  var isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  if(arrow) arrow.style.transform=isOpen?'rotate(-90deg)':'rotate(0deg)';
 }
 function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
 function editAsset(id){
@@ -4428,7 +4613,84 @@ function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').for
 function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'bb'),borderColor:colors,borderWidth:2,borderRadius:['bar'].includes(chartType)?8:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12,padding:10}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}:undefined}});}
 function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
 function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
-function renderAssetChart(){const ctx=document.getElementById('assetChart');if(!ctx||!state.assets.length)return;if(charts.asset)charts.asset.destroy();charts.asset=new Chart(ctx,{type:'doughnut',data:{labels:state.assets.map(a=>a.name),datasets:[{data:state.assets.map(a=>a.value),backgroundColor:state.assets.map(a=>a.color+'bb'),borderColor:state.assets.map(a=>a.color),borderWidth:2,hoverOffset:12}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12,padding:10}}}}});}
+function renderAssetChart(){
+  const ctx=document.getElementById('assetChart');
+  if(!ctx) return;
+  if(!state.assets.length){
+    if(charts.asset){charts.asset.destroy();charts.asset=null;}
+    var c2=document.getElementById('assetTotal2'); if(c2) c2.textContent='';
+    var dl=document.getElementById('assetDonutLbl'); if(dl) dl.textContent='';
+    return;
+  }
+  if(charts.asset) charts.asset.destroy();
+  // Group by scheme for cleaner chart
+  var schemeMap={};
+  var schemeColors={
+    'Stocks':'#6366f1','Mutual Fund':'#22d3ee','ETF':'#34d399',
+    'Gold':'#fbbf24','Cryptocurrency':'#f472b6','Fixed Deposit':'#38bdf8',
+    'PPF':'#4ade80','EPFO':'#a78bfa','NPS':'#fb923c',
+    'Real Estate':'#2dd4bf','Bonds':'#818cf8','Cash':'#86efac','Other':'#e879f9'
+  };
+  state.assets.forEach(function(a){
+    var s=a.scheme||'Other';
+    if(!schemeMap[s]) schemeMap[s]={value:0,color:schemeColors[s]||a.color};
+    schemeMap[s].value+=a.value;
+  });
+  var labels=Object.keys(schemeMap);
+  var values=labels.map(function(s){return schemeMap[s].value;});
+  var bgColors=labels.map(function(s){return schemeMap[s].color+'cc';});
+  var borderColors=labels.map(function(s){return schemeMap[s].color;});
+
+  // Update donut center — show number of schemes
+  var c2=document.getElementById('assetTotal2');
+  var dl=document.getElementById('assetDonutLbl');
+  if(c2) c2.textContent=labels.length+' Types';
+  if(dl) dl.textContent='in portfolio';
+
+  charts.asset=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:labels,
+      datasets:[{
+        data:values,
+        backgroundColor:bgColors,
+        borderColor:borderColors,
+        borderWidth:2,
+        hoverOffset:16,
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:'68%',
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{
+            color:'rgba(255,255,255,.6)',
+            font:{size:11,weight:'700'},
+            boxWidth:10,
+            boxHeight:10,
+            borderRadius:3,
+            padding:12,
+            usePointStyle:true,
+            pointStyle:'circle'
+          }
+        },
+        tooltip:{
+          callbacks:{
+            label:function(ctx){
+              var total=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+              var pct=(ctx.parsed/total*100).toFixed(1);
+              return ' '+ctx.label+': ₹'+fmt(cv(ctx.parsed))+' ('+pct+'%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
 
 // ======== SETTINGS ========
 function shareApp(){
