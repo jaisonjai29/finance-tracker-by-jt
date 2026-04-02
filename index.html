@@ -3645,9 +3645,8 @@ function assetDetailLine(a){
       const sym=state.currSymbol;
       const ee=a.epfoEmpShare||0,er=a.epfoEmplShare||0,ps=a.epfoPension||0,ix=a.epfoInterest||0;
       if(ee>0||er>0) p.push('EE: '+sym+fmt(cv(ee))+' · ER: '+sym+fmt(cv(er)));
-      else if(ps>0) p.push('EE/ER transferred');
-      if(ps>0) p.push('Pension: '+sym+fmt(cv(ps)));
-      if(ix>0) p.push('Interest: '+sym+fmt(cv(ix)));
+      else if(ps>0) p.push('EE/ER settled');
+      if(ps>0) p.push('EPS: '+sym+fmt(cv(ps))+' (info)');
     }
     if(a.notes&&!hasBreakdown) p.push(a.notes);
     return p.join(' · ');
@@ -3769,18 +3768,21 @@ function parseEPFOText(text){
   interest=intTotal;
 
   // === STEP 4: Calculate total corpus ===
-  // If transferred: EE=0, ER=0 → only pension remains as an asset.
-  //   Interest was already paid out in the settlement — DO NOT add to corpus.
-  // If NOT transferred: corpus = EE + ER + pension (current live balance).
+  // Pension (EPS) is NOT a withdrawable asset — it stays in EPS and pays monthly pension at retirement.
+  // Asset value = EE + ER only. Pension is stored for informational display only.
+  // If transferred: EE=0, ER=0 → corpus is 0 (EE+ER were settled/withdrawn).
+  // If NOT transferred: corpus = EE + ER only (pension excluded).
   if(isTransferred){
-    total=pension; // only pension fund remains; EE+ER were settled/withdrawn
+    total=0; // EE+ER settled; pension is info-only
   } else {
-    total=empShare+emplShare+pension;
+    total=empShare+emplShare;
   }
 
-  // Fallback if nothing parsed
-  if(total<=0&&pension>0) total=pension;
-  if(total<=0) return null;
+  // Fallback — if only pension data available (very old passbook), still allow import with 0 value
+  if(total<=0&&(empShare>0||emplShare>0)) total=empShare+emplShare;
+  if(total<0) total=0;
+  // Allow import even if total=0 (transferred accounts), as long as we have some data
+  if(empShare===null&&emplShare===null&&pension<=0) return null;
 
   // === STEP 3b: Extract date range from Int.* rows (first and last date found) ===
   var intDates=[];
@@ -3919,9 +3921,9 @@ function showEPFOPreview(data){
   if(data.pension>0){
     var psHdr=document.createElement('div');
     psHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
-    psHdr.textContent='Pension Fund (EPS)';
+    psHdr.textContent='Pension Fund (EPS) — For Info Only';
     card.appendChild(psHdr);
-    makeRow('👴 Pension accumulated',data.pension,false,'Stays in EPS — not transferred');
+    makeRow('👴 EPS Pension (info only)',data.pension,false,'Locked in EPS — not counted as your asset value');
   }
 
   // --- Interest credited (from Int.* rows only) ---
@@ -3930,15 +3932,16 @@ function showEPFOPreview(data){
     intHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
     intHdr.textContent='Interest Credited'+(data.intDateRange?' ('+data.intDateRange+')':'');
     card.appendChild(intHdr);
-    makeRow('📈 Total interest earned',data.interest,false,isTransferred?'Paid out in settlement':'');
+    makeRow('📈 Interest credited (info)',data.interest,false,isTransferred?'Paid out in settlement':'Already included in EE+ER balance');
   }
 
   // --- Corpus total ---
-  var corpus=isTransferred?data.pension:(data.empShare+data.emplShare+data.pension);
+  // Asset value = EE + ER only. Pension is info-only (locked in EPS, not withdrawable).
+  var corpus=isTransferred?0:(data.empShare+data.emplShare);
   var totalRow=document.createElement('div');
   totalRow.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:6px;border-top:2px solid var(--border2)';
   var tl=document.createElement('div');
-  tl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green)">💰 Total Corpus</div><div style="font-size:10px;color:var(--text3);font-weight:700">'+(isTransferred?'Pension only (EE+ER settled)':'EE + ER + Pension')+'</div>';
+  tl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green)">💰 EPF Corpus (Your Asset)</div><div style="font-size:10px;color:var(--text3);font-weight:700">'+(isTransferred?'EE+ER settled (₹0 EPF asset)':'EE + ER only · Pension shown separately')+'</div>';
   var tv=document.createElement('span');tv.style.cssText='font-size:15px;font-weight:900;color:var(--green)';tv.textContent='₹'+corpus.toLocaleString('en-IN',{maximumFractionDigits:2});
   totalRow.appendChild(tl);totalRow.appendChild(tv);card.appendChild(totalRow);
   box.appendChild(card);
@@ -3980,20 +3983,23 @@ function confirmEPFOImport(total,data){
 
   var extra={};
   if(data){
-    // If transferred (EE=0, ER=0): corpus = pension only (EE+ER were settled/withdrawn already)
-    // If not transferred: corpus = EE + ER + pension (live balance)
+    // Pension (EPS) is locked in EPS — it is NOT a withdrawable asset value.
+    // Stored as epfoPension for info display only; excluded from asset value.
+    // Interest is already baked into the EE/ER balances from the passbook.
+    // If transferred (EE=0, ER=0): EE+ER corpus is zero (settled); pension info-only.
+    // If NOT transferred: corpus = EE + ER only (your EPF balance, no pension).
     var isXfer=(data.empShare===0&&data.emplShare===0);
-    var corpus=isXfer?data.pension:(data.empShare+data.emplShare+data.pension);
+    var corpus=isXfer?0:(data.empShare+data.emplShare);
     extra={
       epfoEmpShare:data.empShare||0,
       epfoEmplShare:data.emplShare||0,
-      epfoPension:data.pension||0,
-      epfoInterest:data.interest||0,
+      epfoPension:data.pension||0,   // info-only, not counted in asset value
+      epfoInterest:data.interest||0, // info-only, already in EE+ER balances
       epfoPrincipal:corpus,
       epfoDepositEE:data.depositEE||0,
       epfoDepositER:data.depositER||0,
-      invested:corpus,           // used by wealth statement / AI
-      value:corpus                  // override total with full corpus
+      invested:corpus,               // used by wealth statement / AI
+      value:corpus                   // EPF corpus (EE+ER only, pension excluded)
     };
     total=corpus;
   }
@@ -4407,6 +4413,8 @@ function renderAssets(){
   const total=state.assets.reduce((s,a)=>s+a.value,0);const tv=state.currSymbol+fmt(cv(total));
   document.getElementById('totalAssetVal').textContent=tv;document.getElementById('assetTotal2').textContent=tv;
   renderPnlSummary();
+  // Always recalculate alloc% from live values so stale stored values don't cause wrong warnings
+  state.assets.forEach(function(a){a.alloc=total>0?parseFloat((a.value/total*100).toFixed(2)):0;});
   const allocTotal=state.assets.reduce((s,a)=>s+(a.alloc||0),0);
   const badge=document.getElementById('allocSummaryBadge');
   if(badge&&state.assets.length){badge.style.display='inline-block';const diff=allocTotal-100;let bg,color,icon,msg;if(Math.abs(diff)<0.01){bg='rgba(34,197,94,0.15)';color='var(--green)';icon='✅';msg='Portfolio 100% allocated';}else if(diff>0){bg='rgba(239,68,68,0.15)';color='var(--red)';icon='❌';msg='Over by '+diff.toFixed(1)+'%';}else{bg='rgba(234,179,8,0.15)';color='var(--yellow)';icon='⚠️';msg='Under by '+Math.abs(diff).toFixed(1)+'%';}badge.innerHTML=`<span style="background:${bg};color:${color};border:1.5px solid ${color};padding:5px 12px;border-radius:20px;font-size:12px;font-weight:900">${icon} ${allocTotal.toFixed(1)}% — ${msg}</span>`;}else if(badge){badge.style.display='none';}
@@ -4545,8 +4553,8 @@ function renderAssets(){
           plAmt=d.qty*d.faceValue*(d.interestRate/100);plLabel='Annual Interest';plIsInterest=true;
         }
       } else if(s==='EPFO'){
-        var ix=a.epfoInterest||0;
-        if(ix>0){plAmt=ix;plPct=null;plLabel='Interest Earned';plIsInterest=true;}
+        // Interest is already baked into EE+ER balances — don't show as a separate P&L bar
+        // plAmt stays null; pension chip shown separately in the chip section below
       } else if(s==='Other'){
         if(d.principal>0&&d.currentValue>0){
           plAmt=d.currentValue-d.principal;plPct=(plAmt/d.principal*100);plLabel='Returns';
@@ -4589,7 +4597,7 @@ function renderAssets(){
         var plPctDisp=plPct!=null?(' ('+(plPct>=0?'+':'')+plPct.toFixed(1)+'%)'):'';
         // EPFO: show pension chip too
         var epfoPensionChip='';
-        if(s==='EPFO'&&a.epfoPension>0) epfoPensionChip='<span style="font-size:10px;font-weight:800;background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:3px 8px">👴 EPS '+state.currSymbol+fmt(cv(a.epfoPension))+'</span>';
+        if(s==='EPFO'&&a.epfoPension>0) epfoPensionChip='<span style="font-size:10px;font-weight:800;background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:3px 8px" title="Pension is locked in EPS — not counted in your asset total">👴 EPS '+state.currSymbol+fmt(cv(a.epfoPension))+' ℹ️</span>';
         html+='<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
         html+='<div style="display:flex;align-items:center;gap:6px;background:'+plBg+';border:1px solid '+plBorder+';border-radius:20px;padding:4px 10px;flex-shrink:0">';
         html+='<span style="font-size:11px">'+plIcon+'</span>';
@@ -7670,7 +7678,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">20260331-v12</span>
+      Current build: <span style="color:var(--accent)">20260402-v13</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
