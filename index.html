@@ -922,6 +922,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="donut-center"><div class="donut-val" id="assetTotal2" style="font-size:13px;color:var(--text2)"></div><div class="donut-lbl" id="assetDonutLbl"></div></div>
         </div>
       </div>
+      <div class="box" id="pnlSummaryBox" style="display:none;padding:0;overflow:hidden">
+        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:14px 16px 10px">📊 Portfolio P&amp;L</div>
+        <div id="pnlSummaryContent"></div>
+      </div>
       <div class="box"><div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📋 My Assets</div><div id="assetList"><div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div></div></div>
       <div class="box"><div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📚 Investment Schemes</div><div id="schemeList"></div></div>
     </div>
@@ -2567,12 +2571,13 @@ async function toggleFingerprint(el){
     showToast('WebAuthn not supported on this browser','red');
     return;
   }
-  document.getElementById('fpStatusLabel').textContent='⏳ Touch your fingerprint sensor…';
+  document.getElementById('fpStatusLabel').textContent='⏳ Registering… follow device prompt';
   try {
     const challenge=new Uint8Array(32); crypto.getRandomValues(challenge);
     const userId=new Uint8Array(16); crypto.getRandomValues(userId);
     // Register with explicit rpId = current hostname (e.g. yourname.github.io)
-    const cred=await navigator.credentials.create({publicKey:{
+    // Try with residentKey:discouraged first (most compatible)
+    var createOpts={publicKey:{
       challenge,
       rp:{id:location.hostname, name:'Finance Tracker'},
       user:{id:userId, name:'finance-user', displayName:'Finance User'},
@@ -2580,10 +2585,19 @@ async function toggleFingerprint(el){
       authenticatorSelection:{
         authenticatorAttachment:'platform',
         userVerification:'required',
-        residentKey:'discouraged'
+        residentKey:'discouraged',
+        requireResidentKey:false
       },
       timeout:60000
-    }});
+    }};
+    var cred=null;
+    try{ cred=await navigator.credentials.create(createOpts); }
+    catch(e2){
+      // Retry without residentKey hint (older Android)
+      delete createOpts.publicKey.authenticatorSelection.residentKey;
+      delete createOpts.publicKey.authenticatorSelection.requireResidentKey;
+      cred=await navigator.credentials.create(createOpts);
+    }
     state.fpCredentialId=bufferToBase64(cred.rawId);
     state.fpEnabled=true;
     saveState();
@@ -2596,6 +2610,15 @@ async function toggleFingerprint(el){
     document.getElementById('fpStatusLabel').textContent='Use biometrics to unlock the app';
     if(e.name==='NotAllowedError'){
       showToast('Cancelled — please try again','yellow');
+    } else if(e.name==='InvalidStateError'){
+      // Already registered — just enable
+      state.fpEnabled=true;
+      saveState();
+      el.classList.add('on');
+      el.querySelector('.tog-knob').style.transform='translateX(22px)';
+      document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
+      initFpButton();
+      showToast('Fingerprint enabled! ✅','green');
     } else {
       showToast('Error: '+e.message,'red');
     }
@@ -3747,31 +3770,37 @@ function splitCSVLine(line){
 // Auto-detect scheme from holding name
 function detectScheme(name){
   var n=name.toLowerCase();
-  // Mutual Fund patterns
+  // ETF must come FIRST — "Gold ETF", "Nifty ETF", "Silver ETF" should all be ETF
+  if(n.includes('etf')||n.includes('bees')||n.includes('niftybees')||
+     n.includes('goldbees')||n.includes('bankbees')||n.includes('juniorbees')||
+     n.includes('liquidbees')||n.includes('itbees')||n.includes('silverbees')||
+     (n.includes('nifty')&&!n.includes('fund'))||
+     (n.includes('sensex')&&!n.includes('fund'))||
+     (n.includes('index')&&!n.includes('fund'))){
+    return 'ETF';
+  }
+  // Mutual Fund patterns (only if not already ETF)
   if(n.includes('fund')||n.includes('mf ')||n.includes(' mf')||n.includes('flexi')||
      n.includes('bluechip')||n.includes('midcap')||n.includes('smallcap')||
      n.includes('largecap')||n.includes('multicap')||n.includes('elss')||
-     n.includes('debt')||n.includes('liquid')||n.includes('hybrid')||
-     n.includes('folio')||n.includes('nav ')||n.includes('direct')||n.includes('growth')||
-     n.includes('dividend')||n.includes(' plan')){
+     n.includes('liquid')||n.includes('hybrid')||
+     n.includes('folio')||n.includes('nav ')||
+     n.includes(' plan')||n.includes('scheme')){
     return 'Mutual Fund';
   }
-  // ETF patterns
-  if(n.includes('etf')||n.includes('bees')||n.includes('nifty')||n.includes('sensex')||
-     n.includes('index')||n.includes('niftybees')||n.includes('goldbees')||
-     n.includes('bankbees')){
-    return 'ETF';
-  }
-  // Gold patterns
-  if(n.includes('gold')||n.includes('sgb')||n.includes('sovereign')||n.includes('silver')){
+  // Gold — physical/SGB only (ETFs already caught above)
+  if(n.includes('sgb')||n.includes('sovereign')||
+     (n.includes('gold')&&!n.includes('etf')&&!n.includes('bees'))||
+     (n.includes('silver')&&!n.includes('etf')&&!n.includes('bees'))){
     return 'Gold';
   }
   // Crypto patterns
-  if(n.includes('btc')||n.includes('eth')||n.includes('bitcoin')||n.includes('ethereum')||
-     n.includes('crypto')||n.includes('usdt')||n.includes('bnb')){
+  if(n.includes('btc')||n.includes('bitcoin')||n.includes('ethereum')||
+     n.includes('crypto')||n.includes('usdt')||n.includes('bnb')||
+     n.includes(' eth')||n.includes('sol ')||n.includes('xrp')){
     return 'Cryptocurrency';
   }
-  // Default: Stocks (direct equity)
+  // Default: Stocks
   return 'Stocks';
 }
 
@@ -3847,23 +3876,40 @@ function confirmDematImport(){
   var rows=window._dematImportRows||[];
   if(!rows.length){closeModal('dematPreviewModal');return;}
   var colors=['#6366f1','#22d3ee','#34d399','#f472b6','#fb923c','#a78bfa','#38bdf8','#4ade80','#fbbf24','#e879f9','#2dd4bf','#f87171','#818cf8','#86efac','#fdba74'];
-  var added=0;
+  var added=0, updated=0;
   rows.forEach(function(r,i){
     var invested=Math.round(r.invested)||0;
     var value=Math.round(r.value)||0;
     if(!value&&!invested) return;
-    state.assets.push({
-      id:Date.now()+i,
-      name:r.name,
-      scheme:r.scheme||'Stocks',
-      invested:invested,
-      value:value,
-      details:{qty:r.qty,avgPrice:r.avg,ltp:r.ltp},
-      color:colors[state.assets.length%colors.length],
-      alloc:0,
-      source:'demat'
+    // Deduplicate: match by name (case-insensitive)
+    var existing=state.assets.find(function(a){
+      return a.name.toLowerCase().trim()===r.name.toLowerCase().trim();
     });
-    added++;
+    if(existing){
+      // Update existing — only if value/invested changed
+      if(existing.value!==value||existing.invested!==invested){
+        existing.invested=invested;
+        existing.value=value;
+        existing.scheme=r.scheme||existing.scheme||'Stocks';
+        existing.details={qty:r.qty,avgPrice:r.avg,ltp:r.ltp};
+        existing.source='demat';
+        updated++;
+      }
+    } else {
+      // Add new holding
+      state.assets.push({
+        id:Date.now()+i,
+        name:r.name,
+        scheme:r.scheme||'Stocks',
+        invested:invested,
+        value:value,
+        details:{qty:r.qty,avgPrice:r.avg,ltp:r.ltp},
+        color:colors[state.assets.length%colors.length],
+        alloc:0,
+        source:'demat'
+      });
+      added++;
+    }
   });
   // Recalculate allocations
   var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
@@ -3871,13 +3917,85 @@ function confirmDematImport(){
   saveState();
   closeModal('dematPreviewModal');
   renderAssets();
-  showToast(added+' holdings imported ✅','green');
+  var msg=[];
+  if(added) msg.push(added+' new added');
+  if(updated) msg.push(updated+' updated');
+  if(!added&&!updated) msg.push('No changes — all up to date');
+  showToast('✅ '+msg.join(', '),'green');
   window._dematImportRows=[];
+}
+
+function renderPnlSummary(){
+  var box=document.getElementById('pnlSummaryBox');
+  var cont=document.getElementById('pnlSummaryContent');
+  if(!box||!cont) return;
+  if(!state.assets.length){box.style.display='none';return;}
+
+  var totalValue=state.assets.reduce(function(s,a){return s+a.value;},0);
+  var totalInvested=state.assets.reduce(function(s,a){return s+(a.invested||0);},0);
+  var totalPnl=totalValue-totalInvested;
+  var totalPct=totalInvested>0?(totalPnl/totalInvested*100).toFixed(2):null;
+  var pnlColor=totalPnl>=0?'var(--green)':'var(--red)';
+  var pnlBg=totalPnl>=0?'rgba(34,197,94,0.08)':'rgba(255,69,105,0.08)';
+  var pnlBorder=totalPnl>=0?'rgba(34,197,94,0.25)':'rgba(255,69,105,0.25)';
+
+  // Overall P&L header
+  var html='<div style="background:'+pnlBg+';border-top:1px solid '+pnlBorder+';padding:14px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">';
+  html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Invested</div>';
+  html+='<div style="font-size:14px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(totalInvested))+'</div></div>';
+  html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Current</div>';
+  html+='<div style="font-size:14px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(totalValue))+'</div></div>';
+  html+='<div><div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Overall P&L</div>';
+  html+='<div style="font-size:14px;font-weight:800;color:'+pnlColor+'">'+(totalPnl>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(totalPnl)))+'</div>';
+  if(totalPct) html+='<div style="font-size:10px;font-weight:700;color:'+pnlColor+'">'+(totalPnl>=0?'+':'')+totalPct+'%</div>';
+  html+='</div></div>';
+
+  // Per-scheme breakdown
+  var schemeGroups={};
+  var schemeColors={'Stocks':'#6366f1','Mutual Fund':'#22d3ee','ETF':'#34d399','Gold':'#fbbf24','Cryptocurrency':'#f472b6','Fixed Deposit':'#38bdf8','PPF':'#4ade80','EPFO':'#a78bfa','NPS':'#fb923c','Real Estate':'#2dd4bf','Bonds':'#818cf8','Cash':'#86efac','Other':'#e879f9'};
+  var schemeEmojis={'Stocks':'📊','Mutual Fund':'📈','ETF':'📉','Gold':'🥇','Cryptocurrency':'₿','Fixed Deposit':'🏦','PPF':'🏛️','EPFO':'🏢','NPS':'👴','Real Estate':'🏠','Bonds':'📜','Cash':'💵','Other':'💼'};
+  state.assets.forEach(function(a){
+    var s=a.scheme||'Other';
+    if(!schemeGroups[s]) schemeGroups[s]={value:0,invested:0,count:0};
+    schemeGroups[s].value+=a.value;
+    schemeGroups[s].invested+=a.invested||0;
+    schemeGroups[s].count++;
+  });
+
+  var schemeOrder=['Stocks','Mutual Fund','ETF','Gold','Cryptocurrency','Fixed Deposit','PPF','EPFO','NPS','Real Estate','Bonds','Cash','Other'];
+  var hasAny=false;
+  schemeOrder.forEach(function(s){
+    var g=schemeGroups[s];
+    if(!g) return;
+    hasAny=true;
+    var pnl=g.value-g.invested;
+    var pct=g.invested>0?(pnl/g.invested*100).toFixed(1):null;
+    var gc=pnl>=0?'var(--green)':'var(--red)';
+    var sc=schemeColors[s]||'#6366f1';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--border)">';
+    html+='<div style="width:8px;height:8px;border-radius:50%;background:'+sc+';flex-shrink:0"></div>';
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--text)">'+(schemeEmojis[s]||'💼')+' '+s+'</div>';
+    html+='<div style="font-size:10px;color:var(--text3);font-weight:600">'+g.count+' holding'+(g.count>1?'s':'')+' · Invested: '+state.currSymbol+fmt(cv(g.invested))+'</div>';
+    html+='</div>';
+    html+='<div style="text-align:right;flex-shrink:0">';
+    html+='<div style="font-size:13px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(g.value))+'</div>';
+    if(g.invested>0){
+      html+='<div style="font-size:11px;font-weight:700;color:'+gc+'">'+(pnl>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(pnl)));
+      if(pct) html+=' ('+( pnl>=0?'+':'')+pct+'%)';
+      html+='</div>';
+    }
+    html+='</div></div>';
+  });
+
+  cont.innerHTML=html;
+  box.style.display=hasAny?'block':'none';
 }
 
 function renderAssets(){
   const total=state.assets.reduce((s,a)=>s+a.value,0);const tv=state.currSymbol+fmt(cv(total));
   document.getElementById('totalAssetVal').textContent=tv;document.getElementById('assetTotal2').textContent=tv;
+  renderPnlSummary();
   const allocTotal=state.assets.reduce((s,a)=>s+(a.alloc||0),0);
   const badge=document.getElementById('allocSummaryBadge');
   if(badge&&state.assets.length){badge.style.display='inline-block';const diff=allocTotal-100;let bg,color,icon,msg;if(Math.abs(diff)<0.01){bg='rgba(34,197,94,0.15)';color='var(--green)';icon='✅';msg='Portfolio 100% allocated';}else if(diff>0){bg='rgba(239,68,68,0.15)';color='var(--red)';icon='❌';msg='Over by '+diff.toFixed(1)+'%';}else{bg='rgba(234,179,8,0.15)';color='var(--yellow)';icon='⚠️';msg='Under by '+Math.abs(diff).toFixed(1)+'%';}badge.innerHTML=`<span style="background:${bg};color:${color};border:1.5px solid ${color};padding:5px 12px;border-radius:20px;font-size:12px;font-weight:900">${icon} ${allocTotal.toFixed(1)}% — ${msg}</span>`;}else if(badge){badge.style.display='none';}
@@ -4610,7 +4728,8 @@ function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncE
 function renderNetWorthTimeline(){const ctx=document.getElementById('netWorthChart');if(!ctx)return;if(charts.nw)charts.nw.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[];const data=[];for(let i=11;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()<=m&&d.getFullYear()<=y;});const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);data.push(cv(inc-exp+state.assets.reduce((s,a)=>s+a.value,0)));}charts.nw=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Net Worth',data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
 function renderYearlySummary(){const c=document.getElementById('yearlySummary');const now=new Date();const year=now.getFullYear();const monthly=[];for(let m=0;m<12;m++){const txs=state.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===year&&d.getMonth()===m;});const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);monthly.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m],inc,exp,net:inc-exp});}const totalInc=monthly.reduce((s,m)=>s+m.inc,0);const totalExp=monthly.reduce((s,m)=>s+m.exp,0);c.innerHTML=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Year Income</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalInc))}</div></div><div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Year Spend</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalExp))}</div></div></div>${monthly.filter(m=>m.inc>0||m.exp>0).map(m=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="min-width:32px;font-size:11px;font-weight:900;color:var(--text3)">${m.month}</div><div style="flex:1"><div style="display:flex;gap:3px;height:6px"><div style="height:100%;background:var(--green);border-radius:3px;flex:${m.inc}"></div><div style="height:100%;background:var(--red);border-radius:3px;flex:${m.exp}"></div></div></div><div style="font-family:var(--font);font-size:11px;font-weight:700;color:${m.net>=0?'var(--green)':'var(--red)'};min-width:60px;text-align:right">${m.net>=0?'+':'-'}${state.currSymbol}${fmt(cv(Math.abs(m.net)))}</div></div>`).join('')}`;}
 function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');chartType=type;renderMainChart();}
-function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'bb'),borderColor:colors,borderWidth:2,borderRadius:['bar'].includes(chartType)?8:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12,padding:10}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}:undefined}});}
+function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));var isPie=chartType==='pie'||chartType==='doughnut';
+  charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:2,hoverOffset:isPie?16:0,borderRadius:['bar'].includes(chartType)?8:(isPie?4:0),borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,cutout:chartType==='doughnut'?'65%':undefined,animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.6)',font:{size:11,weight:'700'},boxWidth:10,boxHeight:10,padding:12,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce(function(a,b){return a+b;},0);var pct=(c.parsed/t*100).toFixed(1);return' '+c.label+': '+state.currSymbol+fmt(cv(c.parsed))+' ('+pct+'%)';}}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}:undefined}});}
 function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
 function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
 function renderAssetChart(){
@@ -4664,6 +4783,7 @@ function renderAssetChart(){
       responsive:true,
       maintainAspectRatio:false,
       cutout:'68%',
+      animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeOutQuart'},
       plugins:{
         legend:{
           position:'bottom',
