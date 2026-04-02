@@ -16,6 +16,7 @@
 <title>Finance Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Kaushan+Script&family=Protest+Riot&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ══════════════════════════════════════════
    MODERN FINANCE — Design System 2025
@@ -910,8 +911,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- ASSETS -->
     <div class="page" id="page-assets">
-      <div class="sec-head"><div class="sec-title">💼 Assets</div><div style="display:flex;gap:8px"><button class="sec-btn" onclick="triggerDematCSV()" style="color:var(--teal)">📂 Import</button><button class="sec-btn" onclick="showModal('assetModal')">➕ Add</button></div></div>
-      <input type="file" id="dematCSVInput" accept=".csv,.txt" style="display:none" onchange="importDematCSV(event)">
+      <div class="sec-head"><div class="sec-title">💼 Assets</div><div style="display:flex;gap:8px"><button class="sec-btn" onclick="triggerDematCSV()" style="color:var(--teal)" title="Import CSV or XLSX from your broker">📂 Import CSV/XLSX</button><button class="sec-btn" onclick="showModal('assetModal')">➕ Add</button></div></div>
+      <input type="file" id="dematCSVInput" accept=".csv,.txt,.xlsx,.xls" style="display:none" onchange="importDematFile(event)">
       <div class="box" style="text-align:center">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">📦 Total Assets</div>
         <div style="font-family:var(--font);font-size:28px;font-weight:700;color:var(--green);margin-bottom:8px" id="totalAssetVal">₹0</div>
@@ -3575,7 +3576,68 @@ function assetDetailLine(a){
 // ======== DEMAT CSV IMPORT ========
 function triggerDematCSV(){document.getElementById('dematCSVInput').click();}
 
-function importDematCSV(event){
+function importDematFile(event){
+  var file=event.target.files[0];
+  if(!file){return;}
+  event.target.value='';
+  var name=file.name.toLowerCase();
+  var isXLSX=name.endsWith('.xlsx')||name.endsWith('.xls');
+  if(isXLSX){
+    importDematXLSX(file);
+  } else {
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var result=parseDematCSV(e.target.result);
+      if(!result.rows.length){showToast('No holdings found. Check file format.','red');return;}
+      showDematPreview(result);
+    };
+    reader.readAsText(file);
+  }
+}
+
+function importDematXLSX(file){
+  if(typeof XLSX==='undefined'){
+    showToast('XLSX library not loaded. Check internet connection.','red');
+    return;
+  }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=new Uint8Array(e.target.result);
+      var workbook=XLSX.read(data,{type:'array'});
+
+      // Try each sheet, use the one with most holdings data
+      var bestResult={rows:[]};
+      workbook.SheetNames.forEach(function(sheetName){
+        var sheet=workbook.Sheets[sheetName];
+        // Convert sheet to array of arrays
+        var aoa=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+        if(!aoa.length) return;
+        // Convert to CSV-like text for our parser
+        var csvText=aoa.map(function(row){
+          return row.map(function(cell){
+            var s=String(cell===null||cell===undefined?'':cell);
+            if(s.includes(','))s='"'+s+'"';
+            return s;
+          }).join(',');
+        }).join('\n');
+        var result=parseDematCSV(csvText);
+        if(result.rows.length>bestResult.rows.length) bestResult=result;
+      });
+
+      if(!bestResult.rows.length){
+        showToast('No holdings found in XLSX. Try exporting as CSV from your broker.','red');
+        return;
+      }
+      showDematPreview(bestResult);
+    } catch(err){
+      showToast('Could not read XLSX: '+err.message,'red');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function importDematCSV_legacy(event){
   var file=event.target.files[0];
   if(!file){return;}
   event.target.value='';
@@ -6771,7 +6833,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
 <div class="modal-bg" id="dematPreviewModal">
   <div class="modal" style="max-height:90vh;overflow-y:auto">
     <div class="modal-handle"></div>
-    <div class="modal-title">📂 Import Demat Holdings</div>
+    <div class="modal-title">📂 Import Holdings</div>
     <div id="dematPreviewBody"></div>
     <button class="btn-go" onclick="confirmDematImport()" style="margin-bottom:8px">✅ Import All Holdings</button>
     <button class="btn-cancel" onclick="closeModal('dematPreviewModal');window._dematImportRows=[];" style="width:100%">✕ Cancel</button>
