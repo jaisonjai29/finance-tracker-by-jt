@@ -2575,7 +2575,33 @@ async function toggleFingerprint(el){
     return;
   }
   var fpLbl=document.getElementById('fpStatusLabel');
-  fpLbl.textContent='⏳ Registering… follow device prompt';
+  fpLbl.textContent='⏳ Follow the device prompt…';
+
+  // If we already have a stored credential ID, verify it works instead of re-registering
+  if(state.fpCredentialId){
+    try{
+      var challenge=new Uint8Array(32); crypto.getRandomValues(challenge);
+      await navigator.credentials.get({publicKey:{
+        challenge,
+        rpId:location.hostname,
+        allowCredentials:[{type:'public-key',id:base64ToBuffer(state.fpCredentialId),transports:['internal']}],
+        userVerification:'required',
+        timeout:60000
+      }});
+      state.fpEnabled=true;
+      saveState();
+      el.classList.add('on');
+      el.querySelector('.tog-knob').style.transform='translateX(22px)';
+      fpLbl.textContent='✅ Enabled — tap ☝️ on lock screen';
+      initFpButton();
+      showToast('Fingerprint re-enabled ✅','green');
+      return;
+    }catch(e){
+      // Stored credential no longer valid — fall through to fresh registration
+      state.fpCredentialId=null;
+    }
+  }
+
   try {
     const challenge=new Uint8Array(32); crypto.getRandomValues(challenge);
     const userId=new Uint8Array(16); crypto.getRandomValues(userId);
@@ -2586,17 +2612,15 @@ async function toggleFingerprint(el){
       pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
       authenticatorSelection:{
         authenticatorAttachment:'platform',
-        userVerification:'required',
-        residentKey:'discouraged',
-        requireResidentKey:false
+        userVerification:'required'
       },
       timeout:60000
     }};
     var cred=null;
     try{ cred=await navigator.credentials.create(createOpts); }
     catch(e2){
-      delete createOpts.publicKey.authenticatorSelection.residentKey;
-      delete createOpts.publicKey.authenticatorSelection.requireResidentKey;
+      // Retry without optional fields for older devices
+      createOpts.publicKey.authenticatorSelection={authenticatorAttachment:'platform',userVerification:'required'};
       cred=await navigator.credentials.create(createOpts);
     }
     state.fpCredentialId=bufferToBase64(cred.rawId);
@@ -2608,25 +2632,39 @@ async function toggleFingerprint(el){
     initFpButton();
     showToast('Fingerprint registered! ✅','green');
   } catch(e){
-    // Always reset label immediately — never leave "Registering…" stuck
     fpLbl.textContent='Use biometrics to unlock the app';
+    el.classList.remove('on');
+    el.querySelector('.tog-knob').style.transform='translateX(0)';
     if(e.name==='NotAllowedError'||e.name==='AbortError'){
-      // User cancelled or timed out — reset toggle visually to OFF
-      el.classList.remove('on');
-      el.querySelector('.tog-knob').style.transform='translateX(0)';
       showToast('Cancelled — try again','yellow');
     } else if(e.name==='InvalidStateError'){
-      // Credential already registered on this device — just mark enabled
-      state.fpEnabled=true;
-      saveState();
-      el.classList.add('on');
-      el.querySelector('.tog-knob').style.transform='translateX(22px)';
-      fpLbl.textContent='✅ Enabled — tap ☝️ on lock screen';
-      initFpButton();
-      showToast('Fingerprint enabled! ✅','green');
+      // Credential exists on device but we lost the ID — do a fresh registration with new userId
+      try{
+        const c2=new Uint8Array(32);crypto.getRandomValues(c2);
+        const u2=new Uint8Array(16);crypto.getRandomValues(u2);
+        var cred2=await navigator.credentials.create({publicKey:{
+          challenge:c2,
+          rp:{id:location.hostname,name:'Finance Tracker'},
+          user:{id:u2,name:'finance-user-'+Date.now(),displayName:'Finance User'},
+          pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+          authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+          timeout:60000
+        }});
+        state.fpCredentialId=bufferToBase64(cred2.rawId);
+        state.fpEnabled=true;
+        saveState();
+        el.classList.add('on');
+        el.querySelector('.tog-knob').style.transform='translateX(22px)';
+        fpLbl.textContent='✅ Registered — tap ☝️ on lock screen';
+        initFpButton();
+        showToast('Fingerprint registered! ✅','green');
+      }catch(e3){
+        fpLbl.textContent='Use biometrics to unlock the app';
+        el.classList.remove('on');
+        el.querySelector('.tog-knob').style.transform='translateX(0)';
+        showToast('Registration failed: '+e3.message,'red');
+      }
     } else {
-      el.classList.remove('on');
-      el.querySelector('.tog-knob').style.transform='translateX(0)';
       showToast('Error: '+e.message,'red');
     }
   }
@@ -3677,82 +3715,90 @@ function parseEPFOText(text){
     if(em2) employer=em2[1].trim();
   }
 
-  // === PRIORITY 1: Header-level balance fields ===
-  // The EPFO passbook header shows:
-  //   "Employee Share : 0"  and  "Employer Share : 0"
-  // These reflect the ACTUAL current balance (0 = transferred to new employer).
-  // We must read these FIRST, before falling through to Grand Total.
-  var hdrEE=t.match(/Employee\s*Share\s*[:\-]\s*(\d[\d,]*)/i);
-  var hdrER=t.match(/Employer\s*Share\s*[:\-]\s*(\d[\d,]*)/i);
-  if(hdrEE) empShare=pn(hdrEE[1]);
-  if(hdrER) emplShare=pn(hdrER[1]);
-
-  // === PRIORITY 2: Grand Total row — historical deposit sum (for informational display) ===
-  // Pattern (pdfjs): "54,103 18,371 Grand Total 5"  — numbers BEFORE label
-  var gt=t.match(/([\d,]+)\s+([\d,]+)\s+Grand\s*Total\s*([\d,]+)?/i);
-  if(gt){depositEE=pn(gt[1]);depositER=pn(gt[2]);pension=pn(gt[3]||'0');}
-  if(!gt){
-    var gt2=t.match(/Grand\s*Total\s*([\d,]+)\s+([\d,]+)\s*([\d,]+)?/i);
-    if(gt2){depositEE=pn(gt2[1]);depositER=pn(gt2[2]);pension=pn(gt2[3]||'0');}
-  }
-
-  // If header values not found, fall back to Grand Total as current balance
-  if(empShare===null) empShare=depositEE;
-  if(emplShare===null) emplShare=depositER;
-
-  // === Extract interest: sum all "Int. Updated upto" / "Int. given against Claim" rows ===
-  // PDF row format (pdfjs): "EE_amt ER_amt [0 0 [pension]] Int. Updated upto DD/MM/YYYY"
-  // The two deposit amounts come first, possibly followed by zeros for withdraw cols
-  var intRegex=/([\d,]+)\s+([\d,]+)(?:\s+[\d,]+)*\s+Int\.?\s*(?:Updated|given)/gi;
-  var im;
-  while((im=intRegex.exec(t))!==null){interest+=pn(im[1])+pn(im[2]);}
-
-  // Fallback A: label comes BEFORE numbers — "Int. Updated upto 31/03/2022 966 320"
-  if(interest===0){
-    var intRegex2=/Int\.?\s*(?:Updated\s*upto|given\s*against\s*Claim)[^\d]*([\d,]+)\s+([\d,]+)/gi;
-    while((im=intRegex2.exec(t))!==null){interest+=pn(im[1])+pn(im[2]);}
-  }
-
-  // Fallback B: single number per Int. row — "Int. Updated upto 31/03/2022 1,286"
-  if(interest===0){
-    var intRegex3=/Int\.?\s*Updated\s*upto[^\d]*([\d,]+)/gi;
-    while((im=intRegex3.exec(t))!==null){interest+=pn(im[1]);}
-    var intRegex4=/Int\.?\s*given\s*against[^\d]*([\d,]+)/gi;
-    while((im=intRegex4.exec(t))!==null){interest+=pn(im[1]);}
-  }
-
-  // === Closing Balance fallback (3-col passbook) ===
-  if(empShare===null&&emplShare===null){
-    var cr=t.match(/Closing\s*Balance\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)/i);
-    if(cr){empShare=pn(cr[1]);emplShare=pn(cr[2]);pension=pn(cr[3]);}
-  }
-
-  // === Strategy: individually labelled fields ===
-  if(empShare===null||emplShare===null){
-    var ee=t.match(/(?:Employee|EE)\s*(?:Share|Contribution|Balance)\s*[:\-]?\s*([\d,]+\.?\d{0,2})/i);
-    var er=t.match(/(?:Employer|ER)\s*(?:Share|Contribution|Balance)\s*[:\-]?\s*([\d,]+\.?\d{0,2})/i);
-    var ep=t.match(/(?:EPS|Pension)\s*(?:Fund|Balance|Amount|Contribution|Share)?\s*[:\-]?\s*([\d,]+\.?\d{0,2})/i);
-    if(empShare===null) empShare=pa(ee);
-    if(emplShare===null) emplShare=pa(er);
-    if(!pension) pension=pa(ep);
-  }
-
+  // === STEP 1: Read header Employee Share and Employer Share ===
+  // The header shows the CURRENT balance. If both are 0, it means funds were
+  // transferred to the current employer's UAN — this is a previous employer passbook.
+  var hdrEE=t.match(/Employee\s*Share\s*[:\-]\s*([\d,]+)/i);
+  var hdrER=t.match(/Employer\s*Share\s*[:\-]\s*([\d,]+)/i);
+  empShare=hdrEE?pn(hdrEE[1]):null;
+  emplShare=hdrER?pn(hdrER[1]):null;
   empShare=empShare||0; emplShare=emplShare||0;
-  total=empShare+emplShare+pension;
+  var isTransferred=(empShare===0&&emplShare===0);
 
-  // Fallback: largest plausible amount
-  if(total<=0){
-    var aa=[];var re2=/([\d,]+)/g;var fm;
-    while((fm=re2.exec(t))!==null){var v=pn(fm[1]);if(v>1000&&v<99000000)aa.push(v);}
-    aa.sort(function(a,b){return b-a;});if(aa.length)total=aa[0];
+  // === STEP 2: If transferred (EE=0, ER=0), get Pension from Grand Total row ===
+  // Grand Total row in this passbook has only 1 number: the Pension column (25,838).
+  // The Withdraw-EE (54,103) and Withdraw-ER (18,371) on the Claim row are the
+  // settled withdrawal amounts — NOT the current balance.
+  if(isTransferred){
+    // Try: single number before "Grand Total" (pension only)
+    var gt1=t.match(/([\d,]+)\s+Grand\s*Total/i);
+    // Try: three numbers before "Grand Total" (some formats: wdwEE wdwER pension)
+    var gt3=t.match(/([\d,]+)\s+([\d,]+)\s+([\d,]+)\s+Grand\s*Total/i);
+    // Try: numbers after "Grand Total"
+    var gta=t.match(/Grand\s*Total\s*([\d,]+)/i);
+    if(gt3){ pension=pn(gt3[3]); } // last of 3 is pension
+    else if(gt1){ pension=pn(gt1[1]); }
+    else if(gta){ pension=pn(gta[1]); }
+  } else {
+    // Not transferred — EE and ER are the current balance
+    // Get pension separately if present
+    var gtp=t.match(/Grand\s*Total[^]*?Pension[^\d]*([\d,]+)/i)||t.match(/([\d,]+)\s+Grand\s*Total/i);
+    if(gtp) pension=pn(gtp[1]);
   }
 
-  if(total<=0&&pension<=0) return null;
+  // === STEP 3: Extract interest from ONLY "Int.*" rows ===
+  // pdfjs outputs the label ("Int. Updated upto 31/03/2022") on one line,
+  // and the numbers ("966 320") on the NEXT line. We look ahead one line.
+  var intTotal=0;
+  var rawLines=text.split(/\n/);
+  for(var il=0;il<rawLines.length;il++){
+    var ln=rawLines[il].trim();
+    if(/Int\.?\s*(?:Updated\s*upto|given\s*against\s*Claim)/i.test(ln)){
+      // Numbers may be on this same line OR on the next line
+      var searchLine=ln.replace(/\d{1,2}\/\d{2}\/\d{4}/g,''); // strip dates
+      var nums=(searchLine.match(/[\d,]+/g)||[]).map(function(n){return pn(n);}).filter(function(v){return v>=1&&v<50000;});
+      // If no numbers on label line, check the very next non-empty line
+      if(nums.length===0&&il+1<rawLines.length){
+        var nextLn=rawLines[il+1].trim();
+        nums=(nextLn.match(/[\d,]+/g)||[]).map(function(n){return pn(n);}).filter(function(v){return v>=1&&v<50000;});
+      }
+      if(nums.length>=2) intTotal+=nums[0]+nums[1];
+      else if(nums.length===1) intTotal+=nums[0];
+    }
+  }
+  interest=intTotal;
+
+  // === STEP 4: Calculate total corpus ===
+  // If transferred: EE=0, ER=0 → only pension remains as an asset.
+  //   Interest was already paid out in the settlement — DO NOT add to corpus.
+  // If NOT transferred: corpus = EE + ER + pension (current live balance).
+  if(isTransferred){
+    total=pension; // only pension fund remains; EE+ER were settled/withdrawn
+  } else {
+    total=empShare+emplShare+pension;
+  }
+
+  // Fallback if nothing parsed
   if(total<=0&&pension>0) total=pension;
+  if(total<=0) return null;
+
+  // === STEP 3b: Extract date range from Int.* rows (first and last date found) ===
+  var intDates=[];
+  for(var id2=0;id2<rawLines.length;id2++){
+    var ld=rawLines[id2];
+    if(/Int\.?\s*(?:Updated\s*upto|given\s*against\s*Claim)/i.test(ld)){
+      var dm=ld.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if(dm) intDates.push(dm[3]+'-'+dm[2]); // store as YYYY-MM for sorting
+    }
+  }
+  intDates.sort();
+  var intDateRange='';
+  if(intDates.length>=2) intDateRange='FY '+intDates[0].substr(0,4)+' – FY '+intDates[intDates.length-1].substr(0,4);
+  else if(intDates.length===1) intDateRange='FY '+intDates[0].substr(0,4);
 
   return{uan:uan,memberName:memberName,employer:employer,
     empShare:empShare,emplShare:emplShare,pension:pension,
-    interest:interest,depositEE:depositEE,depositER:depositER,total:total};
+    interest:interest,intDateRange:intDateRange,depositEE:depositEE,depositER:depositER,total:total};
 }
 function showEPFODebug(rawText){
   var prev=document.getElementById('epfoPreviewModal');if(prev)prev.remove();
@@ -3845,9 +3891,6 @@ function showEPFOPreview(data){
   if(data.employer){var em=document.createElement('div');em.style.cssText='font-size:12px;color:var(--text3);margin-bottom:3px';em.textContent='🏢 '+data.employer;card.appendChild(em);}
   if(data.uan){var un=document.createElement('div');un.style.cssText='font-size:11px;color:var(--text3);margin-bottom:8px';un.textContent='UAN: '+data.uan;card.appendChild(un);}
 
-  // Detect transferred PF: both EE and ER are 0 (transferred) but there's deposit history
-  var isTransferred=(data.empShare===0&&data.emplShare===0&&(data.depositEE>0||data.depositER>0||data.pension>0));
-
   function makeRow(label,amount,dimZero,note){
     var row=document.createElement('div');
     row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)';
@@ -3862,47 +3905,40 @@ function showEPFOPreview(data){
     row.appendChild(left);row.appendChild(val);card.appendChild(row);
   }
 
-  // --- Current Balance section ---
+  var isTransferred=(data.empShare===0&&data.emplShare===0);
+
+  // --- Current balance (from header) ---
   var balHdr=document.createElement('div');
   balHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:4px;text-transform:uppercase';
   balHdr.textContent='Current Balance';
   card.appendChild(balHdr);
+  makeRow('👤 Employee Share (EE)',data.empShare,true,isTransferred?'↗ Transferred to current employer UAN':null);
+  makeRow('🏢 Employer Share (ER)',data.emplShare,true,isTransferred?'↗ Transferred to current employer UAN':null);
 
-  makeRow('👤 Employee Share (EE)',data.empShare,true,isTransferred?'↗ Transferred to new employer':null);
-  makeRow('🏢 Employer Share (ER)',data.emplShare,true,isTransferred?'↗ Transferred to new employer':null);
-  if(data.pension>0) makeRow('👴 Pension (EPS)',data.pension,false,null);
-
-  // --- Contributions (principal) ---
-  var principal=isTransferred?(data.depositEE+data.depositER):(data.empShare+data.emplShare);
-  if(isTransferred&&(data.depositEE>0||data.depositER>0)){
-    var histHdr=document.createElement('div');
-    histHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
-    histHdr.textContent='Total Contributions (Principal)';
-    card.appendChild(histHdr);
-    makeRow('👤 Employee Deposited (EE)',data.depositEE,false,null);
-    makeRow('🏢 Employer Deposited (ER)',data.depositER,false,null);
-    var prinRow=document.createElement('div');
-    prinRow.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)';
-    prinRow.innerHTML='<span style="font-size:12px;font-weight:800;color:var(--text)">💼 Total Principal</span><span style="font-size:12px;font-weight:900;color:var(--text)">₹'+principal.toLocaleString('en-IN',{maximumFractionDigits:2})+'</span>';
-    card.appendChild(prinRow);
+  // --- Pension (from Grand Total row) ---
+  if(data.pension>0){
+    var psHdr=document.createElement('div');
+    psHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
+    psHdr.textContent='Pension Fund (EPS)';
+    card.appendChild(psHdr);
+    makeRow('👴 Pension accumulated',data.pension,false,'Stays in EPS — not transferred');
   }
 
-  // --- Interest earned ---
+  // --- Interest credited (from Int.* rows only) ---
   if(data.interest>0){
     var intHdr=document.createElement('div');
     intHdr.style.cssText='font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin:10px 0 4px;text-transform:uppercase';
-    intHdr.textContent='Interest Earned';
+    intHdr.textContent='Interest Credited'+(data.intDateRange?' ('+data.intDateRange+')':'');
     card.appendChild(intHdr);
-    var intPct=principal>0?((data.interest/principal)*100).toFixed(1):'';
-    makeRow('📈 Interest (all years)',data.interest,false,intPct?intPct+'% on principal':null);
+    makeRow('📈 Total interest earned',data.interest,false,isTransferred?'Paid out in settlement':'');
   }
 
   // --- Corpus total ---
-  var corpus=principal+(data.interest||0)+(data.pension||0);
+  var corpus=isTransferred?data.pension:(data.empShare+data.emplShare+data.pension);
   var totalRow=document.createElement('div');
   totalRow.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:6px;border-top:2px solid var(--border2)';
   var tl=document.createElement('div');
-  tl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green)">💰 Total Corpus</div>'+(principal>0?'<div style="font-size:10px;color:var(--text3);font-weight:700">Principal + Interest'+(data.pension>0?' + Pension':'')+'</div>':'');
+  tl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green)">💰 Total Corpus</div><div style="font-size:10px;color:var(--text3);font-weight:700">'+(isTransferred?'Pension only (EE+ER settled)':'EE + ER + Pension')+'</div>';
   var tv=document.createElement('span');tv.style.cssText='font-size:15px;font-weight:900;color:var(--green)';tv.textContent='₹'+corpus.toLocaleString('en-IN',{maximumFractionDigits:2});
   totalRow.appendChild(tl);totalRow.appendChild(tv);card.appendChild(totalRow);
   box.appendChild(card);
@@ -3944,20 +3980,19 @@ function confirmEPFOImport(total,data){
 
   var extra={};
   if(data){
-    var isTransferred=(data.empShare===0&&data.emplShare===0);
-    // Principal = total deposits (Grand Total row from passbook)
-    var principal=isTransferred?(data.depositEE+data.depositER):(data.empShare+data.emplShare);
-    // Full corpus = principal + interest + pension (what you actually have / had)
-    var corpus=principal+(data.interest||0)+(data.pension||0);
+    // If transferred (EE=0, ER=0): corpus = pension only (EE+ER were settled/withdrawn already)
+    // If not transferred: corpus = EE + ER + pension (live balance)
+    var isXfer=(data.empShare===0&&data.emplShare===0);
+    var corpus=isXfer?data.pension:(data.empShare+data.emplShare+data.pension);
     extra={
       epfoEmpShare:data.empShare||0,
       epfoEmplShare:data.emplShare||0,
       epfoPension:data.pension||0,
       epfoInterest:data.interest||0,
-      epfoPrincipal:principal,
+      epfoPrincipal:corpus,
       epfoDepositEE:data.depositEE||0,
       epfoDepositER:data.depositER||0,
-      invested:principal,           // used by wealth statement / AI
+      invested:corpus,           // used by wealth statement / AI
       value:corpus                  // override total with full corpus
     };
     total=corpus;
@@ -4510,10 +4545,8 @@ function renderAssets(){
           plAmt=d.qty*d.faceValue*(d.interestRate/100);plLabel='Annual Interest';plIsInterest=true;
         }
       } else if(s==='EPFO'){
-        var principal=a.epfoPrincipal||(( a.epfoDepositEE||0)+(a.epfoDepositER||0));
         var ix=a.epfoInterest||0;
-        if(ix>0&&principal>0){plAmt=ix;plPct=(ix/principal*100);plLabel='Interest Earned';plIsInterest=true;}
-        else if(ix>0){plAmt=ix;plLabel='Interest Earned';plIsInterest=true;}
+        if(ix>0){plAmt=ix;plPct=null;plLabel='Interest Earned';plIsInterest=true;}
       } else if(s==='Other'){
         if(d.principal>0&&d.currentValue>0){
           plAmt=d.currentValue-d.principal;plPct=(plAmt/d.principal*100);plLabel='Returns';
