@@ -17,6 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Kaushan+Script&family=Protest+Riot&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(typeof pdfjsLib!=="undefined"){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}</script>
 <style>
 /* ══════════════════════════════════════════
    MODERN FINANCE — Design System 2025
@@ -911,8 +913,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- ASSETS -->
     <div class="page" id="page-assets">
-      <div class="sec-head"><div class="sec-title">💼 Assets</div><div style="display:flex;gap:8px"><button class="sec-btn" onclick="triggerDematCSV()" style="color:var(--teal)" title="Import CSV or XLSX from your broker">📂 Import CSV/XLSX</button><button class="sec-btn" onclick="showModal('assetModal')">➕ Add</button></div></div>
+      <div class="sec-head"><div class="sec-title">💼 Assets</div><div style="display:flex;gap:8px"><button class="sec-btn" onclick="triggerDematCSV()" style="color:var(--teal)" title="Import CSV or XLSX from your broker">📂 Import CSV/XLSX</button><button class="sec-btn" onclick="triggerEPFOPDF()" style="color:var(--purple)" title="Import EPFO Passbook PDF">🏢 EPFO PDF</button><button class="sec-btn" onclick="showModal('assetModal')">➕ Add</button></div></div>
       <input type="file" id="dematCSVInput" accept=".csv,.txt,.xlsx,.xls" style="display:none" onchange="importDematFile(event)">
+      <input type="file" id="epfoPDFInput" accept=".pdf" style="display:none" onchange="importEPFOPDF(event)">
       <div class="box" style="text-align:center">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">📦 Total Assets</div>
         <div style="font-family:var(--font);font-size:28px;font-weight:700;color:var(--green);margin-bottom:8px" id="totalAssetVal">₹0</div>
@@ -2571,12 +2574,11 @@ async function toggleFingerprint(el){
     showToast('WebAuthn not supported on this browser','red');
     return;
   }
-  document.getElementById('fpStatusLabel').textContent='⏳ Registering… follow device prompt';
+  var fpLbl=document.getElementById('fpStatusLabel');
+  fpLbl.textContent='⏳ Registering… follow device prompt';
   try {
     const challenge=new Uint8Array(32); crypto.getRandomValues(challenge);
     const userId=new Uint8Array(16); crypto.getRandomValues(userId);
-    // Register with explicit rpId = current hostname (e.g. yourname.github.io)
-    // Try with residentKey:discouraged first (most compatible)
     var createOpts={publicKey:{
       challenge,
       rp:{id:location.hostname, name:'Finance Tracker'},
@@ -2593,7 +2595,6 @@ async function toggleFingerprint(el){
     var cred=null;
     try{ cred=await navigator.credentials.create(createOpts); }
     catch(e2){
-      // Retry without residentKey hint (older Android)
       delete createOpts.publicKey.authenticatorSelection.residentKey;
       delete createOpts.publicKey.authenticatorSelection.requireResidentKey;
       cred=await navigator.credentials.create(createOpts);
@@ -2603,20 +2604,22 @@ async function toggleFingerprint(el){
     saveState();
     el.classList.add('on');
     el.querySelector('.tog-knob').style.transform='translateX(22px)';
-    document.getElementById('fpStatusLabel').textContent='✅ Registered — tap ☝️ on lock screen';
+    fpLbl.textContent='✅ Registered — tap ☝️ on lock screen';
     initFpButton();
     showToast('Fingerprint registered! ✅','green');
   } catch(e){
-    document.getElementById('fpStatusLabel').textContent='Use biometrics to unlock the app';
-    if(e.name==='NotAllowedError'){
-      showToast('Cancelled — please try again','yellow');
+    // Always reset label immediately — never leave "Registering…" stuck
+    fpLbl.textContent='Use biometrics to unlock the app';
+    if(e.name==='NotAllowedError'||e.name==='AbortError'){
+      // User cancelled or timed out — toggle stays OFF, no state change
+      showToast('Cancelled — try again','yellow');
     } else if(e.name==='InvalidStateError'){
-      // Already registered — just enable
+      // Credential already registered on this device — just mark enabled
       state.fpEnabled=true;
       saveState();
       el.classList.add('on');
       el.querySelector('.tog-knob').style.transform='translateX(22px)';
-      document.getElementById('fpStatusLabel').textContent='✅ Enabled — tap ☝️ on lock screen';
+      fpLbl.textContent='✅ Enabled — tap ☝️ on lock screen';
       initFpButton();
       showToast('Fingerprint enabled! ✅','green');
     } else {
@@ -3595,6 +3598,172 @@ function assetDetailLine(a){
   if(s==='Bonds'){const p=[];if(d.qty>0)p.push(d.qty+' bonds');if(d.interestRate>0)p.push(d.interestRate+'% coupon');if(d.issuer)p.push(d.issuer);return p.join(' · ');}
   if(d.bankName)return d.bankName;if(d.notes)return d.notes;return'';
 }
+
+// ======== EPFO PDF IMPORT ========
+function triggerEPFOPDF(){document.getElementById('epfoPDFInput').click();}
+
+function importEPFOPDF(event){
+  var file=event.target.files[0];
+  if(!file){return;}
+  event.target.value='';
+  if(typeof pdfjsLib==='undefined'){
+    showToast('PDF reader not loaded. Check internet.','red');
+    return;
+  }
+  showToast('Reading PDF…','blue');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var typedArray=new Uint8Array(e.target.result);
+    pdfjsLib.getDocument({data:typedArray}).promise.then(function(pdf){
+      var pagePromises=[];
+      for(var i=1;i<=pdf.numPages;i++){
+        pagePromises.push(pdf.getPage(i).then(function(page){
+          return page.getTextContent().then(function(tc){return tc.items.map(function(it){return it.str;}).join(' ');});
+        }));
+      }
+      Promise.all(pagePromises).then(function(pages){
+        var allText=pages.join('\n');
+        var result=parseEPFOText(allText);
+        if(!result){showToast('Could not read EPFO data. Check it is a valid EPFO passbook PDF.','red');return;}
+        showEPFOPreview(result);
+      });
+    }).catch(function(err){showToast('Could not open PDF: '+err.message,'red');});
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseEPFOText(text){
+  var t=text.replace(/\s+/g,' ');
+  var uanMatch=t.match(/UAN\s*[:\-]?\s*(\d{12})/i);
+  var uan=uanMatch?uanMatch[1]:'';
+  var nameMatch=t.match(/Member\s*Name\s*[:\-]?\s*([A-Z][A-Z\s\.]+?)(?=\s{2,}|\s*UAN|\s*Date|\s*Establishment|$)/i);
+  var memberName=nameMatch?nameMatch[1].trim():'';
+  var estMatch=t.match(/Establishment\s*Name\s*[:\-]?\s*([^\n,;]{3,50}?)(?=\s{2,}|\s*UAN|\s*Date|\s*Member|$)/i);
+  var employer=estMatch?estMatch[1].trim():'';
+  var empShareMatch=t.match(/Employee\s*(?:Share|Contribution)[^\d]*?([\d,]+(?:\.\d{2})?)/i);
+  var emplShareMatch=t.match(/Employer\s*(?:Share|Contribution)[^\d]*?([\d,]+(?:\.\d{2})?)/i);
+  var pensionMatch=t.match(/Pension\s*(?:Fund|Contribution)[^\d]*?([\d,]+(?:\.\d{2})?)/i);
+  var closingMatch=t.match(/(?:Net|Closing|Total)\s*Balance[^\d]*?([\d,]+(?:\.\d{2})?)/i);
+  function parseAmt(m){return m?parseFloat(m[1].replace(/,/g,'')):0;}
+  var empShare=parseAmt(empShareMatch);
+  var emplShare=parseAmt(emplShareMatch);
+  var pension=parseAmt(pensionMatch);
+  var closing=parseAmt(closingMatch);
+  var total=closing>0?closing:(empShare+emplShare+pension);
+  if(total<=0){
+    var allAmts=[];var amtRe=/([\d,]+\.\d{2})/g;var m;
+    while((m=amtRe.exec(t))!==null){var v=parseFloat(m[1].replace(/,/g,''));if(v>1000)allAmts.push(v);}
+    allAmts.sort(function(a,b){return b-a;});
+    total=allAmts[0]||0;
+  }
+  if(total<=0) return null;
+  return{uan:uan,memberName:memberName,employer:employer,empShare:empShare,emplShare:emplShare,pension:pension,total:total};
+}
+
+function showEPFOPreview(data){
+  var existing=(state.assets||[]).filter(function(a){return a.scheme==='EPFO';});
+  var defaultName=data.memberName?'EPF - '+data.memberName:(data.employer?'EPF - '+data.employer:'My EPFO');
+
+  // Remove old modal if present
+  var prev=document.getElementById('epfoPreviewModal');
+  if(prev) prev.remove();
+
+  // Build modal via DOM — no string escaping issues
+  var overlay=document.createElement('div');
+  overlay.className='modal-bg';
+  overlay.id='epfoPreviewModal';
+  overlay.style.cssText='display:flex;z-index:1000';
+  overlay.addEventListener('click',function(e){if(e.target===overlay)closeModal('epfoPreviewModal');});
+
+  var box=document.createElement('div');
+  box.className='modal-box';
+  overlay.appendChild(box);
+
+  // Title
+  var title=document.createElement('div');
+  title.className='modal-title';
+  title.textContent='🏢 EPFO Import';
+  box.appendChild(title);
+
+  // Overwrite warning
+  if(existing.length>0){
+    var warn=document.createElement('div');
+    warn.style.cssText='background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#f59e0b';
+    var warnLines=['⚠️ Existing EPFO asset(s) found:'];
+    existing.forEach(function(a){warnLines.push('• '+a.name+' — ₹'+Number(a.value).toLocaleString('en-IN',{maximumFractionDigits:2}));});
+    warnLines.push('If the name below matches, it will be updated. Otherwise a new entry is added.');
+    warn.innerHTML=warnLines.join('<br>');
+    box.appendChild(warn);
+  }
+
+  // Info card
+  var card=document.createElement('div');
+  card.style.cssText='background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:12px';
+  if(data.memberName){var mn=document.createElement('div');mn.style.cssText='font-size:12px;font-weight:700;margin-bottom:3px';mn.textContent='👤 '+data.memberName;card.appendChild(mn);}
+  if(data.employer){var em=document.createElement('div');em.style.cssText='font-size:12px;color:var(--text3);margin-bottom:3px';em.textContent='🏢 '+data.employer;card.appendChild(em);}
+  if(data.uan){var un=document.createElement('div');un.style.cssText='font-size:11px;color:var(--text3);margin-bottom:8px';un.textContent='UAN: '+data.uan;card.appendChild(un);}
+
+  function makeRow(label,amount){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)';
+    var lbl=document.createElement('span');lbl.style.cssText='font-size:12px;color:var(--text3)';lbl.textContent=label;
+    var val=document.createElement('span');val.style.cssText='font-size:12px;font-weight:700';val.textContent='₹'+amount.toLocaleString('en-IN',{maximumFractionDigits:2});
+    row.appendChild(lbl);row.appendChild(val);card.appendChild(row);
+  }
+  if(data.empShare>0) makeRow('👤 Employee Share',data.empShare);
+  if(data.emplShare>0) makeRow('🏢 Employer Share',data.emplShare);
+  if(data.pension>0) makeRow('👴 Pension Fund',data.pension);
+
+  var totalRow=document.createElement('div');
+  totalRow.style.cssText='display:flex;justify-content:space-between;padding:8px 0';
+  var tl=document.createElement('span');tl.style.cssText='font-size:13px;font-weight:700;color:var(--green)';tl.textContent='💰 Total Balance';
+  var tv=document.createElement('span');tv.style.cssText='font-size:14px;font-weight:900;color:var(--green)';tv.textContent='₹'+data.total.toLocaleString('en-IN',{maximumFractionDigits:2});
+  totalRow.appendChild(tl);totalRow.appendChild(tv);card.appendChild(totalRow);
+  box.appendChild(card);
+
+  // Name field
+  var fieldWrap=document.createElement('div');fieldWrap.style.marginBottom='12px';
+  var fieldLbl=document.createElement('div');fieldLbl.className='field-label';fieldLbl.textContent='📝 Asset Name';
+  var nameInput=document.createElement('input');
+  nameInput.type='text';nameInput.className='field-input';nameInput.id='epfoAssetName';
+  nameInput.value=defaultName;nameInput.placeholder='e.g. EPF - Employer Name';
+  fieldWrap.appendChild(fieldLbl);fieldWrap.appendChild(nameInput);
+  box.appendChild(fieldWrap);
+
+  // Tip
+  var tip=document.createElement('div');
+  tip.style.cssText='font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px';
+  tip.textContent='💡 Use different names for each employer (e.g. EPF - TCS, EPF - Infosys)';
+  box.appendChild(tip);
+
+  // Buttons
+  var btnAdd=document.createElement('button');
+  btnAdd.className='btn-go';btnAdd.textContent='✅ Add / Update Asset';
+  btnAdd.onclick=function(){confirmEPFOImport(data.total);};
+  box.appendChild(btnAdd);
+
+  var btnCancel=document.createElement('button');
+  btnCancel.className='btn-cancel';btnCancel.style.marginTop='6px';btnCancel.textContent='Cancel';
+  btnCancel.onclick=function(){closeModal('epfoPreviewModal');};
+  box.appendChild(btnCancel);
+
+  document.body.appendChild(overlay);
+}
+
+function confirmEPFOImport(total){
+  var name=(document.getElementById('epfoAssetName').value||'').trim()||'My EPFO';
+  if(!state.assets) state.assets=[];
+  var idx=state.assets.findIndex(function(a){return a.scheme==='EPFO'&&a.name===name;});
+  var isUpdate=idx>=0;
+  if(isUpdate){
+    state.assets[idx]=Object.assign(state.assets[idx],{value:total,notes:'Updated from EPFO passbook PDF'});
+  } else {
+    state.assets.push({id:Date.now(),scheme:'EPFO',name:name,value:total,units:'',nav:'',notes:'Imported from EPFO passbook PDF'});
+  }
+  saveState();renderAssets();closeModal('epfoPreviewModal');
+  showToast((isUpdate?'Updated':'Added')+': '+name+' — ₹'+total.toLocaleString('en-IN',{maximumFractionDigits:2}),'green');
+}
+
 
 // ======== DEMAT CSV IMPORT ========
 function triggerDematCSV(){document.getElementById('dematCSVInput').click();}
