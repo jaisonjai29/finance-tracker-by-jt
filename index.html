@@ -861,8 +861,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="sec-head" style="margin-top:4px"><div class="sec-title">📊 6 Months</div></div>
       <div class="box">
         <div class="cpills" id="miniCtrl">
-          <div class="cpill on" onclick="setMini('bar',this)" data-type="bar">📊 Bar</div>
-          <div class="cpill" onclick="setMini('line',this)" data-type="line">📈 Line</div>
+          <div class="cpill" onclick="setMini('bar',this)" data-type="bar">📊 Bar</div>
+          <div class="cpill on" onclick="setMini('line',this)" data-type="line">📈 Line</div>
+          <div class="cpill" onclick="setMini('area',this)" data-type="area">🌊 Area</div>
         </div>
         <div style="position:relative;height:160px"><canvas id="miniChart"></canvas></div>
       </div>
@@ -929,14 +930,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="box" id="pnlSummaryBox" style="display:none;padding:0;overflow:hidden">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:14px 16px 10px">📊 Portfolio P&amp;L</div>
         <div id="pnlSummaryContent"></div>
-      </div>
-      <!-- AI PORTFOLIO INSIGHT BOX -->
-      <div class="box" id="portfolioAiBox" style="padding:0;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px">
-          <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">🤖 AI Portfolio Insight</div>
-          <button id="portfolioAiBtn" onclick="runPortfolioAI()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-text);border:none;border-radius:10px;padding:6px 14px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.4px">✨ Analyse</button>
-        </div>
-        <div id="portfolioAiContent" style="padding:0 16px 14px;font-size:12px;color:var(--text2);font-weight:600;line-height:1.7">Tap <b style="color:var(--accent)">Analyse</b> to get AI-powered insights on your portfolio — P&amp;L breakdown, rebalancing tips, and what to buy next.</div>
       </div>
       <div class="box">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -5628,7 +5621,7 @@ function clearScan(){scanResult=null;document.getElementById('scanResult').style
 
 // ======== CHARTS ========
 function initCharts(){renderMiniChart();}
-function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const type=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'bar';charts.mini=new Chart(ctx,{type,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const rawType=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'line';const isArea=rawType==='area';const chartType=isArea?'line':rawType;charts.mini=new Chart(ctx,{type:chartType,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:isArea?'rgba(34,197,94,.25)':'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:isArea?3:3,pointBackgroundColor:'#22c55e'},{label:'Expense',data:eD,backgroundColor:isArea?'rgba(239,68,68,.2)':'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:isArea?3:3,pointBackgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
 function setMini(type,el){document.querySelectorAll('#miniCtrl .cpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');el.setAttribute('data-type',type);renderMiniChart();}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();renderYearlySummary();renderCatBreakdown();}
 function renderNetWorthTimeline(){
