@@ -105,44 +105,37 @@
   radial-gradient(ellipse 60% 40% at 75% 80%,rgba(0,176,255,0.05) 0%,transparent 55%);
   pointer-events:none;z-index:0;}
 
-/* ══ NEBULA — Deep Space Galaxy ══ */
-[data-theme="nebula"]{
-  --accent:#c084fc;--accent2:#e879f9;--accent-text:#1a0030;
-  --accent-glow:rgba(192,132,252,0.38);
-  --bg:#06020f;--bg2:#0d0520;--bg3:#160a30;
-  --card:#0d0520;--card2:#160a2c;
-  --border:rgba(192,132,252,0.1);--border2:rgba(232,121,249,0.2);
-  --text:#f3e8ff;--text2:#a78bc4;--text3:#4a2d6a;
-  --green:#4ade80;--red:#f87171;--blue:#818cf8;
-  --yellow:#fde68a;--purple:#c084fc;--orange:#fb923c;--teal:#34d399;
-  --glass:rgba(192,132,252,0.04);--glass-border:rgba(192,132,252,0.12);
-  --shadow:0 8px 32px rgba(192,132,252,0.2);
+/* ══ ROSE — Deep Crimson Dark ══ */
+/* ══ ROSE — Soft Pink Light ══ */
+[data-theme="rose"]{
+  --accent:#e11d48;--accent2:#f43f5e;--accent-text:#fff;
+  --accent-glow:rgba(225,29,72,0.2);
+  --bg:#fff1f2;--bg2:#ffffff;--bg3:#ffe4e6;
+  --card:#ffffff;--card2:#fff1f2;
+  --border:rgba(225,29,72,0.1);--border2:rgba(225,29,72,0.18);
+  --text:#1c0a0e;--text2:#6d2c3a;--text3:#c4899a;
+  --green:#16a34a;--red:#e11d48;--blue:#2563eb;
+  --yellow:#d97706;--purple:#9333ea;--orange:#ea580c;--teal:#0d9488;
+  --glass:rgba(225,29,72,0.03);--glass-border:rgba(225,29,72,0.1);
+  --shadow:0 8px 32px rgba(225,29,72,0.14);
+  --shadow-sm:0 4px 16px rgba(0,0,0,0.08);
 }
-[data-theme="nebula"] body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 70% 55% at 15% 10%,rgba(192,132,252,0.12) 0%,transparent 60%),
-  radial-gradient(ellipse 55% 45% at 85% 20%,rgba(232,121,249,0.09) 0%,transparent 55%),
-  radial-gradient(ellipse 50% 60% at 50% 90%,rgba(129,140,248,0.07) 0%,transparent 60%),
-  radial-gradient(ellipse 30% 30% at 70% 55%,rgba(192,132,252,0.05) 0%,transparent 50%);
-  pointer-events:none;z-index:0;}
 
-/* ══ MATCHA — Japanese Dark Tea ══ */
-[data-theme="matcha"]{
-  --accent:#86efac;--accent2:#4ade80;--accent-text:#052e16;
-  --accent-glow:rgba(134,239,172,0.3);
-  --bg:#030a05;--bg2:#071410;--bg3:#0d2218;
-  --card:#071410;--card2:#0d1e15;
-  --border:rgba(134,239,172,0.09);--border2:rgba(134,239,172,0.18);
-  --text:#ecfdf5;--text2:#6aaa84;--text3:#1e4a30;
-  --green:#86efac;--red:#f87171;--blue:#67e8f9;
-  --yellow:#fde68a;--purple:#c084fc;--orange:#fb923c;--teal:#2dd4bf;
-  --glass:rgba(134,239,172,0.03);--glass-border:rgba(134,239,172,0.1);
-  --shadow:0 8px 32px rgba(134,239,172,0.14);
+/* ══ FOREST — Fresh Green Light ══ */
+[data-theme="forest"]{
+  --accent:#16a34a;--accent2:#22c55e;--accent-text:#fff;
+  --accent-glow:rgba(22,163,74,0.2);
+  --bg:#f0fdf4;--bg2:#ffffff;--bg3:#dcfce7;
+  --card:#ffffff;--card2:#f0fdf4;
+  --border:rgba(22,163,74,0.1);--border2:rgba(22,163,74,0.18);
+  --text:#052e16;--text2:#166534;--text3:#86efac;
+  --green:#16a34a;--red:#dc2626;--blue:#2563eb;
+  --yellow:#d97706;--purple:#9333ea;--orange:#ea580c;--teal:#0d9488;
+  --glass:rgba(22,163,74,0.03);--glass-border:rgba(22,163,74,0.1);
+  --shadow:0 8px 32px rgba(22,163,74,0.14);
+  --shadow-sm:0 4px 16px rgba(0,0,0,0.08);
 }
-[data-theme="matcha"] body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 65% 50% at 80% 5%,rgba(74,222,128,0.08) 0%,transparent 60%),
-  radial-gradient(ellipse 55% 45% at 10% 80%,rgba(134,239,172,0.07) 0%,transparent 55%),
-  radial-gradient(ellipse 40% 50% at 50% 50%,rgba(45,212,191,0.04) 0%,transparent 60%);
-  pointer-events:none;z-index:0;}
+
 
 /* ══ DEFAULT DARK AMBIENT ══ */
 :root body::before, [data-theme="dark"] body::before{
@@ -1448,14 +1441,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
             <span style="font-size:9px;font-weight:700;color:rgba(0,229,204,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(0,229,204,0.7);position:relative">✦ AURORA</span>
           </div>
 
-          <div class="theme-sw" style="background:linear-gradient(135deg,#06020f,#160a30);border:1.5px solid rgba(192,132,252,0.45);position:relative;overflow:hidden" onclick="setTheme('nebula',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 15% 10%,rgba(192,132,252,0.25),transparent),radial-gradient(ellipse 50% 50% at 85% 20%,rgba(232,121,249,0.15),transparent),radial-gradient(ellipse 40% 55% at 50% 90%,rgba(129,140,248,0.12),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(232,121,249,0.98);letter-spacing:1.5px;text-shadow:0 0 14px rgba(192,132,252,0.95);position:relative">✦ NEBULA</span>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#fff1f2,#ffe4e6);border:1.5px solid rgba(225,29,72,0.3);position:relative;overflow:hidden" onclick="setTheme('rose',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(225,29,72,0.1),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:700;color:rgba(225,29,72,0.9);letter-spacing:1.5px;position:relative">🌸 ROSE</span>
           </div>
 
-          <div class="theme-sw" style="background:linear-gradient(135deg,#030a05,#0d2218);border:1.5px solid rgba(134,239,172,0.4);position:relative;overflow:hidden" onclick="setTheme('matcha',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 80% 5%,rgba(74,222,128,0.18),transparent),radial-gradient(ellipse 55% 50% at 10% 80%,rgba(134,239,172,0.14),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(134,239,172,0.98);letter-spacing:1.5px;text-shadow:0 0 14px rgba(134,239,172,0.85);position:relative">🍵 MATCHA</span>
+          <div class="theme-sw" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid rgba(22,163,74,0.3);position:relative;overflow:hidden" onclick="setTheme('forest',this)">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(22,163,74,0.1),transparent);pointer-events:none"></div>
+            <span style="font-size:9px;font-weight:700;color:rgba(22,163,74,0.9);letter-spacing:1.5px;position:relative">🌿 FOREST</span>
           </div>
 
         </div>
@@ -2183,7 +2176,7 @@ const CAT_EMOJI={
   // Home & Utilities
   Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🪔',Internet:'🌐',Mobile:'📱',
   // Food
-  Grocery:'🧺',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',
+  Grocery:'🧺',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',Bakery:'🥐',
   // Transport
   Fuel:'⛽',Train:'🚆',Bus:'🚌',Flight:'✈️',Cab:'🚕',Metro:'🚇',Parking:'🅿️',
   // Health
@@ -2211,7 +2204,7 @@ const CAT_COLOR={
   Rent:'#818cf8',Electricity:'#fbbf24',Water:'#38bdf8',
   'LPG/Gas':'#fb923c',Internet:'#67e8f9',Mobile:'#34d399',
   // Food subcategories
-  Grocery:'#f97316',Fruits:'#4ade80','Restaurant':'#fb923c','Food Delivery':'#f43f5e',
+  Grocery:'#f97316',Fruits:'#4ade80','Restaurant':'#fb923c','Food Delivery':'#f43f5e',Bakery:'#d97706',
   // Transport subcategories
   Fuel:'#22c55e',Train:'#0ea5e9',Bus:'#10b981',Flight:'#38bdf8',
   Cab:'#facc15',Metro:'#818cf8',Parking:'#94d82d',
@@ -2267,7 +2260,7 @@ const PLATFORMS=[
 ];
 const EXPENSE_CATS_GROUPED={
   'Home':['Rent','Electricity','Water','LPG/Gas','Internet','Mobile'],
-  'Food':['Grocery','Fruits','Restaurant','Food Delivery'],
+  'Food':['Grocery','Fruits','Restaurant','Food Delivery','Bakery'],
   'Transport':['Fuel','Train','Bus','Flight','Cab','Metro','Parking'],
   'Health':['Doctor/Hospital','Medicine','Insurance','Health Checkup'],
   'Education':['School Fees','College Fees','Books','Tuition','Online Course'],
@@ -5621,7 +5614,7 @@ function clearScan(){scanResult=null;document.getElementById('scanResult').style
 
 // ======== CHARTS ========
 function initCharts(){renderMiniChart();}
-function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const rawType=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'line';const isArea=rawType==='area';const chartType=isArea?'line':rawType;charts.mini=new Chart(ctx,{type:chartType,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:isArea?'rgba(34,197,94,.25)':'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:isArea?3:3,pointBackgroundColor:'#22c55e'},{label:'Expense',data:eD,backgroundColor:isArea?'rgba(239,68,68,.2)':'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:isArea?3:3,pointBackgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const rawType=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'line';const isArea=rawType==='area';const chartType=isArea?'line':rawType;const cc=chartColors();charts.mini=new Chart(ctx,{type:chartType,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:isArea?'rgba(34,197,94,.25)':'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:3,pointBackgroundColor:'#22c55e'},{label:'Expense',data:eD,backgroundColor:isArea?'rgba(239,68,68,.2)':'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:3,pointBackgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:cc.tick,font:{size:10}}},y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10}}}}}});}
 function setMini(type,el){document.querySelectorAll('#miniCtrl .cpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');el.setAttribute('data-type',type);renderMiniChart();}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();renderYearlySummary();renderCatBreakdown();}
 function renderNetWorthTimeline(){
@@ -5664,13 +5657,13 @@ function renderNetWorthTimeline(){
     if(parent){parent.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:12px;font-weight:700;text-align:center;padding:20px">Add transactions or assets<br>to see your net worth trend</div>';}
     return;
   }
-  charts.nw=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#22c55e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' '+state.currSymbol+fmt(cv(c.parsed.y));}}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10},callback:function(v){var a=Math.abs(v);if(a>=10000000)return state.currSymbol+(v/10000000).toFixed(1)+'Cr';if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+fmt(v);}}}}}});
+  const cc=chartColors();charts.nw=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#22c55e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' '+state.currSymbol+fmt(cv(c.parsed.y));}}}},scales:{x:{grid:{display:false},ticks:{color:cc.tick,font:{size:10}}},y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10},callback:function(v){var a=Math.abs(v);if(a>=10000000)return state.currSymbol+(v/10000000).toFixed(1)+'Cr';if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+fmt(v);}}}}}});
 }
 function renderYearlySummary(){const c=document.getElementById('yearlySummary');const now=new Date();const year=now.getFullYear();const monthly=[];for(let m=0;m<12;m++){const txs=state.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===year&&d.getMonth()===m;});const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);monthly.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m],inc,exp,net:inc-exp});}const totalInc=monthly.reduce((s,m)=>s+m.inc,0);const totalExp=monthly.reduce((s,m)=>s+m.exp,0);c.innerHTML=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Year Income</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalInc))}</div></div><div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Year Spend</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalExp))}</div></div></div>${monthly.filter(m=>m.inc>0||m.exp>0).map(m=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="min-width:32px;font-size:11px;font-weight:900;color:var(--text3)">${m.month}</div><div style="flex:1"><div style="display:flex;gap:3px;height:6px"><div style="height:100%;background:var(--green);border-radius:3px;flex:${m.inc}"></div><div style="height:100%;background:var(--red);border-radius:3px;flex:${m.exp}"></div></div></div><div style="font-family:var(--font);font-size:11px;font-weight:700;color:${m.net>=0?'var(--green)':'var(--red)'};min-width:60px;text-align:right">${m.net>=0?'+':'-'}${state.currSymbol}${fmt(cv(Math.abs(m.net)))}</div></div>`).join('')}`;}
 function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');chartType=type;renderMainChart();}
 function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));var isPie=chartType==='pie'||chartType==='doughnut';
-  charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:2,hoverOffset:isPie?16:0,borderRadius:['bar'].includes(chartType)?8:(isPie?4:0),borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,cutout:chartType==='doughnut'?'65%':undefined,animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.6)',font:{size:11,weight:'700'},boxWidth:10,boxHeight:10,padding:12,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce(function(a,b){return a+b;},0);var pct=(c.parsed/t*100).toFixed(1);return' '+c.label+': '+state.currSymbol+fmt(cv(c.parsed))+' ('+pct+'%)';}}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}:undefined}});}
-function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.45)',font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+  const cc2=chartColors();charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:2,hoverOffset:isPie?16:0,borderRadius:['bar'].includes(chartType)?8:(isPie?4:0),borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,cutout:chartType==='doughnut'?'65%':undefined,animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{color:cc2.legend,font:{size:11,weight:'700'},boxWidth:10,boxHeight:10,padding:12,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce(function(a,b){return a+b;},0);var pct=(c.parsed/t*100).toFixed(1);return' '+c.label+': '+state.currSymbol+fmt(cv(c.parsed))+' ('+pct+'%)';}}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:cc2.tick,font:{size:10}}},y:{grid:{color:cc2.grid},ticks:{color:cc2.tick,font:{size:10}}}}:undefined}});}
+function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const cc3=chartColors();charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:cc3.legend,font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:cc3.tick,font:{size:10}}},y:{grid:{color:cc3.grid},ticks:{color:cc3.tick,font:{size:10}}}}}});}
 function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
 function renderAssetChart(){
   const ctx=document.getElementById('assetChart');
@@ -5728,7 +5721,7 @@ function renderAssetChart(){
         legend:{
           position:'bottom',
           labels:{
-            color:'rgba(255,255,255,.6)',
+            color:chartColors().legend,
             font:{size:11,weight:'700'},
             boxWidth:10,
             boxHeight:10,
@@ -5779,7 +5772,19 @@ function copyShareLink(){
   }catch(e){showToast('Copy the link manually','yellow');}
 }
 function setTheme(t,el){state.theme=t;saveState();applyTheme(t);document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');setTimeout(()=>{renderMiniChart();if(curPage==='analytics')renderAnalytics();if(curPage==='assets')renderAssetChart();},300);}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t||'dark');}
+function applyTheme(t){
+  var valid=['dark','light','ocean','aurora','rose','forest'];
+  document.documentElement.setAttribute('data-theme',valid.includes(t)?t:'dark');
+}
+// Returns theme-aware colors for Chart.js axes/grids
+function chartColors(){
+  var isLight=(state.theme==='light'||state.theme==='rose'||state.theme==='forest');
+  return{
+    tick:isLight?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)',
+    grid:isLight?'rgba(0,0,0,0.07)':'rgba(255,255,255,0.05)',
+    legend:isLight?'rgba(0,0,0,0.6)':'rgba(255,255,255,0.6)'
+  };
+}
 function syncThemeBtn(){document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));const t=state.theme||'dark';const match=[...document.querySelectorAll('.theme-sw')].find(s=>s.getAttribute('onclick')&&s.getAttribute('onclick').includes("'"+t+"'"));if(match)match.classList.add('on');}
 function setFont(f,el){state.font=f;saveState();applyFont(f);document.querySelectorAll('#fontGrid .font-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
 function applyFont(f){document.documentElement.setAttribute('data-font',f);}
@@ -7888,7 +7893,7 @@ function renderNetWorthTimelineReport(){
   var cumulative=[];var running=baseNW;
   for(var i=data.length-1;i>=0;i--){running-=data[i];cumulative.unshift(running);}
   cumulative[cumulative.length-1]=baseNW;
-  charts.nwt=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:cumulative.map(cv),borderColor:'var(--accent)',backgroundColor:'rgba(124,92,252,0.08)',fill:true,tension:0.4,borderWidth:1.5,pointRadius:2,pointBackgroundColor:'var(--accent)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return state.currSymbol+fmt(c.raw);}}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:9},maxRotation:0}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:9},maxTicksLimit:4,callback:function(v){var a=Math.abs(v);if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+v;}}}}}});
+  const cc4=chartColors();charts.nwt=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:cumulative.map(cv),borderColor:'var(--accent)',backgroundColor:'rgba(124,92,252,0.08)',fill:true,tension:0.4,borderWidth:1.5,pointRadius:2,pointBackgroundColor:'var(--accent)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return state.currSymbol+fmt(c.raw);}}}},scales:{x:{grid:{display:false},ticks:{color:cc4.tick,font:{size:9},maxRotation:0}},y:{grid:{color:cc4.grid},ticks:{color:cc4.tick,font:{size:9},maxTicksLimit:4,callback:function(v){var a=Math.abs(v);if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+v;}}}}}});
 }
 
 // ======== SHAREABLE SPENDING SUMMARY CARD ========
