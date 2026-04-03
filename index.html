@@ -304,6 +304,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 .page{display:none;animation:fadeUp .28s cubic-bezier(.4,0,.2,1)}
 .page.on{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ══ SECTION HEADER ══ */
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
@@ -929,7 +930,26 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:14px 16px 10px">📊 Portfolio P&amp;L</div>
         <div id="pnlSummaryContent"></div>
       </div>
-      <div class="box"><div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📋 My Assets</div><div id="assetList"><div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div></div></div>
+      <!-- AI PORTFOLIO INSIGHT BOX -->
+      <div class="box" id="portfolioAiBox" style="padding:0;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px">
+          <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">🤖 AI Portfolio Insight</div>
+          <button id="portfolioAiBtn" onclick="runPortfolioAI()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-text);border:none;border-radius:10px;padding:6px 14px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.4px">✨ Analyse</button>
+        </div>
+        <div id="portfolioAiContent" style="padding:0 16px 14px;font-size:12px;color:var(--text2);font-weight:600;line-height:1.7">Tap <b style="color:var(--accent)">Analyse</b> to get AI-powered insights on your portfolio — P&amp;L breakdown, rebalancing tips, and what to buy next.</div>
+      </div>
+      <div class="box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">📋 My Assets</div>
+          <div style="display:flex;align-items:center;gap:0;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:3px;flex-shrink:0">
+            <button id="assetViewRich" onclick="setAssetView('rich')" title="Rich view — full metric grid per holding"
+              style="padding:5px 11px;font-size:11px;font-weight:800;border:none;border-radius:7px;cursor:pointer;transition:all .2s;background:var(--accent);color:var(--accent-text);letter-spacing:.3px">⊞ Rich</button>
+            <button id="assetViewCompact" onclick="setAssetView('compact')" title="Compact view — one row per holding"
+              style="padding:5px 11px;font-size:11px;font-weight:800;border:none;border-radius:7px;cursor:pointer;transition:all .2s;background:transparent;color:var(--text2);letter-spacing:.3px">☰ Compact</button>
+          </div>
+        </div>
+        <div id="assetList"><div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div></div>
+      </div>
       <div id="schemeList" style="display:none"></div>
     </div>
 
@@ -1059,11 +1079,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <span style="font-family:var(--font)" id="wealthAssetsTotal">₹0</span>
         </div>
         <div id="wealthAssetRows"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px" id="wealthAssetNav" style="display:none">
-          <button onclick="wealthPage('asset',-1)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 14px;color:var(--text);font-weight:900;cursor:pointer;font-size:16px">‹</button>
-          <span style="font-size:11px;font-weight:700;color:var(--text3)" id="wealthAssetPager"></span>
-          <button onclick="wealthPage('asset',1)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 14px;color:var(--text);font-weight:900;cursor:pointer;font-size:16px">›</button>
-        </div>
       </div>
 
       <!-- ACCOUNTS section -->
@@ -1605,7 +1620,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260331-v12 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260403-v13 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -2425,6 +2440,10 @@ function loadState(){
   if(!state.pin) state.pin='0000';
   if(!state.currencyRate) state.currencyRate=1;
   if(!state.baseCurrency) state.baseCurrency='INR';
+  state.assetView='compact';
+  // Always open on current real month — never stay on a past month from storage
+  state.currentMonth=new Date().getMonth();
+  state.currentYear=new Date().getFullYear();
   applyTheme(state.theme);
   applyFont(state.font);
   updateCurrSymbols();
@@ -2703,7 +2722,7 @@ function initApp(){
   }
   updateTxAccountSelect();
 }
-function setTodayDate(){document.getElementById('txDate').value=new Date().toISOString().split('T')[0];}
+function setTodayDate(){const d=new Date().toISOString().split('T')[0];const f=document.getElementById('txDate');if(f){f.value=d;f.max=d;}}
 function initFpButton(){var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';}
 
 // ======== NAVIGATION ========
@@ -2935,10 +2954,13 @@ function customConfirm(icon, title, msg, onOk){
 
 function editTx(id){
   const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
+  const todayStr=new Date().toISOString().split('T')[0];
   document.getElementById('editTxId').value=id;
   document.getElementById('editTxAmt').value=parseFloat((tx.amount*(state.currencyRate||1)).toFixed(2));
   document.getElementById('editTxDesc').value=tx.desc;
-  document.getElementById('editTxDate').value=tx.date;
+  const dateField=document.getElementById('editTxDate');
+  dateField.value=tx.date;
+  dateField.max=todayStr; // block future dates
   document.getElementById('editTxNotes').value=tx.notes||'';
   document.getElementById('editTxOrigAmt').value=tx.amount;  // stored INR value
   document.getElementById('editTxOrigType').value=tx.type;
@@ -3067,6 +3089,8 @@ function saveEditTx(){
   const origType=document.getElementById('editTxOrigType').value;
   const origAcct=document.getElementById('editTxOrigAcct').value;
   if(!amt||!date){showToast('Fill amount and date','yellow');return;}
+  const todayMax=new Date().toISOString().split('T')[0];
+  if(date>todayMax){showToast('Future dates are not allowed','yellow');return;}
   const amtINR2=amt/(state.currencyRate||1);  // convert display currency back to INR
   const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
   // Reverse original real-account balance effect (origAmt is already in INR)
@@ -3119,7 +3143,7 @@ function updateDashboard(){
   if(net>=0){badge.className='hero-badge badge-up';badge.textContent=tr('surplus')+' '+state.currSymbol+fmt(cv(net));}
   else{badge.className='hero-badge badge-dn';badge.textContent=tr('deficit')+' '+state.currSymbol+fmt(cv(Math.abs(net)));}
   const rc=document.getElementById('recentList');
-  const recent=state.transactions.slice(0,5);
+  const recent=txs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
   rc.innerHTML=recent.length?recent.map(tx=>txHTML(tx)).join(''):`<div class="empty"><div class="empty-big">💸</div><div class="empty-title">${tr('noTx')}</div><div class="empty-desc">${tr('noTxDesc')}</div></div>`;
   // Budget alert bar
   updateBudgetAlertBar();
@@ -3215,10 +3239,11 @@ var ASSET_FIELD_CONFIGS = {
   'Real Estate': [{id:'area',lbl:'Area (sq ft)',ph:'e.g. 1200',t:'number'},{id:'buyPrice',lbl:'Purchase Price',ph:'e.g. 5000000',t:'number'},{id:'currentPrice',lbl:'Current Market Value',ph:'e.g. 7500000',t:'number'},{id:'location',lbl:'Location',ph:'e.g. Chennai, T.Nagar',t:'text'}],
   Bonds:         [{id:'qty',lbl:'Number of Bonds',ph:'e.g. 10',t:'number'},{id:'faceValue',lbl:'Face Value/Bond',ph:'e.g. 1000',t:'number'},{id:'interestRate',lbl:'Coupon Rate %',ph:'e.g. 7.0',t:'number',step:'0.01'},{id:'maturityDate',lbl:'Maturity Date',ph:'',t:'date'},{id:'issuer',lbl:'Issuer',ph:'e.g. Govt of India',t:'text'}],
   Cash:          [{id:'currentValue',lbl:'Cash Amount',ph:'e.g. 50000',t:'number'},{id:'bankName',lbl:'Location',ph:'e.g. Savings Account',t:'text'}],
+  EPFO:          [{id:'epfoEmpShare',lbl:'👤 Employee Share (EE)',ph:'e.g. 85000',t:'number'},{id:'epfoEmplShare',lbl:'🏢 Employer Share (ER)',ph:'e.g. 72000',t:'number'},{id:'epfoInterest',lbl:'💰 Interest Credited',ph:'e.g. 12000',t:'number'},{id:'epfoPension',lbl:'👴 EPS Pension (info only)',ph:'e.g. 15000',t:'number'}],
   Other:         [{id:'principal',lbl:'Amount Invested',ph:'0',t:'number'},{id:'currentValue',lbl:'Current Value',ph:'0',t:'number'},{id:'notes',lbl:'Notes',ph:'Describe this asset',t:'text'}]
 };
 
-var ASSET_NAME_PH = {Stocks:'e.g. Reliance, TCS, Infosys','Mutual Fund':'e.g. HDFC Flexicap Fund',ETF:'e.g. Nifty 50 ETF',Cryptocurrency:'e.g. Bitcoin, Ethereum',Gold:'e.g. SGB 2024, Physical Gold','Fixed Deposit':'e.g. SBI FD 2024',PPF:'PPF Account',NPS:'NPS Account','Real Estate':'e.g. Flat in Chennai',Bonds:'e.g. Govt Bond 2028',Cash:'e.g. Emergency Fund',Other:'Asset Name'};
+var ASSET_NAME_PH = {Stocks:'e.g. Reliance, TCS, Infosys','Mutual Fund':'e.g. HDFC Flexicap Fund',ETF:'e.g. Nifty 50 ETF',Cryptocurrency:'e.g. Bitcoin, Ethereum',Gold:'e.g. SGB 2024, Physical Gold','Fixed Deposit':'e.g. SBI FD 2024',PPF:'PPF Account',EPFO:'e.g. EPF - Current Employer',NPS:'NPS Account','Real Estate':'e.g. Flat in Chennai',Bonds:'e.g. Govt Bond 2028',Cash:'e.g. Emergency Fund',Other:'Asset Name'};
 
 function updateAssetFields(){
   var scheme = document.getElementById('assetScheme').value;
@@ -3283,6 +3308,11 @@ function calcAssetPreview(){
   } else if(scheme==='Bonds'){
     var qty=getAF('qty'), fv=getAF('faceValue'), rate=getAF('interestRate');
     if(qty>0 && fv>0){ invested=qty*fv; currentValue=invested+(invested*(rate/100)); }
+  } else if(scheme==='EPFO'){
+    var ee=getAF('epfoEmpShare'), er=getAF('epfoEmplShare'), ix=getAF('epfoInterest'), ps=getAF('epfoPension');
+    invested=ee+er; currentValue=ee+er;
+    if(ix>0) rows.push({lbl:'Interest Credited',str:sym+fmt(ix),col:'var(--green)'});
+    if(ps>0) rows.push({lbl:'EPS Pension (info only)',str:sym+fmt(ps),col:'#a78bfa'});
   } else {
     invested=getAF('principal'); currentValue=getAF('currentValue')||invested;
   }
@@ -3324,8 +3354,10 @@ function saveAsset(){
     details[key]=inp.type==='number'?parseFloat(inp.value||'0'):(inp.value||'');
   }
   var modal=document.getElementById('assetModal');
-  var invested=parseFloat(modal.dataset.invested||'0')||details.principal||details.buyPrice||0;
-  var value=parseFloat(modal.dataset.value||'0')||details.currentValue||details.currentPrice||invested;
+  var _mfI=(details.units>0&&details.buyNav>0)?(details.units*details.buyNav):0;
+  var _mfV=(details.units>0&&details.currentNav>0)?(details.units*details.currentNav):_mfI;
+  var invested=parseFloat(modal.dataset.invested||'0')||details.principal||details.buyPrice||_mfI||0;
+  var value=parseFloat(modal.dataset.value||'0')||details.currentValue||details.currentPrice||_mfV||invested;
   if(!value&&!invested){showToast('Enter price/value details','yellow');return;}
   var editId=modal.dataset.editId;
 
@@ -3390,9 +3422,33 @@ function _commitAsset(name,scheme,invested,value,details,editId,editColor){
   });
   if(editId){
     var idx=state.assets.findIndex(function(a){return a.id===parseInt(editId);});
-    if(idx>-1){state.assets[idx]=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:investedINR,value:valueINR,details:detailsINR,color:editColor||state.assets[idx].color});}
+    if(idx>-1){
+      var updatedAsset=Object.assign(state.assets[idx],{name:name,scheme:scheme,invested:investedINR,value:valueINR,details:detailsINR,color:editColor||state.assets[idx].color});
+      // EPFO: sync root-level breakdown props from details
+      if(scheme==='EPFO'){
+        var ee2=(detailsINR.epfoEmpShare||0), er2=(detailsINR.epfoEmplShare||0);
+        updatedAsset.epfoEmpShare=ee2;
+        updatedAsset.epfoEmplShare=er2;
+        updatedAsset.epfoInterest=detailsINR.epfoInterest||0;
+        updatedAsset.epfoPension=detailsINR.epfoPension||0;
+        var epfoVal=ee2+er2;
+        if(epfoVal>0){updatedAsset.value=epfoVal;updatedAsset.invested=epfoVal;}
+      }
+      state.assets[idx]=updatedAsset;
+    }
   } else {
-    state.assets.push({id:Date.now(),name:name,scheme:scheme,invested:investedINR,value:valueINR,details:detailsINR,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]});
+    var newAsset={id:Date.now(),name:name,scheme:scheme,invested:investedINR,value:valueINR,details:detailsINR,color:ASSET_COLORS[state.assets.length%ASSET_COLORS.length]};
+    // EPFO: sync root-level breakdown props
+    if(scheme==='EPFO'){
+      var ee3=(detailsINR.epfoEmpShare||0), er3=(detailsINR.epfoEmplShare||0);
+      newAsset.epfoEmpShare=ee3;
+      newAsset.epfoEmplShare=er3;
+      newAsset.epfoInterest=detailsINR.epfoInterest||0;
+      newAsset.epfoPension=detailsINR.epfoPension||0;
+      var epfoVal2=ee3+er3;
+      if(epfoVal2>0){newAsset.value=epfoVal2;newAsset.invested=epfoVal2;}
+    }
+    state.assets.push(newAsset);
   }
   var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
   state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});
@@ -3450,7 +3506,6 @@ function renderWealthAllocBars(){
     schemeActual[a.scheme]+=(totalVal>0?(a.value/totalVal*100):0);
   });
   var targetTotal=Object.values(state.allocTargets).reduce(function(s,v){return s+(v||0);},0);
-  // Update badge
   var badge=document.getElementById('allocTotalBadge');
   if(badge){
     badge.textContent=targetTotal.toFixed(0)+'%';
@@ -3458,6 +3513,25 @@ function renderWealthAllocBars(){
     var over=targetTotal>105;
     badge.style.background=nearHundred?'rgba(34,197,94,0.15)':over?'rgba(239,68,68,0.15)':'rgba(234,179,8,0.15)';
     badge.style.color=nearHundred?'var(--green)':over?'var(--red)':'var(--yellow)';
+  }
+  // Color logic by status:
+  // no holdings → #444 (grey)
+  // very under (<50% of target) → #ef4444 (red)
+  // under (50–85% of target) → #f59e0b (amber)
+  // close but under (85–95%) → #fde68a (yellow)
+  // on target (95–110%) → #16a34a (dark green)
+  // slightly over (110–130%) → #f97316 (orange)
+  // very over (>130%) → #ef4444 (red)
+  function barColor(actual, target){
+    if(!target||target===0) return '#555';
+    if(actual===0) return '#444';
+    var ratio=actual/target;
+    if(ratio<0.5)  return '#ef4444';
+    if(ratio<0.85) return '#f59e0b';
+    if(ratio<0.95) return '#fde68a';
+    if(ratio<=1.10) return '#16a34a';
+    if(ratio<=1.30) return '#f97316';
+    return '#ef4444';
   }
   var schemes=Object.keys(state.allocTargets);
   wrap.innerHTML=schemes.map(function(s){
@@ -3467,32 +3541,29 @@ function renderWealthAllocBars(){
     var diff=actual-target;
     var isOk=Math.abs(diff)<=THRESHOLD;
     var isOver=diff>THRESHOLD;
-    var statusIcon=isOk?'✅':isOver?'▲':'▼';
-    var statusText=isOk?'On target':isOver?'+'+diff.toFixed(1)+'%':diff.toFixed(1)+'%';
-    var actualColor=isOk?'var(--green)':isOver?'var(--orange)':'var(--yellow)';
-    var maxBar=Math.max(target,actual,1);
-    var actualW=Math.min(100,(actual/maxBar*100)).toFixed(1);
-    var targetW=Math.min(100,(target/maxBar*100)).toFixed(1);
-    return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
-      +'<div style="width:40px;height:40px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'
-      +'<div style="flex:1;min-width:0">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
-          +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+s+'</span>'
-          +'<div style="display:flex;align-items:center;gap:6px">'
-            +'<span style="font-size:11px;color:var(--accent);font-weight:700">🎯 '+target+'%</span>'
-            +'<span style="font-size:11px;font-weight:700;color:'+actualColor+';background:rgba(0,0,0,0.2);padding:2px 7px;border-radius:20px;border:1px solid '+actualColor+'">'+statusIcon+' '+statusText+'</span>'
-          +'</div>'
-        +'</div>'
-        +'<div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px;display:flex;justify-content:space-between">'
-          +'<span style="color:var(--accent)">▬ Target</span><span style="color:'+actualColor+'">▬ Actual: '+actual.toFixed(1)+'%</span>'
-        +'</div>'
-        +'<div style="height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:3px">'
-          +'<div style="height:100%;width:'+targetW+'%;background:var(--accent);border-radius:4px;transition:width .6s ease;opacity:0.85"></div>'
-        +'</div>'
-        +'<div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden">'
-          +'<div style="height:100%;width:'+actualW+'%;background:'+actualColor+';border-radius:3px;transition:width .6s ease"></div>'
-        +'</div>'
+    var col=barColor(actual,target);
+    // Fill width = actual% capped at 100% of the bar (bar represents 0→target*1.3 scale so overflows are visible)
+    var scale=Math.max(target*1.3, actual, 1);
+    var fillW=Math.min(100,(actual/scale*100)).toFixed(1);
+    var targetTickW=Math.min(100,(target/scale*100)).toFixed(1);
+    var statusLabel=isOk?'On target':isOver?('+'+diff.toFixed(1)+'% over'):(diff.toFixed(1)+'% under');
+    return '<div style="margin-bottom:12px">'
+      // Single header row: emoji + name | actual% status | target%
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+        +'<span style="font-size:16px;flex-shrink:0">'+info.emoji+'</span>'
+        +'<span style="font-size:12px;font-weight:800;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s+'</span>'
+        +'<span style="font-size:11px;font-weight:800;color:'+col+';white-space:nowrap">'+actual.toFixed(1)+'%</span>'
+        +'<span style="font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;margin-left:2px">/ '+target+'% target</span>'
       +'</div>'
+      // Single 100% track bar
+      +'<div style="position:relative;height:8px;background:var(--bg3);border-radius:4px;overflow:visible">'
+        // Fill based on actual
+        +'<div style="position:absolute;left:0;top:0;height:100%;width:'+fillW+'%;background:'+col+';border-radius:4px;transition:width .6s ease;opacity:0.9"></div>'
+        // Target tick mark
+        +'<div style="position:absolute;top:-3px;height:14px;width:2px;background:var(--accent);border-radius:1px;left:'+targetTickW+'%;transform:translateX(-50%)" title="Target: '+target+'%"></div>'
+      +'</div>'
+      // Status label under bar
+      +'<div style="margin-top:3px;font-size:9px;font-weight:700;color:'+col+';text-align:right">'+statusLabel+'</div>'
     +'</div>';
   }).join('');
 }
@@ -3632,7 +3703,7 @@ function resetAllocTargets(){
 function assetDetailLine(a){
   const d=a.details||{};const s=a.scheme;
   if(s==='Stocks'||s==='ETF'){const p=[];if(d.qty>0)p.push(d.qty+' shares');if(d.buyPrice>0)p.push('Avg: '+state.currSymbol+fmt(cv(d.buyPrice)));if(d.currentPrice>0)p.push('CMP: '+state.currSymbol+fmt(cv(d.currentPrice)));if(d.exchange)p.push(d.exchange);return p.join(' · ');}
-  if(s==='Mutual Fund'){const p=[];if(d.units>0)p.push(parseFloat(d.units).toFixed(3)+' units');if(d.buyNav>0)p.push('NAV: '+state.currSymbol+fmt(cv(d.buyNav))+' to '+state.currSymbol+fmt(cv(d.currentNav||d.buyNav)));if(d.fundHouse)p.push(d.fundHouse);return p.join(' · ');}
+  if(s==='Mutual Fund'){const p=[];const mq=d.units||d.qty||0,ma=d.buyNav||d.buyPrice||d.avgPrice||0,mc=d.currentNav||d.currentPrice||d.ltp||0;if(mq>0)p.push(parseFloat(mq).toFixed(3)+' units');if(ma>0)p.push('Avg NAV: '+state.currSymbol+fmt(cv(ma)));if(mc>0)p.push('Curr NAV: '+state.currSymbol+fmt(cv(mc)));if(d.fundHouse)p.push(d.fundHouse);return p.join(' · ');}
   if(s==='Cryptocurrency'){const p=[];if(d.qty>0)p.push(d.qty+' coins');if(d.currentPrice>0)p.push('Price: '+state.currSymbol+fmt(cv(d.currentPrice)));if(d.exchange)p.push(d.exchange);return p.join(' · ');}
   if(s==='Gold'){const p=[];if(d.qty>0)p.push(d.qty+'g');if(d.currentPrice>0)p.push(state.currSymbol+fmt(cv(d.currentPrice))+'/g');if(d.goldType)p.push(d.goldType);return p.join(' · ');}
   if(s==='Fixed Deposit'){const p=[];if(d.interestRate>0)p.push(d.interestRate+'% p.a.');if(d.tenure>0)p.push(d.tenure+'mo');if(d.maturityDate)p.push('Matures: '+d.maturityDate);if(d.bankName)p.push(d.bankName);return p.join(' · ');}
@@ -4186,38 +4257,25 @@ function splitCSVLine(line){
 
 // Auto-detect scheme from holding name
 function detectScheme(name){
-  var n=name.toLowerCase();
-  // ETF must come FIRST — "Gold ETF", "Nifty ETF", "Silver ETF" should all be ETF
-  if(n.includes('etf')||n.includes('bees')||n.includes('niftybees')||
-     n.includes('goldbees')||n.includes('bankbees')||n.includes('juniorbees')||
-     n.includes('liquidbees')||n.includes('itbees')||n.includes('silverbees')||
-     (n.includes('nifty')&&!n.includes('fund'))||
-     (n.includes('sensex')&&!n.includes('fund'))||
-     (n.includes('index')&&!n.includes('fund'))){
-    return 'ETF';
-  }
-  // Mutual Fund patterns (only if not already ETF)
-  if(n.includes('fund')||n.includes('mf ')||n.includes(' mf')||n.includes('flexi')||
-     n.includes('bluechip')||n.includes('midcap')||n.includes('smallcap')||
-     n.includes('largecap')||n.includes('multicap')||n.includes('elss')||
-     n.includes('liquid')||n.includes('hybrid')||
-     n.includes('folio')||n.includes('nav ')||
-     n.includes(' plan')||n.includes('scheme')){
-    return 'Mutual Fund';
-  }
-  // Gold — physical/SGB only (ETFs already caught above)
-  if(n.includes('sgb')||n.includes('sovereign')||
-     (n.includes('gold')&&!n.includes('etf')&&!n.includes('bees'))||
-     (n.includes('silver')&&!n.includes('etf')&&!n.includes('bees'))){
-    return 'Gold';
-  }
-  // Crypto patterns
+  var n=name.toLowerCase().trim();
+
+  // Rule 1: Gold or Silver in name → ETF
+  // All gold/silver holdings from CSV/demat are ETFs (physical gold is added manually only)
+  if(n.includes('gold')||n.includes('silver')){return 'ETF';}
+
+  // Rule 2: Explicit ETF keyword
+  if(n.includes('etf')||n.includes('bees')){return 'ETF';}
+
+  // Rule 3: Mutual Fund — must contain "fund" explicitly
+  if(n.includes('fund')){return 'Mutual Fund';}
+
+  // Rule 4: Crypto
   if(n.includes('btc')||n.includes('bitcoin')||n.includes('ethereum')||
-     n.includes('crypto')||n.includes('usdt')||n.includes('bnb')||
-     n.includes(' eth')||n.includes('sol ')||n.includes('xrp')){
+     n.includes('crypto')||n.includes('usdt')){
     return 'Cryptocurrency';
   }
-  // Default: Stocks
+
+  // Rule 5: Default → Stocks
   return 'Stocks';
 }
 
@@ -4308,7 +4366,7 @@ function confirmDematImport(){
         existing.invested=invested;
         existing.value=value;
         existing.scheme=r.scheme||existing.scheme||'Stocks';
-        existing.details={qty:r.qty,avgPrice:r.avg,ltp:r.ltp};
+        existing.details={qty:r.qty,buyPrice:r.avg,currentPrice:r.ltp,avgPrice:r.avg,ltp:r.ltp};
         existing.source='demat';
         updated++;
       }
@@ -4320,7 +4378,7 @@ function confirmDematImport(){
         scheme:r.scheme||'Stocks',
         invested:invested,
         value:value,
-        details:{qty:r.qty,avgPrice:r.avg,ltp:r.ltp},
+        details:{qty:r.qty,buyPrice:r.avg,currentPrice:r.ltp,avgPrice:r.avg,ltp:r.ltp},
         color:colors[state.assets.length%colors.length],
         alloc:0,
         source:'demat'
@@ -4381,6 +4439,9 @@ function renderPnlSummary(){
 
   var schemeOrder=['Stocks','Mutual Fund','ETF','Gold','Cryptocurrency','Fixed Deposit','PPF','EPFO','NPS','Real Estate','Bonds','Cash','Other'];
   var hasAny=false;
+  // Find max absolute PnL across schemes for bar scaling
+  var maxAbsPnl=0;
+  schemeOrder.forEach(function(s){var g=schemeGroups[s];if(g&&g.invested>0){var p=Math.abs(g.value-g.invested);if(p>maxAbsPnl)maxAbsPnl=p;}});
   schemeOrder.forEach(function(s){
     var g=schemeGroups[s];
     if(!g) return;
@@ -4388,14 +4449,16 @@ function renderPnlSummary(){
     var pnl=g.value-g.invested;
     var pct=g.invested>0?(pnl/g.invested*100).toFixed(1):null;
     var gc=pnl>=0?'var(--green)':'var(--red)';
+    var gcBg=pnl>=0?'rgba(34,197,94,0.15)':'rgba(255,69,105,0.15)';
     var sc=schemeColors[s]||'#6366f1';
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--border)">';
+    var barPct=maxAbsPnl>0?Math.min(100,(Math.abs(pnl)/maxAbsPnl*100)):0;
+    html+='<div style="padding:10px 16px;border-top:1px solid var(--border)">';
+    html+='<div style="display:flex;align-items:center;gap:10px">';
     html+='<div style="width:8px;height:8px;border-radius:50%;background:'+sc+';flex-shrink:0"></div>';
     html+='<div style="flex:1;min-width:0">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center">';
     html+='<div style="font-size:12px;font-weight:700;color:var(--text)">'+(schemeEmojis[s]||'💼')+' '+s+'</div>';
-    html+='<div style="font-size:10px;color:var(--text3);font-weight:600">'+g.count+' holding'+(g.count>1?'s':'')+' · Invested: '+state.currSymbol+fmt(cv(g.invested))+'</div>';
-    html+='</div>';
-    html+='<div style="text-align:right;flex-shrink:0">';
+    html+='<div style="text-align:right">';
     html+='<div style="font-size:13px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(g.value))+'</div>';
     if(g.invested>0){
       html+='<div style="font-size:11px;font-weight:700;color:'+gc+'">'+(pnl>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(pnl)));
@@ -4403,13 +4466,51 @@ function renderPnlSummary(){
       html+='</div>';
     }
     html+='</div></div>';
+    html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">'+g.count+' holding'+(g.count>1?'s':'')+' · Invested: '+state.currSymbol+fmt(cv(g.invested))+'</div>';
+    // P&L bar
+    if(g.invested>0&&barPct>0){
+      html+='<div style="margin-top:6px;height:4px;background:var(--bg3);border-radius:4px;overflow:hidden">';
+      html+='<div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+gc+';border-radius:4px;transition:width .6s;min-width:4px"></div>';
+      html+='</div>';
+    }
+    html+='</div></div></div>';
   });
 
   cont.innerHTML=html;
   box.style.display=hasAny?'block':'none';
 }
 
+/* ── Asset view mode: 'rich' | 'compact' ── */
+if(!state.assetView) state.assetView='compact';
+function setAssetView(mode){
+  state.assetView=mode;
+  var rich=document.getElementById('assetViewRich');
+  var compact=document.getElementById('assetViewCompact');
+  if(rich&&compact){
+    if(mode==='rich'){
+      rich.style.background='var(--accent)';rich.style.color='var(--accent-text)';
+      compact.style.background='transparent';compact.style.color='var(--text2)';
+    } else {
+      compact.style.background='var(--accent)';compact.style.color='var(--accent-text)';
+      rich.style.background='transparent';rich.style.color='var(--text2)';
+    }
+  }
+  renderAssets();
+}
+
 function renderAssets(){
+  if(!state.assetView) state.assetView='compact';
+  // Sync toggle button appearance
+  var _rv=document.getElementById('assetViewRich'),_cv2=document.getElementById('assetViewCompact');
+  if(_rv&&_cv2){
+    if(state.assetView==='compact'){
+      _cv2.style.background='var(--accent)';_cv2.style.color='var(--accent-text)';
+      _rv.style.background='transparent';_rv.style.color='var(--text2)';
+    } else {
+      _rv.style.background='var(--accent)';_rv.style.color='var(--accent-text)';
+      _cv2.style.background='transparent';_cv2.style.color='var(--text2)';
+    }
+  }
   const total=state.assets.reduce((s,a)=>s+a.value,0);const tv=state.currSymbol+fmt(cv(total));
   document.getElementById('totalAssetVal').textContent=tv;document.getElementById('assetTotal2').textContent=tv;
   renderPnlSummary();
@@ -4477,11 +4578,13 @@ function renderAssets(){
     var schemeGain=g.invested>0?((g.value-g.invested)/g.invested*100).toFixed(1):null;
     var gainColor=schemeGain>=0?'var(--green)':'var(--red)';
     var groupId='grp_'+scheme.replace(/[^a-z0-9]/gi,'_');
+    var defaultOpen=false;
+    var canBulkDelete=true;
 
     // Group header — tap to expand/collapse
     html+='<div style="border:1px solid '+schemeColor+'33;border-radius:16px;margin-bottom:10px;overflow:hidden">';
-    // Header row
-    html+='<div onclick="toggleAssetGroup(\''+groupId+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;background:'+schemeColor+'11;user-select:none">';
+    html+='<div style="display:flex;align-items:stretch;background:'+schemeColor+'11">';
+    html+='<div onclick="toggleAssetGroup(\''+groupId+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;flex:1;min-width:0;cursor:pointer;user-select:none">';
     html+='<div style="width:38px;height:38px;border-radius:12px;background:'+schemeColor+'22;border:1.5px solid '+schemeColor+'55;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+schemeEmoji+'</div>';
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="font-size:14px;font-weight:800;color:var(--text)">'+scheme+'</div>';
@@ -4491,7 +4594,11 @@ function renderAssets(){
     html+='<div style="font-size:15px;font-weight:800;color:'+schemeColor+'">'+state.currSymbol+fmt(cv(g.value))+'</div>';
     html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">'+schemePct+'% of portfolio</div>';
     html+='</div>';
-    html+='<div id="'+groupId+'_arrow" style="font-size:14px;color:var(--text3);margin-left:8px;transition:transform .3s;flex-shrink:0;transform:rotate(-90deg)">▼</div>';
+    html+='<div id="'+groupId+'_arrow" style="font-size:14px;color:var(--text3);margin-left:8px;transition:transform .3s;flex-shrink:0;transform:'+(defaultOpen?'rotate(0deg)':'rotate(-90deg)')+'">▼</div>';
+    html+='</div>';
+    if(canBulkDelete){
+      html+='<button onclick="deleteAllByScheme(\''+scheme+'\')" style="flex-shrink:0;background:rgba(255,69,105,0.08);border:none;border-left:1px solid rgba(255,69,105,0.18);padding:0 14px;font-size:11px;font-weight:700;color:var(--red);cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">🗑️<span style="font-size:9px">All</span></button>';
+    }
     html+='</div>'; // end header
 
     // Progress bar
@@ -4499,9 +4606,8 @@ function renderAssets(){
     html+='<div style="height:100%;width:'+Math.min(100,schemePct)+'%;background:'+schemeColor+';border-radius:3px;transition:width .6s"></div>';
     html+='</div>';
 
-    // Collapsible holdings list — all collapsed by default
-    var defaultOpen = false;
-    html+='<div id="'+groupId+'" style="display:none">';
+    // Collapsible holdings list — auto-expand equity/MF/ETF by default
+    html+='<div id="'+groupId+'" style="display:'+(defaultOpen?'block':'none')+'">';
 
     g.assets.forEach(function(a){
       var pct=a.alloc!=null?a.alloc:(total>0?(a.value/total*100):0);
@@ -4518,10 +4624,8 @@ function renderAssets(){
           plAmt=current-invested;plPct=(plAmt/invested*100);plLabel='P&L';
         }
       } else if(s==='Mutual Fund'){
-        if(d.units>0&&d.buyNav>0&&d.currentNav>0){
-          var inv=d.units*d.buyNav,cur=d.units*d.currentNav;
-          plAmt=cur-inv;plPct=(plAmt/inv*100);plLabel='P&L';
-        }
+        var _mq=d.units||d.qty||0, _ma=d.buyNav||d.buyPrice||d.avgPrice||0, _mc=d.currentNav||d.currentPrice||d.ltp||0;
+        if(_mq>0&&_ma>0&&_mc>0){var inv=_mq*_ma,cur=_mq*_mc;plAmt=cur-inv;plPct=(plAmt/inv*100);plLabel='P&L';}
       } else if(s==='Cryptocurrency'){
         if(d.qty>0&&d.buyPrice>0&&d.currentPrice>0){
           var inv2=d.qty*d.buyPrice,cur2=d.qty*d.currentPrice;
@@ -4571,6 +4675,54 @@ function renderAssets(){
       var plBorder=plPositive?'rgba(34,197,94,0.25)':'rgba(255,69,105,0.25)';
       var plIcon=plIsInterest?'📈':(plPositive?'▲':'▼');
 
+      // ══ COMPACT VIEW ══
+      if(state.assetView==='compact'){
+        html+='<div style="padding:9px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">';
+        // Color bar
+        html+='<div style="width:3px;height:36px;border-radius:3px;background:'+schemeColor+';flex-shrink:0"></div>';
+        // Name + subtitle
+        html+='<div style="flex:1;min-width:0">';
+        html+='<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>';
+        // Compact sub-line: qty · buy · cmp or detail line
+        var compactSub='';
+        if((s==='Stocks'||s==='ETF')&&d.qty>0){
+          compactSub=(d.qty>0?d.qty+(s==='Stocks'?' sh':' u'):'')+(d.buyPrice>0?' · avg '+state.currSymbol+fmt(cv(d.buyPrice)):'')+(d.currentPrice>0?' · '+state.currSymbol+fmt(cv(d.currentPrice)):'');
+        } else if(s==='Mutual Fund'){
+          var _mq2=d.units||d.qty||0,_ma2=d.buyNav||d.buyPrice||d.avgPrice||0,_mc2=d.currentNav||d.currentPrice||d.ltp||0;
+          compactSub=(_mq2>0?parseFloat(_mq2).toFixed(3)+' u':'')+((_ma2>0)?' · NAV '+state.currSymbol+fmt(cv(_ma2)):'')+((_mc2>0)?' → '+state.currSymbol+fmt(cv(_mc2)):'');
+        } else if(s==='Cryptocurrency'&&d.qty>0){
+          compactSub=d.qty+' coins'+(d.currentPrice>0?' · '+state.currSymbol+fmt(cv(d.currentPrice)):'');
+        } else if(s==='Gold'&&d.qty>0){
+          compactSub=d.qty+'g'+(d.currentPrice>0?' · '+state.currSymbol+fmt(cv(d.currentPrice))+'/g':'');
+        } else if(detailLine){
+          compactSub=detailLine;
+        }
+        if(compactSub) html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+compactSub+'</div>';
+        html+='</div>';
+        // P&L chip (compact)
+        if(plAmt!==null){
+          var plAmtC=(plAmt>=0?'+':'-')+state.currSymbol+fmt(cv(Math.abs(plAmt)));
+          var plPctC=plPct!=null?(' '+(plPct>=0?'+':'')+plPct.toFixed(1)+'%'):'';
+          html+='<div style="text-align:right;flex-shrink:0">';
+          html+='<div style="font-size:13px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(a.value))+'</div>';
+          html+='<div style="font-size:10px;font-weight:800;color:'+plColor+'">'+plAmtC+plPctC+'</div>';
+          html+='</div>';
+        } else {
+          html+='<div style="text-align:right;flex-shrink:0">';
+          html+='<div style="font-size:13px;font-weight:800;color:var(--text)">'+state.currSymbol+fmt(cv(a.value))+'</div>';
+          html+='<div style="font-size:10px;color:var(--text3);font-weight:600">'+pct.toFixed(1)+'%</div>';
+          html+='</div>';
+        }
+        // Actions (compact inline)
+        html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-left:4px">';
+        html+='<span style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:800" onclick="editAsset('+a.id+')">✏️</span>';
+        html+='<span style="font-size:10px;color:var(--red);cursor:pointer;font-weight:800" onclick="deleteAsset('+a.id+')">✕</span>';
+        html+='</div>';
+        html+='</div>'; // end compact row
+        // skip rich rendering — use else block below
+      } else {
+      // ══ END COMPACT VIEW → RICH VIEW BELOW ══
+
       html+='<div style="padding:12px 16px;border-top:1px solid var(--border)">';
 
       // ── Top row: dot + name + value ──
@@ -4578,9 +4730,20 @@ function renderAssets(){
       html+='<div style="width:3px;min-height:36px;border-radius:3px;background:'+schemeColor+';flex-shrink:0;margin-top:3px"></div>';
       html+='<div style="flex:1;min-width:0">';
       html+='<div style="font-size:13px;font-weight:700;color:var(--text)">'+a.name+'</div>';
-      if(detailLine) html+='<div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:1px">'+detailLine+'</div>';
-      html+='<div style="display:flex;gap:8px;margin-top:5px">';
+      // Exchange / fund house badge
+      var badgeExtra='';
+      if(s==='Stocks'&&d.exchange) badgeExtra='<span style="font-size:9px;background:rgba(68,138,255,0.15);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:6px;padding:2px 6px;font-weight:800">'+d.exchange+'</span> ';
+      if(s==='ETF'&&d.exchange) badgeExtra='<span style="font-size:9px;background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 6px;font-weight:800">'+d.exchange+'</span> ';
+      if(s==='Mutual Fund'&&d.fundHouse) badgeExtra='<span style="font-size:9px;background:rgba(34,211,238,0.12);color:#22d3ee;border:1px solid rgba(34,211,238,0.3);border-radius:6px;padding:2px 6px;font-weight:800">'+d.fundHouse+'</span> ';
+      if(badgeExtra) html+='<div style="margin-top:3px">'+badgeExtra+'</div>';
+      html+='<div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap">';
       html+='<span style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:800" onclick="editAsset('+a.id+')">✏️ Edit</span>';
+      // Quick update price button for trackable holdings
+      var hasQP=false;
+      if(s==='Stocks'||s==='ETF') { hasQP=true; html+='<span style="font-size:10px;color:var(--teal);cursor:pointer;font-weight:800" onclick="quickUpdatePrice('+a.id+',\'currentPrice\',\'CMP\')">⚡ Update CMP</span>'; }
+      if(s==='Mutual Fund')       { hasQP=true; html+='<span style="font-size:10px;color:var(--teal);cursor:pointer;font-weight:800" onclick="quickUpdatePrice('+a.id+',\'currentNav\',\'NAV\')">⚡ Update NAV</span>'; }
+      if(s==='Cryptocurrency')    { hasQP=true; html+='<span style="font-size:10px;color:var(--teal);cursor:pointer;font-weight:800" onclick="quickUpdatePrice('+a.id+',\'currentPrice\',\'Price\')">⚡ Update Price</span>'; }
+      if(s==='Gold')              { hasQP=true; html+='<span style="font-size:10px;color:var(--teal);cursor:pointer;font-weight:800" onclick="quickUpdatePrice('+a.id+',\'currentPrice\',\'₹/g\')">⚡ Update Rate</span>'; }
       html+='<span style="font-size:10px;color:var(--red);cursor:pointer;font-weight:800" onclick="deleteAsset('+a.id+')">✕ Remove</span>';
       html+='</div>';
       html+='</div>';
@@ -4591,31 +4754,122 @@ function renderAssets(){
       html+='</div>';
       html+='</div>'; // end top row
 
-      // ── P&L / Interest bar ──────────────────────────────────────────────
+      // ── Rich metric grid for Stocks / ETF / Mutual Fund / Crypto / Gold ──
+      var showRichGrid = false;
+      var richRows = [];
+      if((s==='Stocks'||s==='ETF') && (d.qty>0||d.buyPrice>0||d.currentPrice>0)){
+        showRichGrid=true;
+        var qtyLabel = s==='Stocks' ? 'Shares' : 'Units';
+        if(d.qty>0)      richRows.push({lbl:qtyLabel,         val:d.qty,                           fmt:'num'});
+        if(d.buyPrice>0) richRows.push({lbl:'Avg Price',      val:cv(d.buyPrice),                  fmt:'curr'});
+        if(d.currentPrice>0)richRows.push({lbl:'Curr Price',  val:cv(d.currentPrice),              fmt:'curr', highlight: d.currentPrice>=d.buyPrice&&d.buyPrice>0?'green':(d.buyPrice>0?'red':'')});
+        if(d.qty>0&&d.buyPrice>0)   richRows.push({lbl:'Invested',    val:cv(d.qty*d.buyPrice),    fmt:'curr'});
+        if(d.qty>0&&d.currentPrice>0)richRows.push({lbl:'Curr Value', val:cv(d.qty*d.currentPrice),fmt:'curr', highlight:'accent'});
+      } else if(s==='Mutual Fund'){
+        // Support both manual entry (units/buyNav/currentNav) and CSV import (qty/buyPrice/currentPrice)
+        var mfQty    = d.units    || d.qty    || 0;
+        var mfAvgNav = d.buyNav   || d.buyPrice|| d.avgPrice || 0;
+        var mfCurNav = d.currentNav|| d.currentPrice || d.ltp || 0;
+        if(mfQty>0||mfAvgNav>0||mfCurNav>0){
+          showRichGrid=true;
+          if(mfQty>0)    richRows.push({lbl:'Quantity (Units)', val:mfQty,                           fmt:'num3'});
+          if(mfAvgNav>0) richRows.push({lbl:'Avg NAV',         val:cv(mfAvgNav),                    fmt:'curr'});
+          if(mfCurNav>0) richRows.push({lbl:'Current NAV',     val:cv(mfCurNav),                    fmt:'curr', highlight: mfCurNav>=mfAvgNav&&mfAvgNav>0?'green':(mfAvgNav>0?'red':'')});
+          if(mfQty>0&&mfAvgNav>0)  richRows.push({lbl:'Invested',      val:cv(mfQty*mfAvgNav),      fmt:'curr'});
+          if(mfQty>0&&mfCurNav>0)  richRows.push({lbl:'Current Value', val:cv(mfQty*mfCurNav),      fmt:'curr', highlight:'accent'});
+        }
+      } else if(s==='Cryptocurrency' && (d.qty>0||d.buyPrice>0||d.currentPrice>0)){
+        showRichGrid=true;
+        if(d.qty>0)       richRows.push({lbl:'Coins/Tokens',  val:d.qty,                           fmt:'num'});
+        if(d.buyPrice>0)  richRows.push({lbl:'Buy Price',     val:cv(d.buyPrice),                  fmt:'curr'});
+        if(d.currentPrice>0)richRows.push({lbl:'Curr Price',  val:cv(d.currentPrice),              fmt:'curr', highlight: d.currentPrice>=d.buyPrice&&d.buyPrice>0?'green':(d.buyPrice>0?'red':'')});
+        if(d.qty>0&&d.buyPrice>0)    richRows.push({lbl:'Invested',   val:cv(d.qty*d.buyPrice),    fmt:'curr'});
+        if(d.qty>0&&d.currentPrice>0)richRows.push({lbl:'Curr Value', val:cv(d.qty*d.currentPrice),fmt:'curr', highlight:'accent'});
+      } else if(s==='Gold' && (d.qty>0||d.buyPrice>0||d.currentPrice>0)){
+        showRichGrid=true;
+        if(d.qty>0)       richRows.push({lbl:'Grams',         val:d.qty,                           fmt:'num'});
+        if(d.buyPrice>0)  richRows.push({lbl:'Buy ₹/g',       val:cv(d.buyPrice),                  fmt:'curr'});
+        if(d.currentPrice>0)richRows.push({lbl:'Curr ₹/g',   val:cv(d.currentPrice),              fmt:'curr', highlight: d.currentPrice>=d.buyPrice&&d.buyPrice>0?'green':(d.buyPrice>0?'red':'')});
+        if(d.qty>0&&d.buyPrice>0)    richRows.push({lbl:'Invested',   val:cv(d.qty*d.buyPrice),    fmt:'curr'});
+        if(d.qty>0&&d.currentPrice>0)richRows.push({lbl:'Curr Value', val:cv(d.qty*d.currentPrice),fmt:'curr', highlight:'accent'});
+      }
+      if(showRichGrid && richRows.length){
+        // Up to 3 cols per row
+        var cols=richRows.length>=4?3:richRows.length;
+        var hlMap={green:'var(--green)',red:'var(--red)',accent:'var(--accent)'};
+        html+='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:6px;margin-top:10px">';
+        richRows.forEach(function(r){
+          var vc=r.highlight?hlMap[r.highlight]||'var(--text)':'var(--text)';
+          var dispVal='';
+          if(r.fmt==='num') dispVal=''+r.val;
+          else if(r.fmt==='num3') dispVal=parseFloat(r.val).toFixed(3);
+          else dispVal=state.currSymbol+fmt(r.val);
+          html+='<div style="background:var(--bg3);border-radius:10px;padding:8px 10px;text-align:center">';
+          html+='<div style="font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px">'+r.lbl+'</div>';
+          html+='<div style="font-size:12px;font-weight:800;color:'+vc+'">'+dispVal+'</div>';
+          html+='</div>';
+        });
+        html+='</div>';
+
+        // Per-unit change chip
+        var unitChange=null, unitChangePct=null, unitLabel='';
+        if((s==='Stocks'||s==='ETF'||s==='Cryptocurrency'||s==='Gold')&&d.buyPrice>0&&d.currentPrice>0){
+          unitChange=cv(d.currentPrice)-cv(d.buyPrice);
+          unitChangePct=(unitChange/cv(d.buyPrice)*100);
+          unitLabel=s==='Gold'?'per gram':'per share';
+        } else if(s==='Mutual Fund'){
+          var _maN=d.buyNav||d.buyPrice||d.avgPrice||0, _mcN=d.currentNav||d.currentPrice||d.ltp||0;
+          if(_maN>0&&_mcN>0){unitChange=cv(_mcN)-cv(_maN);unitChangePct=(unitChange/cv(_maN)*100);unitLabel='per unit (NAV)';}
+        }
+        if(unitChange!==null){
+          var ucCol=unitChange>=0?'var(--green)':'var(--red)';
+          var ucBg=unitChange>=0?'rgba(34,197,94,0.08)':'rgba(255,69,105,0.08)';
+          var ucBd=unitChange>=0?'rgba(34,197,94,0.2)':'rgba(255,69,105,0.2)';
+          html+='<div style="margin-top:6px;display:flex;align-items:center;gap:6px">';
+          html+='<div style="background:'+ucBg+';border:1px solid '+ucBd+';border-radius:8px;padding:4px 10px;font-size:10px;font-weight:800;color:'+ucCol+'">';
+          html+=(unitChange>=0?'▲ +':' ▼ ')+state.currSymbol+fmt(Math.abs(unitChange))+' ('+unitChangePct.toFixed(1)+'%) '+unitLabel;
+          html+='</div></div>';
+        }
+      }
+
+      // ── P&L banner ──────────────────────────────────────────────────────
       if(plAmt!==null){
         var plAmtDisp=(plAmt>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(plAmt)));
         var plPctDisp=plPct!=null?(' ('+(plPct>=0?'+':'')+plPct.toFixed(1)+'%)'):'';
-        // EPFO: show pension chip too
         var epfoPensionChip='';
         if(s==='EPFO'&&a.epfoPension>0) epfoPensionChip='<span style="font-size:10px;font-weight:800;background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:3px 8px" title="Pension is locked in EPS — not counted in your asset total">👴 EPS '+state.currSymbol+fmt(cv(a.epfoPension))+' ℹ️</span>';
-        html+='<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
-        html+='<div style="display:flex;align-items:center;gap:6px;background:'+plBg+';border:1px solid '+plBorder+';border-radius:20px;padding:4px 10px;flex-shrink:0">';
-        html+='<span style="font-size:11px">'+plIcon+'</span>';
-        html+='<span style="font-size:11px;font-weight:800;color:'+plColor+'">'+plLabel+'</span>';
-        html+='<span style="font-size:12px;font-weight:900;color:'+plColor+'">'+plAmtDisp+'</span>';
-        if(plPctDisp) html+='<span style="font-size:10px;font-weight:700;color:'+plColor+'">'+plPctDisp+'</span>';
-        html+='</div>';
-        if(epfoPensionChip) html+=epfoPensionChip;
-        html+='</div>';
+        // Full-width P&L bar for Stocks/ETF/MF when rich grid shown
+        if(showRichGrid && plAmt!==null){
+          html+='<div style="margin-top:8px;padding:10px 12px;border-radius:12px;background:'+plBg+';border:1px solid '+plBorder+';display:flex;align-items:center;justify-content:space-between">';
+          html+='<div style="display:flex;align-items:center;gap:6px">';
+          html+='<span style="font-size:13px">'+plIcon+'</span>';
+          html+='<span style="font-size:11px;font-weight:800;color:'+plColor+'">'+plLabel+'</span>';
+          html+='</div>';
+          html+='<div style="text-align:right">';
+          html+='<div style="font-size:14px;font-weight:900;color:'+plColor+'">'+plAmtDisp+'</div>';
+          if(plPctDisp) html+='<div style="font-size:10px;font-weight:700;color:'+plColor+'">'+plPctDisp+'</div>';
+          html+='</div>';
+          html+='</div>';
+        } else {
+          html+='<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+          html+='<div style="display:flex;align-items:center;gap:6px;background:'+plBg+';border:1px solid '+plBorder+';border-radius:20px;padding:4px 10px;flex-shrink:0">';
+          html+='<span style="font-size:11px">'+plIcon+'</span>';
+          html+='<span style="font-size:11px;font-weight:800;color:'+plColor+'">'+plLabel+'</span>';
+          html+='<span style="font-size:12px;font-weight:900;color:'+plColor+'">'+plAmtDisp+'</span>';
+          if(plPctDisp) html+='<span style="font-size:10px;font-weight:700;color:'+plColor+'">'+plPctDisp+'</span>';
+          html+='</div>';
+          if(epfoPensionChip) html+=epfoPensionChip;
+          html+='</div>';
+        }
       } else {
-        // No P&L data — show a neutral "Add buy price to track P&L" hint only for trackable types
         var trackable=['Stocks','ETF','Mutual Fund','Cryptocurrency','Gold','Real Estate'];
         if(trackable.indexOf(s)>=0){
           html+='<div style="margin-top:6px;font-size:10px;color:var(--text3);font-weight:600">💡 Add buy price to track P&L</div>';
         }
       }
 
-      html+='</div>'; // end holding row
+      html+='</div>'; // end holding row (rich)
+      } // end rich view else
     });
 
     // Group footer — summary
@@ -4643,7 +4897,141 @@ function toggleAssetGroup(id){
   el.style.display=isOpen?'none':'block';
   if(arrow) arrow.style.transform=isOpen?'rotate(-90deg)':'rotate(0deg)';
 }
+
+async function runPortfolioAI(){
+  var btn=document.getElementById('portfolioAiBtn');
+  var content=document.getElementById('portfolioAiContent');
+  if(!btn||!content) return;
+  if(!state.assets||!state.assets.length){content.innerHTML='<div style="color:var(--text3)">Add some assets first to get AI insights.</div>';return;}
+  btn.textContent='⏳ Analysing…';btn.disabled=true;
+  content.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="width:20px;height:20px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div><span style="color:var(--text3)">Claude is reviewing your portfolio…</span></div>';
+
+  // Build concise portfolio summary for the prompt
+  var sym=state.currSymbol;
+  var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
+  var totalInv=state.assets.reduce(function(s,a){return s+(a.invested||0);},0);
+  var totalPL=totalVal-totalInv;
+
+  // Group by scheme
+  var grpMap={};
+  state.assets.forEach(function(a){
+    var s=a.scheme||'Other';
+    if(!grpMap[s]) grpMap[s]={assets:[],value:0,invested:0};
+    grpMap[s].assets.push(a);grpMap[s].value+=a.value;grpMap[s].invested+=a.invested||0;
+  });
+
+  var holdingLines=[];
+  state.assets.forEach(function(a){
+    var d=a.details||{};var s=a.scheme;var line=a.name+' ('+s+')';
+    if((s==='Stocks'||s==='ETF')&&d.qty>0&&d.buyPrice>0&&d.currentPrice>0){
+      var inv=d.qty*d.buyPrice,cur=d.qty*d.currentPrice,pl=cur-inv,plp=(pl/inv*100).toFixed(1);
+      line+=' | Qty:'+d.qty+' | Avg:'+sym+fmt(cv(d.buyPrice))+' | CMP:'+sym+fmt(cv(d.currentPrice))+' | Invested:'+sym+fmt(cv(inv))+' | Value:'+sym+fmt(cv(cur))+' | P&L:'+sym+fmt(cv(Math.abs(pl)))+' ('+(pl>=0?'+':'-')+plp+'%)';
+    } else if(s==='Mutual Fund'&&d.units>0&&d.buyNav>0&&d.currentNav>0){
+      var inv=d.units*d.buyNav,cur=d.units*d.currentNav,pl=cur-inv,plp=(pl/inv*100).toFixed(1);
+      line+=' | Units:'+d.units.toFixed(3)+' | Avg NAV:'+sym+fmt(cv(d.buyNav))+' | NAV:'+sym+fmt(cv(d.currentNav))+' | Invested:'+sym+fmt(cv(inv))+' | Value:'+sym+fmt(cv(cur))+' | P&L:'+sym+fmt(cv(Math.abs(pl)))+' ('+(pl>=0?'+':'-')+plp+'%)';
+    } else {
+      line+=' | Value:'+sym+fmt(cv(a.value))+(a.invested?' | Invested:'+sym+fmt(cv(a.invested)):'');
+    }
+    holdingLines.push(line);
+  });
+
+  var schemeAllocs=Object.entries(grpMap).map(function([k,v]){
+    var pct=totalVal>0?(v.value/totalVal*100).toFixed(1):0;
+    var pl=v.value-v.invested;
+    return k+': '+pct+'% ('+sym+fmt(cv(v.value))+', P&L '+(pl>=0?'+':'')+sym+fmt(cv(Math.abs(pl)))+')';
+  }).join('\n');
+
+  var prompt='You are a smart financial advisor for an Indian investor.\n\nPORTFOLIO SUMMARY:\nTotal Invested: '+sym+fmt(cv(totalInv))+'\nCurrent Value: '+sym+fmt(cv(totalVal))+'\nOverall P&L: '+(totalPL>=0?'+':'')+sym+fmt(cv(Math.abs(totalPL)))+' ('+(totalInv>0?((totalPL/totalInv)*100).toFixed(1):0)+'%)\n\nASSET ALLOCATION:\n'+schemeAllocs+'\n\nHOLDINGS DETAIL:\n'+holdingLines.join('\n')+'\n\nProvide 3-5 concise, specific, actionable portfolio insights covering: top/worst performers, rebalancing suggestions, concentration risk, what action to consider (buy more / book partial profit / hold), and one actionable "next step".\n\nReturn ONLY valid JSON array (no markdown, no code fences):\n[{"type":"good|warn|bad|info","icon":"emoji","title":"max 7 words","text":"2-3 sentences with specific numbers"}]';
+
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    var data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    var raw=data.content?.[0]?.text||'[]';
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var insights=JSON.parse(clean);
+    var typeColors={good:'rgba(34,197,94,0.1)',warn:'rgba(255,215,64,0.1)',bad:'rgba(255,69,105,0.1)',info:'rgba(68,138,255,0.1)'};
+    var typeBorders={good:'rgba(34,197,94,0.3)',warn:'rgba(255,215,64,0.3)',bad:'rgba(255,69,105,0.3)',info:'rgba(68,138,255,0.3)'};
+    content.innerHTML=insights.map(function(ins){
+      var bg=typeColors[ins.type]||typeColors.info;
+      var bd=typeBorders[ins.type]||typeBorders.info;
+      return '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:12px;padding:12px 14px;margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+        +'<span style="font-size:22px">'+ins.icon+'</span>'
+        +'<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.3">'+ins.title+'</div>'
+        +'</div>'
+        +'<div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.7">'+ins.text+'</div>'
+        +'</div>';
+    }).join('');
+    btn.textContent='🔄 Refresh';btn.disabled=false;
+  }catch(e){
+    content.innerHTML='<div style="background:rgba(255,69,105,0.1);border:1px solid rgba(255,69,105,0.25);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--text2);font-weight:600">⚠️ Could not reach AI. Check connection and try again.<br><span style="font-size:10px;color:var(--text3)">'+e.message+'</span></div>';
+    btn.textContent='✨ Retry';btn.disabled=false;
+  }
+}
+function quickUpdatePrice(id, field, label){
+  var a=state.assets.find(function(x){return x.id===id;});
+  if(!a) return;
+  var d=a.details||{};
+  var r2=state.currencyRate||1;
+  var currentVal=d[field]?(d[field]*r2):0;
+  customPrompt('⚡','Update '+label,
+    'Enter new '+label+' for '+a.name+':',
+    currentVal>0?fmt(currentVal):'',
+    function(raw){
+      var newVal=parseFloat((raw||'').replace(/,/g,''));
+      if(!newVal||isNaN(newVal)||newVal<=0){showToast('Enter a valid price','yellow');return;}
+      var newValINR=newVal/r2;
+      a.details=Object.assign({},d);
+      a.details[field]=newValINR;
+      // Recompute value from qty * currentPrice or units * currentNav
+      var s=a.scheme;
+      if((s==='Stocks'||s==='ETF'||s==='Cryptocurrency'||s==='Gold')&&a.details.qty>0){
+        a.value=a.details.qty*newValINR;
+      } else if(s==='Mutual Fund'&&a.details.units>0){
+        a.value=a.details.units*newValINR;
+      }
+      var totalVal=state.assets.reduce(function(x,aa){return x+aa.value;},0);
+      state.assets.forEach(function(aa){aa.alloc=totalVal>0?parseFloat((aa.value/totalVal*100).toFixed(2)):0;});
+      saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();
+      showToast(label+' updated ✓','green');
+    }
+  );
+}
+
+// Helper: simple prompt dialog (reuses customConfirm pattern)
+function customPrompt(icon,title,msg,defaultVal,cb){
+  // Build an inline bottom-sheet prompt
+  var existing=document.getElementById('_quickPromptSheet');
+  if(existing) existing.remove();
+  var sheet=document.createElement('div');
+  sheet.id='_quickPromptSheet';
+  sheet.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)';
+  sheet.innerHTML='<div style="background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px">'
+    +'<div style="text-align:center;font-size:32px;margin-bottom:8px">'+icon+'</div>'
+    +'<div style="font-size:16px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px">'+title+'</div>'
+    +'<div style="font-size:12px;color:var(--text3);text-align:center;font-weight:600;margin-bottom:16px">'+msg+'</div>'
+    +'<input id="_qpInput" type="number" inputmode="decimal" class="field-input" style="margin-bottom:12px;font-size:16px;text-align:center" value="'+defaultVal+'" placeholder="0.00">'
+    +'<div style="display:flex;gap:10px">'
+    +'<button class="btn-cancel" style="flex:1" onclick="document.getElementById(\'_quickPromptSheet\').remove()">Cancel</button>'
+    +'<button class="btn-go" style="flex:1" id="_qpOk">Update ✓</button>'
+    +'</div></div>';
+  document.body.appendChild(sheet);
+  var inp=document.getElementById('_qpInput');
+  inp.focus();inp.select();
+  document.getElementById('_qpOk').onclick=function(){
+    var v=inp.value;sheet.remove();cb(v);
+  };
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){var v=inp.value;sheet.remove();cb(v);}});
+  sheet.addEventListener('click',function(e){if(e.target===sheet)sheet.remove();});
+}
+
 function deleteAsset(id){customConfirm('💼','Remove Asset','This cannot be undone.',function(){state.assets=state.assets.filter(a=>a.id!==id);var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();});}
+function deleteAllByScheme(scheme){var count=state.assets.filter(function(a){return a.scheme===scheme;}).length;if(!count)return;customConfirm('🗑️','Delete All '+scheme,'Remove all '+count+' '+scheme+' holding'+(count>1?'s':'')+'. This cannot be undone.',function(){state.assets=state.assets.filter(function(a){return a.scheme!==scheme;});var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);state.assets.forEach(function(a){a.alloc=totalVal>0?parseFloat((a.value/totalVal*100).toFixed(2)):0;});saveState();renderAssets();if(curPage==='assets')renderAssetChart();updateDashboard();showToast('🗑️ All '+scheme+' holdings removed','red');});}
 function editAsset(id){
   var a=state.assets.find(a=>a.id===id);
   if(!a)return;
@@ -4669,6 +5057,21 @@ function editAsset(id){
             : v;
         }
       });
+    }
+    // EPFO: root-level props (epfoEmpShare, epfoEmplShare, epfoInterest, epfoPension)
+    if(a.scheme==='EPFO'){
+      var epfoMap={epfoEmpShare:'epfoEmpShare',epfoEmplShare:'epfoEmplShare',epfoInterest:'epfoInterest',epfoPension:'epfoPension'};
+      Object.entries(epfoMap).forEach(function([rootKey,fieldId]){
+        var el=document.getElementById('af_'+fieldId);
+        if(el&&a[rootKey]!=null) el.value=parseFloat((a[rootKey]*r5).toFixed(2));
+      });
+      // Also compute preview value = EE + ER for EPFO
+      var ee=parseFloat(document.getElementById('af_epfoEmpShare')?.value||'0');
+      var er=parseFloat(document.getElementById('af_epfoEmplShare')?.value||'0');
+      if(ee+er>0){
+        modal.dataset.invested=((ee+er)/r5).toFixed(2);
+        modal.dataset.value=((ee+er)/r5).toFixed(2);
+      }
     }
     // Trigger preview recalculation
     if(typeof calcAssetPreview==='function') calcAssetPreview();
@@ -5228,7 +5631,48 @@ function initCharts(){renderMiniChart();}
 function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const type=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'bar';charts.mini=new Chart(ctx,{type,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
 function setMini(type,el){document.querySelectorAll('#miniCtrl .cpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');el.setAttribute('data-type',type);renderMiniChart();}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();renderYearlySummary();renderCatBreakdown();}
-function renderNetWorthTimeline(){const ctx=document.getElementById('netWorthChart');if(!ctx)return;if(charts.nw)charts.nw.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[];const data=[];for(let i=11;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()<=m&&d.getFullYear()<=y;});const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);data.push(cv(inc-exp+state.assets.reduce((s,a)=>s+a.value,0)));}charts.nw=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Net Worth',data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}}}}});}
+function renderNetWorthTimeline(){
+  var ctx=document.getElementById('netWorthChart');
+  if(!ctx)return;
+  if(charts.nw)charts.nw.destroy();
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now=new Date();
+  var labels=[];var data=[];
+  var totalAssets=state.assets.reduce(function(s,a){return s+a.value;},0);
+  var totalLiab=state.liabilities.reduce(function(s,l){return s+l.remaining;},0);
+  var totalAccts=state.accounts.reduce(function(s,a){return s+a.balance;},0);
+  var baseNW=totalAssets+totalAccts-totalLiab;
+
+  // Build monthly net transaction deltas
+  var monthlyNet=[];
+  for(var i=11;i>=0;i--){
+    var mn=(now.getMonth()-i+12)%12;
+    var yr=now.getFullYear()+Math.floor((now.getMonth()-i)/12);
+    if(now.getMonth()-i<0)yr=now.getFullYear()-1;
+    var txsM=state.transactions.filter(function(t){
+      var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr;
+    });
+    var net=txsM.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0)
+            -txsM.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    labels.push(months[mn]);
+    monthlyNet.push(net);
+  }
+  // Build cumulative NW backwards from current baseNW
+  var cumulative=[];var running=baseNW;
+  for(var i=monthlyNet.length-1;i>=0;i--){running-=monthlyNet[i];cumulative.unshift(running);}
+  cumulative[cumulative.length-1]=baseNW;
+  data=cumulative.map(cv);
+
+  // Only show empty if truly nothing to display
+  var hasData=data.some(function(v){return v!==0;});
+  if(!hasData){
+    charts.nw=null;
+    var parent=ctx.parentNode;
+    if(parent){parent.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:12px;font-weight:700;text-align:center;padding:20px">Add transactions or assets<br>to see your net worth trend</div>';}
+    return;
+  }
+  charts.nw=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#22c55e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' '+state.currSymbol+fmt(cv(c.parsed.y));}}}},scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.3)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:10},callback:function(v){var a=Math.abs(v);if(a>=10000000)return state.currSymbol+(v/10000000).toFixed(1)+'Cr';if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+fmt(v);}}}}}});
+}
 function renderYearlySummary(){const c=document.getElementById('yearlySummary');const now=new Date();const year=now.getFullYear();const monthly=[];for(let m=0;m<12;m++){const txs=state.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===year&&d.getMonth()===m;});const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);monthly.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m],inc,exp,net:inc-exp});}const totalInc=monthly.reduce((s,m)=>s+m.inc,0);const totalExp=monthly.reduce((s,m)=>s+m.exp,0);c.innerHTML=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Year Income</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalInc))}</div></div><div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Year Spend</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalExp))}</div></div></div>${monthly.filter(m=>m.inc>0||m.exp>0).map(m=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="min-width:32px;font-size:11px;font-weight:900;color:var(--text3)">${m.month}</div><div style="flex:1"><div style="display:flex;gap:3px;height:6px"><div style="height:100%;background:var(--green);border-radius:3px;flex:${m.inc}"></div><div style="height:100%;background:var(--red);border-radius:3px;flex:${m.exp}"></div></div></div><div style="font-family:var(--font);font-size:11px;font-weight:700;color:${m.net>=0?'var(--green)':'var(--red)'};min-width:60px;text-align:right">${m.net>=0?'+':'-'}${state.currSymbol}${fmt(cv(Math.abs(m.net)))}</div></div>`).join('')}`;}
 function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');chartType=type;renderMainChart();}
 function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));var isPie=chartType==='pie'||chartType==='doughnut';
@@ -6361,24 +6805,9 @@ function renderWealthSection(type){
   var html='';
 
   if(type==='asset'){
-    var a=item;
-    var gain=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;
-    var gainColor=gain&&parseFloat(gain)>=0?'var(--green)':'var(--red)';
-    html='<div style="display:flex;align-items:center;gap:10px;padding:8px 0">'
-      +'<div style="width:4px;height:44px;border-radius:2px;background:'+a.color+';flex-shrink:0"></div>'
-      +'<div style="flex:1">'
-        +'<div style="font-size:14px;font-weight:900">'+a.name+'</div>'
-        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+(SCHEME_INFO[a.scheme]?.emoji||'💼')+' '+a.scheme+(a.alloc?' · '+a.alloc.toFixed(1)+'% alloc':'')+'</div>'
-        +(gain?'<div style="font-size:11px;font-weight:900;color:'+gainColor+';margin-top:2px">'+(parseFloat(gain)>=0?'📈 +':'📉 ')+gain+'%</div>':'')
-      +'</div>'
-      +'<div style="text-align:right">'
-        +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+a.color+'">'+state.currSymbol+fmt(cv(a.value))+'</div>'
-        +(a.invested>0?'<div style="font-size:10px;color:var(--text3);font-weight:700">invested: '+state.currSymbol+fmt(cv(a.invested))+'</div>':'')
-      +'</div></div>'
-      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-        +'<button onclick="editAsset('+a.id+')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
-        +'<button onclick="wealthDeleteConfirm(\'asset\','+a.id+')" style="flex:1;background:rgba(255,69,105,0.12);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">🗑️ Delete</button>'
-      +'</div>';
+    // Grouped dropdown rendering — handled separately by renderWealthAssetGrouped()
+    renderWealthAssetGrouped();
+    return;
   }else if(type==='acct'){
     var ac=item;
     var info=ACCT_TYPES[ac.type]||{emoji:'🏦'};
@@ -6462,6 +6891,81 @@ function editAcct(id){
   showModal('acctModal');
 }
 
+var _wealthGroupOpen={};
+function renderWealthAssetGrouped(){
+  var rowEl=document.getElementById('wealthAssetRows');
+  if(!rowEl)return;
+  if(!state.assets.length){
+    rowEl.innerHTML='<div class="empty" style="padding:10px"><div class="empty-desc">No assets added</div></div>';
+    return;
+  }
+  // Define group order and colors
+  var GROUP_ORDER=['Stocks','Mutual Fund','ETF','Gold','Cryptocurrency','Fixed Deposit','PPF','EPFO','NPS','Real Estate','Bonds','Cash','Other'];
+  var GROUP_COLORS={'Stocks':'#6366f1','Mutual Fund':'#22d3ee','ETF':'#34d399','Gold':'#fbbf24','Cryptocurrency':'#f472b6','Fixed Deposit':'#38bdf8','PPF':'#4ade80','EPFO':'#a78bfa','NPS':'#fb923c','Real Estate':'#2dd4bf','Bonds':'#818cf8','Cash':'#86efac','Other':'#e879f9'};
+  var GROUP_EMOJI={'Stocks':'📊','Mutual Fund':'📈','ETF':'📉','Gold':'🥇','Cryptocurrency':'₿','Fixed Deposit':'🏦','PPF':'🏛️','EPFO':'🏢','NPS':'👴','Real Estate':'🏠','Bonds':'📜','Cash':'💵','Other':'💼'};
+  // Build groups
+  var groups={};
+  state.assets.forEach(function(a){
+    var s=a.scheme||'Other';
+    if(!groups[s])groups[s]={assets:[],totalValue:0,totalInvested:0};
+    groups[s].assets.push(a);
+    groups[s].totalValue+=a.value;
+    groups[s].totalInvested+=a.invested||0;
+  });
+  var html='';
+  GROUP_ORDER.forEach(function(scheme){
+    if(!groups[scheme])return;
+    var g=groups[scheme];
+    var col=GROUP_COLORS[scheme]||'#888';
+    var emoji=GROUP_EMOJI[scheme]||'💼';
+    var isOpen=_wealthGroupOpen[scheme]===true; // collapsed by default
+    var gain=g.totalInvested>0?((g.totalValue-g.totalInvested)/g.totalInvested*100).toFixed(1):null;
+    var gainColor=gain&&parseFloat(gain)>=0?'var(--green)':'var(--red)';
+    var totalAlloc=state.assets.reduce(function(s,a){return s+a.value;},0);
+    var groupAlloc=totalAlloc>0?(g.totalValue/totalAlloc*100).toFixed(1):'0';
+    // Group header row (always visible)
+    html+='<div style="border:1px solid '+col+'33;border-radius:10px;margin-bottom:8px;overflow:hidden">'
+      +'<div onclick="toggleWealthGroup(\''+scheme+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:'+col+'11;cursor:pointer;user-select:none">'
+        +'<span style="font-size:18px">'+emoji+'</span>'
+        +'<div style="flex:1">'
+          +'<div style="font-size:13px;font-weight:900;color:var(--text)">'+scheme+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);font-weight:700">'+g.assets.length+' holding'+(g.assets.length>1?'s':'')+' · '+groupAlloc+'% of portfolio'+(gain?' · <span style="color:'+gainColor+'">'+(parseFloat(gain)>=0?'+':'')+gain+'%</span>':'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;margin-right:6px">'
+          +'<div style="font-family:var(--font);font-size:14px;font-weight:700;color:'+col+'">'+state.currSymbol+fmt(cv(g.totalValue))+'</div>'
+          +(g.totalInvested>0?'<div style="font-size:10px;color:var(--text3)">inv: '+state.currSymbol+fmt(cv(g.totalInvested))+'</div>':'')
+        +'</div>'
+        +'<span style="color:var(--text3);font-size:14px;font-weight:900;transition:transform 0.2s;display:inline-block;transform:'+(isOpen?'rotate(90deg)':'rotate(0deg)')+'">›</span>'
+      +'</div>'
+      // Individual assets dropdown
+      +(isOpen?'<div style="border-top:1px solid '+col+'22">'+g.assets.map(function(a){
+        var ag=a.invested>0?((a.value-a.invested)/a.invested*100).toFixed(1):null;
+        var agColor=ag&&parseFloat(ag)>=0?'var(--green)':'var(--red)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border)">'
+          +'<div style="width:3px;height:36px;border-radius:2px;background:'+a.color+';flex-shrink:0"></div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'
+            +(ag?'<div style="font-size:10px;font-weight:900;color:'+agColor+'">'+(parseFloat(ag)>=0?'📈 +':'📉 ')+ag+'%</div>':'<div style="font-size:10px;color:var(--text3)">'+(a.alloc?a.alloc.toFixed(1)+'% alloc':'')+'</div>')
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+            +'<div style="font-family:var(--font);font-size:13px;font-weight:700;color:'+a.color+'">'+state.currSymbol+fmt(cv(a.value))+'</div>'
+            +(a.invested>0?'<div style="font-size:10px;color:var(--text3)">'+state.currSymbol+fmt(cv(a.invested))+'</div>':'')
+          +'</div>'
+          +'<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-left:4px">'
+            +'<button onclick="editAsset('+a.id+')" style="background:rgba(68,138,255,0.15);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;cursor:pointer">✏️</button>'
+            +'<button onclick="wealthDeleteConfirm(\'asset\','+a.id+')" style="background:rgba(255,69,105,0.15);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;cursor:pointer">🗑️</button>'
+          +'</div>'
+        +'</div>';
+      }).join('')+'</div>':'')
+    +'</div>';
+  });
+  rowEl.innerHTML=html;
+}
+function toggleWealthGroup(scheme){
+  _wealthGroupOpen[scheme]=(_wealthGroupOpen[scheme]===true)?false:true;
+  renderWealthAssetGrouped();
+}
+
 function renderWealth(){
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
@@ -6491,13 +6995,12 @@ function renderWealth(){
   else{badge.className='hero-badge badge-dn';badge.textContent='📉 Deficit';}
   updateCurrSymbols();
 
-  // Clamp indices within current list bounds
-  _wealthIdx.asset=Math.min(_wealthIdx.asset,Math.max(0,state.assets.length-1));
+  // Clamp indices within current list bounds (acct/liab/goal only now)
   _wealthIdx.acct=Math.min(_wealthIdx.acct,Math.max(0,state.accounts.length-1));
   _wealthIdx.liab=Math.min(_wealthIdx.liab,Math.max(0,state.liabilities.length-1));
   _wealthIdx.goal=Math.min(_wealthIdx.goal,Math.max(0,state.goals.length-1));
 
-  renderWealthSection('asset');
+  renderWealthAssetGrouped();
   renderWealthSection('acct');
   renderWealthSection('liab');
   renderWealthSection('goal');
@@ -6819,7 +7322,7 @@ showPage=function(id){
   if(id==='retirement'){/* user triggers calc */}
   if(id==='emergency'){calcEmergencyFund();}
   if(id==='trends'){renderSpendingTrends();}
-  if(id==='reports'){setReportPreset('thisMonth',document.querySelector('.chip.on'));generateForecast();renderNetWorthTimeline();}
+  if(id==='reports'){setReportPreset('thisMonth',document.querySelector('.chip.on'));generateForecast();renderNetWorthTimelineReport();}
   if(id==='sharecard'){refreshShareCard();}
 };
 
@@ -7369,7 +7872,7 @@ function generateForecast(){
 }
 
 // ── Net Worth Timeline ──
-function renderNetWorthTimeline(){
+function renderNetWorthTimelineReport(){
   var ctx=document.getElementById('netWorthChartReport');
   if(!ctx) return;
   if(charts.nwt) charts.nwt.destroy();
@@ -7549,7 +8052,6 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
             <span style="font-size:13px;font-weight:800;color:var(--text)">v11 — 31 Mar 2026</span>
-            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             ☁️ <b style="color:var(--text)">Scheduled auto-sync</b> to Drive every 30 min<br>
@@ -7569,14 +8071,38 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         </div>
       </div>
 
-      <!-- v12 — Current -->
+      <!-- v13 — Current LATEST -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">13</div>
+          <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v13 — 03 Apr 2026</span>
+            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🐛 <b style="color:var(--text)">Fixed MF rich grid</b> — works for both CSV-imported (qty/buyPrice) and manually added (units/buyNav) holdings<br>
+            🐛 <b style="color:var(--text)">Fixed MF save bug</b> — units × NAV now correctly computes invested &amp; current value<br>
+            🐛 <b style="color:var(--text)">Fixed expand/collapse arrow</b> — Stocks/MF/ETF correctly auto-expand on load<br>
+            📈 <b style="color:var(--text)">Mutual Fund rich grid</b> — Quantity, Avg NAV, Current NAV, Invested, Current Value &amp; P&amp;L<br>
+            🗑️ <b style="color:var(--text)">Bulk delete</b> — 🗑️ All button on Stocks, MF &amp; ETF header removes entire group<br>
+            ⚡ <b style="color:var(--text)">Quick Update CMP / NAV / Price</b> inline<br>
+            📉 <b style="color:var(--text)">Per-unit change chip</b> — ▲/▼ per share / unit / gram<br>
+            🥇 <b style="color:var(--text)">Rich grid for Crypto &amp; Gold</b><br>
+            🤖 <b style="color:var(--text)">AI Portfolio Insight</b> — P&amp;L analysis &amp; rebalancing tips
+          </div>
+        </div>
+      </div>
+
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">12</div>
           <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v12 — 31 Mar 2026 <span style="background:rgba(34,197,94,0.15);color:var(--green);padding:2px 7px;border-radius:6px;font-size:10px;margin-left:4px">LATEST</span></div>
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v12 — 31 Mar 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             ☝️ <b style="color:var(--text)">Fingerprint / Face ID unlock</b> via WebAuthn<br>
             🔒 <b style="color:var(--text)">Biometric toggle</b> in Settings → Security<br>
@@ -7678,7 +8204,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">20260402-v13</span>
+      Current build: <span style="color:var(--accent)">v13 — 03 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
