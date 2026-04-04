@@ -1077,7 +1077,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <span>🏦 ACCOUNTS & CASH</span>
           <span style="font-family:var(--font)" id="wealthAcctsTotal">₹0</span>
         </div>
-        <div id="wealthCashBreakdown"></div>
         <div id="wealthAcctRows"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px" id="wealthAcctNav">
           <button onclick="wealthPage('acct',-1)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 14px;color:var(--text);font-weight:900;cursor:pointer;font-size:16px">‹</button>
@@ -2710,6 +2709,17 @@ function lockApp(){document.getElementById('app').classList.remove('on');documen
 function initApp(){
   // Do NOT auto-create default accounts — user adds their own manually
   if(!Array.isArray(state.accounts)) state.accounts=[];
+  // ── Migrate legacy accounts: set openingBalance=0 if not set ──
+  // This fixes old accounts where balance was set as opening seed (not tx-based)
+  state.accounts.forEach(function(a){
+    if(typeof a.openingBalance!=='number'){
+      // Legacy account — treat existing balance as pure transaction-driven (opening = 0)
+      a.openingBalance=0;
+      // Recalculate: balance should = openingBalance(0) + txNet
+      var txNet=state.transactions.filter(function(t){return String(t.account)===String(a.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
+      a.balance=txNet; // reset to pure tx sum
+    }
+  });
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
   updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();
@@ -5291,12 +5301,7 @@ function renderAccounts(){
   if(!state.accounts.length){al.innerHTML=`<div class="empty"><div class="empty-big">🏦</div><div class="empty-title">No accounts yet</div><div class="empty-desc">Add Cash, Bank, UPI, Credit Card</div></div>`;return;}
   al.innerHTML=state.accounts.map(a=>{
     const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
-    const acctTxNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
-    const openingBal=typeof a.openingBalance==='number'?a.openingBalance:(a.balance-acctTxNet);
-    const openingNote=Math.abs(openingBal)>0.5
-      ?`<div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:3px">Txns: ${acctTxNet>=0?'+':''}${state.currSymbol}${fmt(cv(acctTxNet))} · Opening: ${state.currSymbol}${fmt(cv(openingBal))}</div>`
-      :'';
-    return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div>${openingNote}<div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;
+    return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;
   }).join('');
   // Update history filter dropdown
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
@@ -6934,31 +6939,7 @@ function renderWealthSection(type){
   }else if(type==='acct'){
     var ac=item;
     var info=ACCT_TYPES[ac.type]||{emoji:'🏦'};
-    var acTxNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
-    // Use stored openingBalance if present; otherwise derive it (legacy accounts)
-    var acOpening=typeof ac.openingBalance==='number'?ac.openingBalance:(ac.balance-acTxNet);
-    var acBreakdown=Math.abs(acOpening)>0.5
-      ?'<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3)">Opening balance</div>'
-        +'<div style="font-family:var(--font);font-size:11px;font-weight:700;color:var(--text2)">'+state.currSymbol+fmt(cv(acOpening))+'</div>'
-        +'</div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3)">Transactions net</div>'
-        +'<div style="font-family:var(--font);font-size:11px;font-weight:700;color:'+(acTxNet>=0?'var(--green)':'var(--red)')+'">'+(acTxNet>=0?'+':'')+state.currSymbol+fmt(cv(acTxNet))+'</div>'
-        +'</div>'
-      :'';
-    html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'
-      +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'
-      +'<div style="flex:1">'
-        +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'
-        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'
-      +'</div>'
-      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'
-      +'</div>'
-      +acBreakdown
-      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-        +'<button onclick="editAcct(\''+ac.id+'\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Account</button>'
-      +'</div>';
+    html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'      +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'      +'<div style="flex:1">'        +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'      +'</div>'      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'      +'</div>'      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'        +'<button onclick="editAcct(\''+ac.id+'\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Account</button>'      +'</div>';
   }else if(type==='liab'){
     var l=item;
     var li=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
@@ -7209,22 +7190,8 @@ function renderWealth(){
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
 
-  // Cash & Bank flow breakdown (carry-forward based) — used for the breakdown card only
-  const carry=getCarryForward(state.currentMonth,state.currentYear);
-  const curTxs=getMonthTxs();
-  const curIncome=curTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const curExpense=curTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const carryAfterExpense=carry-curExpense;
-  const cashBank= carryAfterExpense>=0
-    ? carryAfterExpense+curIncome
-    : curIncome+carryAfterExpense;
-
-  // ── FIX: Account & Cash Savings stat box uses real account balances ──
-  // This matches what the account detail cards show (opening balance + tx net = current balance)
-  // If accounts exist, use their sum; otherwise fall back to cash-flow formula
-  const totalAccts=state.accounts.length>0
-    ? state.accounts.reduce((s,a)=>s+a.balance,0)
-    : cashBank;
+  // Cash & Bank = sum of all real account balances (openingBalance + txNet each)
+  const totalAccts=state.accounts.reduce((s,a)=>s+a.balance,0);
   const netWorth=totalAssets+totalAccts-totalLiab;
 
   var nwEl=document.getElementById('wealthNetWorth');
@@ -7248,8 +7215,7 @@ function renderWealth(){
   document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(cv(totalLiab));
   // Store for use in renderWealthSection acct breakdown
   // Pass real account totals so breakdown card is consistent with stat box
-  window._wealthCashBreakdown={carry,curIncome,curExpense,carryAfterExpense,cashBank,totalAccts,hasAccounts:state.accounts.length>0};
-  renderWealthCashBreakdown();
+  // Breakdown panel removed — each account card shows its own balance directly
 
   const badge=document.getElementById('wealthBadge');
   if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent='📈 Surplus';}
