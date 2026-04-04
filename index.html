@@ -1611,7 +1611,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v18 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v15 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -6293,11 +6293,13 @@ function syncToCloud(){
   });
 
   var timedOut=false;
+  state._syncRetried=false;
   var timer=setTimeout(function(){
     timedOut=true;
-    if(el) el.textContent='Timed out — check internet';
-    showToast('⚠️ Sync timed out.','red');
-  },20000);
+    if(el) el.textContent='Timed out — retrying...';
+    showToast('⚠️ Sync timed out. Retrying once...','yellow');
+    setTimeout(function(){ if(!state._syncRetried){ state._syncRetried=true; syncToCloud(); } },3000);
+  },45000);
 
   findDriveFile().then(function(existing){
     // Always delete ALL existing backups first, then create one fresh file
@@ -6330,6 +6332,7 @@ function syncToCloud(){
     }
     if(res.id) gDriveFileId=res.id;
     state.lastSync=safeState.lastSync;
+    state._syncRetried=false;
     saveState();
     updateCloudSyncStatus();
     showToast('✅ Synced to Google Drive!','green');
@@ -6365,14 +6368,16 @@ function loadFromCloud(){
   var timer=setTimeout(function(){
     timedOut=true;
     if(el) el.textContent='Timed out';
-    showToast('⚠️ Load timed out.','red');
-  },20000);
+    showToast('⚠️ Load timed out. Check internet and retry.','red');
+  },45000);
 
   findDriveFile().then(function(existing){
     if(!existing){
       clearTimeout(timer);
-      if(el) el.textContent='No backup found on Drive';
-      showToast('No backup found. Sync first from another device.','yellow');
+      // No backup found — auto-push a fresh backup now so next load will work
+      if(el) el.textContent='No backup found — creating one now...';
+      showToast('No backup found. Creating your first backup...','yellow');
+      setTimeout(function(){ syncToCloud(); },800);
       return;
     }
     return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media'
@@ -7109,18 +7114,22 @@ function renderWealth(){
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
 
-  // Cash & Bank = carry forward + current month income - current month expenses
-  // Carry forward = cumulative net of ALL months before current
+  // Cash & Bank flow breakdown (carry-forward based) — used for the breakdown card only
   const carry=getCarryForward(state.currentMonth,state.currentYear);
   const curTxs=getMonthTxs();
   const curIncome=curTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const curExpense=curTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  // Carry is 1st priority for expenses: carry absorbs expense first, then income
   const carryAfterExpense=carry-curExpense;
   const cashBank= carryAfterExpense>=0
-    ? carryAfterExpense+curIncome          // carry covered all expense, income fully intact
-    : curIncome+carryAfterExpense;         // carry deficit eats into income
-  const totalAccts=cashBank;
+    ? carryAfterExpense+curIncome
+    : curIncome+carryAfterExpense;
+
+  // ── FIX: Account & Cash Savings stat box uses real account balances ──
+  // This matches what the account detail cards show (opening balance + tx net = current balance)
+  // If accounts exist, use their sum; otherwise fall back to cash-flow formula
+  const totalAccts=state.accounts.length>0
+    ? state.accounts.reduce((s,a)=>s+a.balance,0)
+    : cashBank;
   const netWorth=totalAssets+totalAccts-totalLiab;
 
   var nwEl=document.getElementById('wealthNetWorth');
@@ -7128,7 +7137,7 @@ function renderWealth(){
   nwEl.style.color=netWorth<0?'var(--red)':netWorth>0?'var(--green)':'var(--text)';
   document.getElementById('wealthTotalAssets').textContent=fmt(cv(totalAssets));
   document.getElementById('wealthTotalDebts').textContent=fmt(cv(totalLiab));
-  // Cash & Bank stat box
+  // Cash & Bank stat box — now shows real account balance sum
   var acctStatEl=document.getElementById('wealthTotalAccts');
   acctStatEl.textContent=(totalAccts<0?'－':'')+fmt(cv(Math.abs(totalAccts)));
   var acctBox=acctStatEl.closest('.stat-box');
@@ -8227,15 +8236,15 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         </div>
       </div>
 
-      <!-- v13 — Current LATEST -->
+      <!-- v15 — Current LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">13</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">15</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v18 — 04 Apr 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v15 — 04 Apr 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
@@ -8360,7 +8369,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v18 — 04 Apr 2026</span>
+      Current build: <span style="color:var(--accent)">v15 — 04 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
