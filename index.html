@@ -1610,7 +1610,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v15 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v17 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -3149,17 +3149,18 @@ function updateDashboard(){
   const netWorth=totalAssets+totalAccts-totalLiab;
   const savRate=effectiveIncome>0?Math.round((effectiveIncome-expense)/effectiveIncome*100):0;
   document.getElementById('netWorthAmt').textContent=fmt(cv(Math.abs(netWorth)));
-  document.getElementById('incAmt').textContent=fmt(cv(effectiveIncome));
+  // Money In shows only THIS month's actual income — carry is displayed separately, not added to income
+  document.getElementById('incAmt').textContent=fmt(cv(income));
   document.getElementById('expAmt').textContent=fmt(cv(expense));
   document.getElementById('saveRate').textContent=Math.max(0,savRate)+'%';
   document.getElementById('saveBarFill').style.width=Math.max(0,Math.min(100,savRate))+'%';
-  // Carry forward badge
+  // Carry forward badge — informational, explains why surplus/deficit includes prior months
   const cfBadge=document.getElementById('carryForwardBadge');
   if(cfBadge){
     if(carry!==0){
       cfBadge.style.display='flex';
-      if(carry>0){cfBadge.className='carry-badge carry-pos';cfBadge.innerHTML='↩️ Prev. savings +'+state.currSymbol+fmt(cv(carry))+' carried in';}
-      else{cfBadge.className='carry-badge carry-neg';cfBadge.innerHTML='↩️ Prev. deficit −'+state.currSymbol+fmt(cv(Math.abs(carry)))+' carried in';}
+      if(carry>0){cfBadge.className='carry-badge carry-pos';cfBadge.innerHTML='↩️ Prev. month savings +'+state.currSymbol+fmt(cv(carry))+' carried forward';}
+      else{cfBadge.className='carry-badge carry-neg';cfBadge.innerHTML='↩️ Prev. month deficit −'+state.currSymbol+fmt(cv(Math.abs(carry)))+' carried forward';}
     }else{cfBadge.style.display='none';}
   }
   const badge=document.getElementById('netBadge');
@@ -5264,7 +5265,15 @@ function renderAccounts(){
   c.innerHTML=`<div class="stat-grid" style="margin-bottom:0"><div class="stat-box sg"><span class="stat-emoji">🏦</span><div class="stat-lbl">Total Balance</div><div class="stat-val" style="font-size:16px">${state.currSymbol}${fmt(cv(totalBal))}</div></div><div class="stat-box sb"><span class="stat-emoji">💳</span><div class="stat-lbl">Accounts</div><div class="stat-val">${state.accounts.length}</div></div></div>`;
   const al=document.getElementById('acctList');
   if(!state.accounts.length){al.innerHTML=`<div class="empty"><div class="empty-big">🏦</div><div class="empty-title">No accounts yet</div><div class="empty-desc">Add Cash, Bank, UPI, Credit Card</div></div>`;return;}
-  al.innerHTML=state.accounts.map(a=>{const info=ACCT_TYPES[a.type]||{emoji:'🏦'};return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;}).join('');
+  al.innerHTML=state.accounts.map(a=>{
+    const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
+    const acctTxNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
+    const openingBal=a.balance-acctTxNet;
+    const openingNote=Math.abs(openingBal)>0.5
+      ?`<div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:3px">Txns: ${acctTxNet>=0?'+':''}${state.currSymbol}${fmt(cv(acctTxNet))} · Opening: ${state.currSymbol}${fmt(cv(openingBal))}</div>`
+      :'';
+    return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div>${openingNote}<div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;
+  }).join('');
   // Update history filter dropdown
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
@@ -6853,6 +6862,18 @@ function renderWealthSection(type){
   }else if(type==='acct'){
     var ac=item;
     var info=ACCT_TYPES[ac.type]||{emoji:'🏦'};
+    var acTxNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
+    var acOpening=ac.balance-acTxNet;
+    var acBreakdown=Math.abs(acOpening)>0.5
+      ?'<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3)">Opening balance</div>'
+        +'<div style="font-family:var(--font);font-size:11px;font-weight:700;color:var(--text2)">'+state.currSymbol+fmt(cv(acOpening))+'</div>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3)">Transactions net</div>'
+        +'<div style="font-family:var(--font);font-size:11px;font-weight:700;color:'+(acTxNet>=0?'var(--green)':'var(--red)')+'">'+(acTxNet>=0?'+':'')+state.currSymbol+fmt(cv(acTxNet))+'</div>'
+        +'</div>'
+      :'';
     html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'
       +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'
       +'<div style="flex:1">'
@@ -6861,6 +6882,7 @@ function renderWealthSection(type){
       +'</div>'
       +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'
       +'</div>'
+      +acBreakdown
       +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
         +'<button onclick="editAcct(\''+ac.id+'\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
         +'<button onclick="wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="flex:1;background:rgba(255,69,105,0.12);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">🗑️ Delete</button>'
@@ -7027,6 +7049,18 @@ function renderWealth(){
     acctBox.className='stat-box '+(totalAccts<0?'sr':'sb');
     var acctEmoji=acctBox.querySelector('.stat-emoji');
     if(acctEmoji)acctEmoji.textContent=totalAccts<0?'⚠️':'🏦';
+    // Show opening balance breakdown so user understands why it differs from transaction totals
+    var allTxNet=state.transactions.reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
+    var openingBal=totalAccts-allTxNet;
+    var existingNote=acctBox.querySelector('.acct-opening-note');
+    if(existingNote)existingNote.remove();
+    if(Math.abs(openingBal)>0.5){
+      var note=document.createElement('div');
+      note.className='acct-opening-note';
+      note.style.cssText='font-size:10px;font-weight:700;color:var(--text3);margin-top:3px;line-height:1.4;text-align:center';
+      note.innerHTML='Txns: '+(allTxNet>=0?'+':'')+state.currSymbol+fmt(cv(allTxNet))+'<br>Opening: '+state.currSymbol+fmt(cv(openingBal));
+      acctBox.appendChild(note);
+    }
   }
   document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(cv(totalAssets));
   document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(totalAccts)));
@@ -8121,7 +8155,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v15 — 04 Apr 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v17 — 04 Apr 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
@@ -8246,7 +8280,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v15 — 04 Apr 2026</span>
+      Current build: <span style="color:var(--accent)">v17 — 04 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
