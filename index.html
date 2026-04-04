@@ -3143,12 +3143,13 @@ function updateDashboard(){
   const carry=getCarryForward(state.currentMonth,state.currentYear);
   const effectiveIncome=income+carry;
   const net=effectiveIncome-expense;
-  // Net worth uses same carry-forward formula as Wealth Statement
+  // Net worth: use real account balances if accounts exist, else fall back to carry-forward
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
   const carryAfterExp=carry-expense;
   const cashBank=carryAfterExp>=0?carryAfterExp+income:income+carryAfterExp;
-  const netWorth=totalAssets+cashBank-totalLiab;
+  const totalAcctsBal=state.accounts.length>0?state.accounts.reduce((s,a)=>s+a.balance,0):cashBank;
+  const netWorth=totalAssets+totalAcctsBal-totalLiab;
   const savRate=effectiveIncome>0?Math.round((effectiveIncome-expense)/effectiveIncome*100):0;
   document.getElementById('netWorthAmt').textContent=fmt(cv(Math.abs(netWorth)));
   // Money In shows only THIS month's actual income — carry is displayed separately, not added to income
@@ -5251,9 +5252,14 @@ function saveAcct(){
   const balINR=balance/(state.currencyRate||1);
   if(editId){
     const a=state.accounts.find(a=>a.id===editId);
-    if(a){a.name=name;a.type=type;a.balance=balINR;a.color=acctColor;}
+    if(a){
+      // Recalculate balance = new opening + existing tx net (don't double-count)
+      const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
+      a.name=name;a.type=type;a.openingBalance=balINR;a.balance=balINR+txNet;a.color=acctColor;
+    }
   }else{
-    state.accounts.push({id:String(Date.now()),name,type,balance:balINR,color:acctColor});
+    // New account: opening balance stored separately; balance starts equal to opening (no txns yet)
+    state.accounts.push({id:String(Date.now()),name,type,openingBalance:balINR,balance:balINR,color:acctColor});
   }
   saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();
   document.getElementById('acctModal').dataset.editId='';
@@ -5270,7 +5276,7 @@ function renderAccounts(){
   al.innerHTML=state.accounts.map(a=>{
     const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
     const acctTxNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
-    const openingBal=a.balance-acctTxNet;
+    const openingBal=typeof a.openingBalance==='number'?a.openingBalance:(a.balance-acctTxNet);
     const openingNote=Math.abs(openingBal)>0.5
       ?`<div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:3px">Txns: ${acctTxNet>=0?'+':''}${state.currSymbol}${fmt(cv(acctTxNet))} · Opening: ${state.currSymbol}${fmt(cv(openingBal))}</div>`
       :'';
@@ -6870,7 +6876,8 @@ function renderWealthSection(type){
     var ac=item;
     var info=ACCT_TYPES[ac.type]||{emoji:'🏦'};
     var acTxNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
-    var acOpening=ac.balance-acTxNet;
+    // Use stored openingBalance if present; otherwise derive it (legacy accounts)
+    var acOpening=typeof ac.openingBalance==='number'?ac.openingBalance:(ac.balance-acTxNet);
     var acBreakdown=Math.abs(acOpening)>0.5
       ?'<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">'
         +'<div style="font-size:11px;font-weight:700;color:var(--text3)">Opening balance</div>'
@@ -6955,7 +6962,9 @@ function editAcct(id){
   var a=state.accounts.find(a=>a.id===id);if(!a)return;
   document.getElementById('acctName').value=a.name;
   document.getElementById('acctType').value=a.type;
-  document.getElementById('acctBalance').value=parseFloat(((a.balance||0)*(state.currencyRate||1)).toFixed(2));
+  // Show the opening balance (seed), not the running balance which includes transactions
+  var openBal=typeof a.openingBalance==='number'?a.openingBalance:(a.balance||0);
+  document.getElementById('acctBalance').value=parseFloat((openBal*(state.currencyRate||1)).toFixed(2));
   acctColor=a.color||'#22c55e';
   document.getElementById('acctModal').dataset.editId=id;
   document.querySelector('#acctModal .btn-go').textContent='✅ Update Account';
@@ -7045,6 +7054,34 @@ function renderWealthCashBreakdown(){
   var sym=state.currSymbol;
   var carry=b.carry, curIncome=b.curIncome, curExpense=b.curExpense;
   var carryAfterExpense=b.carryAfterExpense, cashBank=b.cashBank;
+
+  // If real accounts exist, show per-account breakdown instead of cash-flow formula
+  if(b.hasAccounts && state.accounts.length>0){
+    var totalBal=b.totalAccts;
+    var html='<div style="background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:14px">'
+      +'<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">🏦 Account Balances</div>';
+    state.accounts.forEach(function(ac,i){
+      var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[ac.type])||{emoji:'🏦'};
+      var txNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
+      var opening=typeof ac.openingBalance==='number'?ac.openingBalance:(ac.balance-txNet);
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;'+(i<state.accounts.length-1?'border-bottom:1px solid var(--border)':'')+'">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:16px">'+info.emoji+'</span>'
+          +'<div><div style="font-size:12px;font-weight:800;color:var(--text)">'+ac.name+'</div>'
+          +(Math.abs(opening)>0.5?'<div style="font-size:10px;font-weight:600;color:var(--text3)">Opening: '+sym+fmt(cv(opening))+(txNet!==0?' · Txns: '+(txNet>0?'+':'')+sym+fmt(cv(txNet)):'')+'</div>':'')
+          +'</div>'
+        +'</div>'
+        +'<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
+      +'</div>';
+    });
+    var resultColor=totalBal>0?'var(--green)':totalBal<0?'var(--red)':'var(--text3)';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid var(--border)">'
+      +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Total Balance</div>'
+      +'<div style="font-family:var(--font);font-size:16px;font-weight:900;color:'+resultColor+'">'+(totalBal<0?'−':'')+sym+fmt(cv(Math.abs(totalBal)))+'</div>'
+    +'</div></div>';
+    el.innerHTML=html;
+    return;
+  }
 
   // Build step-by-step breakdown rows
   var rows=[];
@@ -7152,7 +7189,8 @@ function renderWealth(){
   document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(totalAccts)));
   document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(cv(totalLiab));
   // Store for use in renderWealthSection acct breakdown
-  window._wealthCashBreakdown={carry,curIncome,curExpense,carryAfterExpense,cashBank};
+  // Pass real account totals so breakdown card is consistent with stat box
+  window._wealthCashBreakdown={carry,curIncome,curExpense,carryAfterExpense,cashBank,totalAccts,hasAccounts:state.accounts.length>0};
   renderWealthCashBreakdown();
 
   const badge=document.getElementById('wealthBadge');
