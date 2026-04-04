@@ -1059,7 +1059,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="stat-grid-3" style="margin-bottom:14px">
         <div class="stat-box sg"><span class="stat-emoji">📈</span><div class="stat-lbl" id="wLblAssets">Total Assets</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalAssets">0</span></div></div>
         <div class="stat-box sr"><span class="stat-emoji">💸</span><div class="stat-lbl" id="wLblDebts">Total Debts</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalDebts">0</span></div></div>
-        <div class="stat-box sb"><span class="stat-emoji">🏦</span><div class="stat-lbl" id="wLblAccts">Cash & Bank</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalAccts">0</span></div></div>
+        <div class="stat-box sb" style="cursor:pointer" onclick="showAcctBalBreakdown()"><span class="stat-emoji">🏦</span><div class="stat-lbl" id="wLblAccts">Cash & Bank</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="wealthTotalAccts">0</span></div><div style="font-size:9px;color:var(--blue);font-weight:700;margin-top:3px">ℹ️ tap for details</div></div>
       </div>
 
       <!-- ASSETS section -->
@@ -2392,7 +2392,8 @@ let state={
   familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
-  driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''
+  driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',
+  trackerOpeningBalance:null
 };
 let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=9999;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
@@ -2945,9 +2946,11 @@ function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx
 // Returns cumulative carry-forward amount from all months before the given month/year.
 // Positive = savings carried in; Negative = deficit carried in.
 function getCarryForward(month, year){
-  var carry=0;
+  // If user set a manual opening balance for the tracker, add it as the base
+  var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
+  var carry=base;
   // Find the earliest transaction date to know how far back to go
-  if(!state.transactions.length) return 0;
+  if(!state.transactions.length) return carry;
   var earliest=state.transactions.reduce(function(min,tx){return tx.date<min?tx.date:min;},state.transactions[0].date);
   var eDate=new Date(earliest);
   var eM=eDate.getMonth(), eY=eDate.getFullYear();
@@ -2960,6 +2963,75 @@ function getCarryForward(month, year){
     curM++;if(curM>11){curM=0;curY++;}
   }
   return carry;
+}
+
+// Show a modal breaking down how carry forward was calculated
+function showCarryBreakdown(){
+  var month=state.currentMonth, year=state.currentYear;
+  var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
+  var rows=[];
+  if(base!==0) rows.push({label:'🏁 Tracker Opening Balance',inc:base>0?base:0,exp:base<0?Math.abs(base):0,net:base,note:'Manually set starting balance'});
+
+  if(state.transactions.length){
+    var earliest=state.transactions.reduce(function(min,tx){return tx.date<min?tx.date:min;},state.transactions[0].date);
+    var eDate=new Date(earliest);
+    var eM=eDate.getMonth(), eY=eDate.getFullYear();
+    var curM=eM, curY=eY;
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    while(curY<year||(curY===year&&curM<month)){
+      var txs=state.transactions.filter(function(tx){var d=new Date(tx.date);return d.getMonth()===curM&&d.getFullYear()===curY;});
+      var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+      var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+      if(inc>0||exp>0) rows.push({label:months[curM]+' '+curY,inc:inc,exp:exp,net:inc-exp,note:txs.length+' transaction'+(txs.length!==1?'s':'')});
+      curM++;if(curM>11){curM=0;curY++;}
+    }
+  }
+
+  var total=rows.reduce(function(s,r){return s+r.net;},0);
+  var sym=state.currSymbol;
+  var html='<div style="font-size:12px;color:var(--text3);font-weight:700;margin-bottom:14px;line-height:1.6">The carry-forward is the <b style="color:var(--text)">cumulative savings or deficit</b> from all months before the current one. It tells you how much you had left (or owed) coming into this month.</div>';
+
+  if(!rows.length){
+    html+='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;font-weight:700">No previous month data yet.<br>Carry forward is ₹0.</div>';
+  } else {
+    html+='<div style="background:var(--bg3);border-radius:12px;overflow:hidden;margin-bottom:12px">';
+    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)"><span>Period</span><span style="text-align:right">Income</span><span style="text-align:right;padding-left:10px">Expense</span><span style="text-align:right;padding-left:10px">Net</span></div>';
+    rows.forEach(function(r){
+      html+='<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0;padding:9px 12px;border-bottom:1px solid var(--border)">'
+        +'<div><div style="font-size:12px;font-weight:800;color:var(--text)">'+r.label+'</div><div style="font-size:10px;color:var(--text3)">'+r.note+'</div></div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:8px">'+(r.inc>0?sym+fmt(cv(r.inc)):'—')+'</div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:8px">'+(r.exp>0?sym+fmt(cv(r.exp)):'—')+'</div>'
+        +'<div style="font-size:12px;font-weight:900;text-align:right;white-space:nowrap;padding-left:8px;color:'+(r.net>=0?'var(--green)':'var(--red)')+'">'+( r.net>=0?'+':'-')+sym+fmt(cv(Math.abs(r.net)))+'</div>'
+      +'</div>';
+    });
+    html+='<div style="display:grid;grid-template-columns:1fr auto;gap:0;padding:10px 12px;background:var(--bg2)">'
+      +'<div style="font-size:13px;font-weight:900;color:var(--text)">↩️ Total Carry Forward</div>'
+      +'<div style="font-size:15px;font-weight:900;color:'+(total>=0?'var(--green)':'var(--red)')+'">'+(total>=0?'+':'-')+sym+fmt(cv(Math.abs(total)))+'</div>'
+    +'</div></div>';
+  }
+
+  // Edit opening balance section
+  html+='<div style="background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:12px;padding:14px;margin-bottom:4px">'
+    +'<div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px">✏️ Set Tracker Opening Balance</div>'
+    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.6">If you had savings or a deficit <b style="color:var(--text)">before you started using this app</b>, set it here. This adjusts the carry-forward for all months.</div>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+      +'<input id="carryOpeningInput" type="number" placeholder="e.g. 11600" value="'+(base||'')+'" style="flex:1;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-weight:700;font-family:var(--font);outline:none">'
+      +'<button onclick="saveCarryOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap">Save</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--text3);margin-top:8px;font-weight:600">💡 Enter negative value (e.g. -5000) if you started with a deficit. Enter 0 to reset.</div>'
+  +'</div>';
+
+  document.getElementById('carryBreakdownBody').innerHTML=html;
+  showModal('carryBreakdownModal');
+}
+function saveCarryOpening(){
+  var v=parseFloat(document.getElementById('carryOpeningInput').value);
+  if(isNaN(v)) v=0;
+  state.trackerOpeningBalance=v/(state.currencyRate||1);
+  saveState();
+  closeModal('carryBreakdownModal');
+  updateDashboard();
+  showToast('Opening balance set to '+state.currSymbol+fmt(cv(state.trackerOpeningBalance)),'green');
 }
 function txHTML(tx){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
@@ -3188,9 +3260,24 @@ function updateDashboard(){
   if(cfBadge){
     if(carry!==0){
       cfBadge.style.display='flex';
-      if(carry>0){cfBadge.className='carry-badge carry-pos';cfBadge.innerHTML='↩️ Prev. month savings +'+state.currSymbol+fmt(cv(carry))+' carried forward';}
-      else{cfBadge.className='carry-badge carry-neg';cfBadge.innerHTML='↩️ Prev. month deficit −'+state.currSymbol+fmt(cv(Math.abs(carry)))+' carried forward';}
-    }else{cfBadge.style.display='none';}
+      var carryLabel=carry>0
+        ?'↩️ Carried forward: +'+state.currSymbol+fmt(cv(carry))+' &nbsp;<span style="font-size:10px;opacity:0.7">ℹ️ Tap to see breakdown</span>'
+        :'↩️ Deficit carried: −'+state.currSymbol+fmt(cv(Math.abs(carry)))+' &nbsp;<span style="font-size:10px;opacity:0.7">ℹ️ Tap to see breakdown</span>';
+      cfBadge.className='carry-badge '+(carry>0?'carry-pos':'carry-neg');
+      cfBadge.innerHTML=carryLabel;
+      cfBadge.style.cursor='pointer';
+      cfBadge.onclick=showCarryBreakdown;
+    }else{
+      // Show a neutral "set opening balance" nudge even when carry=0
+      cfBadge.style.display='flex';
+      cfBadge.className='carry-badge';
+      cfBadge.style.background='rgba(124,92,252,0.08)';
+      cfBadge.style.border='1px solid rgba(124,92,252,0.2)';
+      cfBadge.style.color='var(--accent)';
+      cfBadge.innerHTML='↩️ Carry forward: ₹0 &nbsp;<span style="font-size:10px;opacity:0.7">✏️ Set opening balance</span>';
+      cfBadge.style.cursor='pointer';
+      cfBadge.onclick=showCarryBreakdown;
+    }
   }
   const badge=document.getElementById('netBadge');
   if(net>=0){badge.className='hero-badge badge-up';badge.textContent=tr('surplus')+' '+state.currSymbol+fmt(cv(net));}
@@ -5301,7 +5388,10 @@ function renderAccounts(){
   if(!state.accounts.length){al.innerHTML=`<div class="empty"><div class="empty-big">🏦</div><div class="empty-title">No accounts yet</div><div class="empty-desc">Add Cash, Bank, UPI, Credit Card</div></div>`;return;}
   al.innerHTML=state.accounts.map(a=>{
     const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
-    return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteAcct('${a.id}')">Remove</div></div></div>`;
+    const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
+    const openBal=typeof a.openingBalance==='number'?a.openingBalance:0;
+    const openNote=Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'';
+    return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div>${openNote}</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:4px"><div style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:900;background:rgba(68,138,255,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(68,138,255,0.3)" onclick="editAcct('${a.id}')">✏️ Edit</div><div style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.1);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,69,105,0.2)" onclick="deleteAcct('${a.id}')">Remove</div></div></div></div>`;
   }).join('');
   // Update history filter dropdown
   const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
@@ -7186,6 +7276,50 @@ function renderWealthCashBreakdown(){
   el.innerHTML=html;
 }
 
+function showAcctBalBreakdown(){
+  var sym=state.currSymbol;
+  var html='';
+  if(!state.accounts.length){
+    html='<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px;font-weight:700">No accounts added yet.<br>Add an account to track your bank balances.</div>';
+  } else {
+    var totalBal=state.accounts.reduce(function(s,a){return s+a.balance;},0);
+    html='<div style="font-size:12px;color:var(--text3);font-weight:700;margin-bottom:14px;line-height:1.6">Each account balance = <b style="color:var(--text)">Opening Balance</b> + all income credited − all expenses debited to that account. Tap ✏️ Edit on any account to correct the opening balance.</div>';
+    html+='<div style="background:var(--bg3);border-radius:12px;overflow:hidden;margin-bottom:12px">';
+    state.accounts.forEach(function(ac,i){
+      var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[ac.type])||{emoji:'🏦'};
+      var txNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
+      var opening=typeof ac.openingBalance==='number'?ac.openingBalance:0;
+      var incTxns=state.transactions.filter(function(t){return String(t.account)===String(ac.id)&&t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+      var expTxns=state.transactions.filter(function(t){return String(t.account)===String(ac.id)&&t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+      html+='<div style="padding:12px;'+(i<state.accounts.length-1?'border-bottom:1px solid var(--border)':'')+'">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+          +'<div style="display:flex;align-items:center;gap:8px">'
+            +'<span style="font-size:18px">'+info.emoji+'</span>'
+            +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">'+ac.name+'</div>'
+            +'<div style="font-size:10px;color:var(--text3);font-weight:600">'+ac.type+'</div></div>'
+          +'</div>'
+          +'<div style="font-family:var(--font);font-size:15px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
+        +'</div>'
+        +'<div style="background:var(--bg2);border-radius:8px;padding:8px 10px;font-size:11px;font-weight:700">'
+          +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">🏁 Opening Balance</span><span style="color:var(--text)">'+sym+fmt(cv(opening))+'</span></div>'
+          +(incTxns>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">📥 Income credited</span><span style="color:var(--green)">+'+sym+fmt(cv(incTxns))+'</span></div>':'')
+          +(expTxns>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">📤 Expenses debited</span><span style="color:var(--red)">−'+sym+fmt(cv(expTxns))+'</span></div>':'')
+          +'<div style="display:flex;justify-content:space-between;padding-top:4px;border-top:1px solid var(--border)"><span style="color:var(--text)">= Current Balance</span><span style="color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(ac.balance))+'</span></div>'
+        +'</div>'
+        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="width:100%;margin-top:8px;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:7px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Opening Balance</button>'
+      +'</div>';
+    });
+    html+='</div>';
+    var totColor=totalBal>=0?'var(--green)':'var(--red)';
+    html+='<div style="background:var(--bg3);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Total Cash & Bank</div>'
+      +'<div style="font-family:var(--font);font-size:16px;font-weight:900;color:'+totColor+'">'+(totalBal<0?'−':'')+sym+fmt(cv(Math.abs(totalBal)))+'</div>'
+    +'</div>';
+  }
+  document.getElementById('acctBalBreakdownBody').innerHTML=html;
+  showModal('acctBalBreakdownModal');
+}
+
 function renderWealth(){
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
@@ -8434,6 +8568,26 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
       Current build: <span style="color:var(--accent)">v15 — 04 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
+  </div>
+</div>
+
+<!-- ACCOUNT BALANCE BREAKDOWN MODAL -->
+<div class="modal-bg" id="acctBalBreakdownModal">
+  <div class="modal" style="max-height:88vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏦 Cash & Bank Breakdown</div>
+    <div id="acctBalBreakdownBody"></div>
+    <button class="btn-cancel" onclick="closeModal('acctBalBreakdownModal')" style="width:100%;margin-top:12px">✕ Close</button>
+  </div>
+</div>
+
+<!-- CARRY FORWARD BREAKDOWN MODAL -->
+<div class="modal-bg" id="carryBreakdownModal">
+  <div class="modal" style="max-height:88vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title">↩️ Carry Forward Breakdown</div>
+    <div id="carryBreakdownBody"></div>
+    <button class="btn-cancel" onclick="closeModal('carryBreakdownModal')" style="width:100%;margin-top:12px">✕ Close</button>
   </div>
 </div>
 
