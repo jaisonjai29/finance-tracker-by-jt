@@ -1077,6 +1077,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <span>🏦 ACCOUNTS & CASH</span>
           <span style="font-family:var(--font)" id="wealthAcctsTotal">₹0</span>
         </div>
+        <div id="wealthCashBreakdown"></div>
         <div id="wealthAcctRows"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px" id="wealthAcctNav">
           <button onclick="wealthPage('acct',-1)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 14px;color:var(--text);font-weight:900;cursor:pointer;font-size:16px">‹</button>
@@ -1610,7 +1611,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v17 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v18 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -3142,11 +3143,12 @@ function updateDashboard(){
   const carry=getCarryForward(state.currentMonth,state.currentYear);
   const effectiveIncome=income+carry;
   const net=effectiveIncome-expense;
-  // Net worth uses actual account balances — same ground truth as Wealth Statement
+  // Net worth uses same carry-forward formula as Wealth Statement
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
-  const totalAccts=state.accounts.reduce((s,a)=>s+a.balance,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
-  const netWorth=totalAssets+totalAccts-totalLiab;
+  const carryAfterExp=carry-expense;
+  const cashBank=carryAfterExp>=0?carryAfterExp+income:income+carryAfterExp;
+  const netWorth=totalAssets+cashBank-totalLiab;
   const savRate=effectiveIncome>0?Math.round((effectiveIncome-expense)/effectiveIncome*100):0;
   document.getElementById('netWorthAmt').textContent=fmt(cv(Math.abs(netWorth)));
   // Money In shows only THIS month's actual income — carry is displayed separately, not added to income
@@ -7030,10 +7032,95 @@ function toggleWealthGroup(scheme){
   renderWealthAssetGrouped();
 }
 
+function renderWealthCashBreakdown(){
+  var el=document.getElementById('wealthCashBreakdown');
+  if(!el)return;
+  var b=window._wealthCashBreakdown;
+  if(!b){el.innerHTML='';return;}
+  var sym=state.currSymbol;
+  var carry=b.carry, curIncome=b.curIncome, curExpense=b.curExpense;
+  var carryAfterExpense=b.carryAfterExpense, cashBank=b.cashBank;
+
+  // Build step-by-step breakdown rows
+  var rows=[];
+
+  // Row 1: Carry forward (prev months saving/deficit)
+  if(carry>0){
+    rows.push({label:'↩️ Carried from prev. months',amt:carry,color:'var(--green)',sign:'+',note:'Savings accumulated from all previous months'});
+  } else if(carry<0){
+    rows.push({label:'↩️ Carried from prev. months',amt:carry,color:'var(--red)',sign:'',note:'Deficit carried over from previous months'});
+  } else {
+    rows.push({label:'↩️ Carried from prev. months',amt:0,color:'var(--text3)',sign:'',note:'No carry — first month or balanced so far'});
+  }
+
+  // Row 2: Expenses deducted from carry first
+  var expFromCarry=carry>0?Math.min(carry,curExpense):0;
+  var expFromIncome=curExpense-expFromCarry;
+  if(curExpense>0){
+    rows.push({label:'📤 Current month expenses',amt:-curExpense,color:'var(--red)',sign:'−',
+      note: expFromCarry>0&&expFromIncome>0
+        ? sym+fmt(cv(expFromCarry))+' from carry · '+sym+fmt(cv(expFromIncome))+' from income'
+        : expFromCarry>=curExpense
+        ? 'Fully covered by carried savings'
+        : 'Fully deducted from current income'
+    });
+  }
+
+  // Row 3: Current month income
+  if(curIncome>0){
+    rows.push({label:'📥 Current month income',amt:curIncome,color:'var(--green)',sign:'+',
+      note: expFromIncome>0
+        ? sym+fmt(cv(expFromIncome))+' used for expenses · '+sym+fmt(cv(curIncome-expFromIncome))+' remains'
+        : 'Fully intact — expenses covered by carry'
+    });
+  }
+
+  // Divider + result
+  var resultColor=cashBank>0?'var(--green)':cashBank<0?'var(--red)':'var(--text3)';
+
+  var html='<div style="background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:14px">'
+    +'<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">💡 How Cash & Bank is Calculated</div>';
+
+  rows.forEach(function(r,i){
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;'+(i<rows.length-1?'border-bottom:1px solid var(--border)':'')+'">'
+      +'<div style="flex:1">'
+        +'<div style="font-size:12px;font-weight:800;color:var(--text)">'+r.label+'</div>'
+        +'<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px">'+r.note+'</div>'
+      +'</div>'
+      +'<div style="font-family:var(--font);font-size:13px;font-weight:900;color:'+r.color+';white-space:nowrap;margin-left:12px">'
+        +(r.amt===0?sym+'0':(r.amt>0?r.sign+sym+fmt(cv(r.amt)):'−'+sym+fmt(cv(Math.abs(r.amt)))))
+      +'</div>'
+    +'</div>';
+  });
+
+  // Total line
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid var(--border)">'
+    +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Available Cash & Bank</div>'
+    +'<div style="font-family:var(--font);font-size:16px;font-weight:900;color:'+resultColor+'">'
+      +(cashBank<0?'−':'')+sym+fmt(cv(Math.abs(cashBank)))
+    +'</div>'
+  +'</div>';
+
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 function renderWealth(){
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
-  const totalAccts=state.accounts.reduce((s,a)=>s+a.balance,0);
+
+  // Cash & Bank = carry forward + current month income - current month expenses
+  // Carry forward = cumulative net of ALL months before current
+  const carry=getCarryForward(state.currentMonth,state.currentYear);
+  const curTxs=getMonthTxs();
+  const curIncome=curTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const curExpense=curTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  // Carry is 1st priority for expenses: carry absorbs expense first, then income
+  const carryAfterExpense=carry-curExpense;
+  const cashBank= carryAfterExpense>=0
+    ? carryAfterExpense+curIncome          // carry covered all expense, income fully intact
+    : curIncome+carryAfterExpense;         // carry deficit eats into income
+  const totalAccts=cashBank;
   const netWorth=totalAssets+totalAccts-totalLiab;
 
   var nwEl=document.getElementById('wealthNetWorth');
@@ -7041,7 +7128,7 @@ function renderWealth(){
   nwEl.style.color=netWorth<0?'var(--red)':netWorth>0?'var(--green)':'var(--text)';
   document.getElementById('wealthTotalAssets').textContent=fmt(cv(totalAssets));
   document.getElementById('wealthTotalDebts').textContent=fmt(cv(totalLiab));
-  // Cash & Bank stat box: show sign + switch color green/red
+  // Cash & Bank stat box
   var acctStatEl=document.getElementById('wealthTotalAccts');
   acctStatEl.textContent=(totalAccts<0?'－':'')+fmt(cv(Math.abs(totalAccts)));
   var acctBox=acctStatEl.closest('.stat-box');
@@ -7049,22 +7136,15 @@ function renderWealth(){
     acctBox.className='stat-box '+(totalAccts<0?'sr':'sb');
     var acctEmoji=acctBox.querySelector('.stat-emoji');
     if(acctEmoji)acctEmoji.textContent=totalAccts<0?'⚠️':'🏦';
-    // Show opening balance breakdown so user understands why it differs from transaction totals
-    var allTxNet=state.transactions.reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
-    var openingBal=totalAccts-allTxNet;
     var existingNote=acctBox.querySelector('.acct-opening-note');
     if(existingNote)existingNote.remove();
-    if(Math.abs(openingBal)>0.5){
-      var note=document.createElement('div');
-      note.className='acct-opening-note';
-      note.style.cssText='font-size:10px;font-weight:700;color:var(--text3);margin-top:3px;line-height:1.4;text-align:center';
-      note.innerHTML='Txns: '+(allTxNet>=0?'+':'')+state.currSymbol+fmt(cv(allTxNet))+'<br>Opening: '+state.currSymbol+fmt(cv(openingBal));
-      acctBox.appendChild(note);
-    }
   }
   document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(cv(totalAssets));
   document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(totalAccts)));
   document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(cv(totalLiab));
+  // Store for use in renderWealthSection acct breakdown
+  window._wealthCashBreakdown={carry,curIncome,curExpense,carryAfterExpense,cashBank};
+  renderWealthCashBreakdown();
 
   const badge=document.getElementById('wealthBadge');
   if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent='📈 Surplus';}
@@ -8155,7 +8235,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v17 — 04 Apr 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v18 — 04 Apr 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
@@ -8280,7 +8360,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v17 — 04 Apr 2026</span>
+      Current build: <span style="color:var(--accent)">v18 — 04 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
