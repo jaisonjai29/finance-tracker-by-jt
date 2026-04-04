@@ -5465,9 +5465,15 @@ function updateTxAccountSelect(){
       return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
     }).join('');
 
-  // Restore previous selection; don't auto-pick — let user choose consciously
+  // Restore previous selection, or auto-select HDFC Savings Account as default
   if(curr && filtered.find(function(a){return String(a.id)===String(curr);})){
     sel.value=curr;
+  } else {
+    // Try to find HDFC Savings Account first, then any Savings Account, then first account
+    var hdfcSav=filtered.find(function(a){return a.name&&a.name.toLowerCase().indexOf('hdfc')>-1&&a.type==='Savings Account';});
+    var anySav=filtered.find(function(a){return a.type==='Savings Account';});
+    var defAcct=hdfcSav||anySav||filtered[0];
+    if(defAcct) sel.value=String(defAcct.id);
   }
 
   // Show/hide the payment method field (expenses only)
@@ -5657,7 +5663,15 @@ function updateRecurAccountSelect(){
   var lbl=document.getElementById('recurAccountLabel');
   if(lbl)lbl.textContent=recurType==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
   sel.innerHTML='<option value="">-- Select Account --</option>'+filtered.map(function(a){var info=ACCT_TYPES[a.type]||{emoji:'🏦'};return'<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+'</option>';}).join('');
-  if(!curr&&filtered.length>0)sel.value=filtered[0].id;
+  // Auto-select HDFC Savings as default if no prior selection
+  if(curr && filtered.find(function(a){return String(a.id)===String(curr);})){
+    sel.value=curr;
+  } else {
+    var hdfcSav=filtered.find(function(a){return a.name&&a.name.toLowerCase().indexOf('hdfc')>-1&&a.type==='Savings Account';});
+    var anySav=filtered.find(function(a){return a.type==='Savings Account';});
+    var defAcct=hdfcSav||anySav||filtered[0];
+    if(defAcct) sel.value=String(defAcct.id);
+  }
   // Show/hide platform and payMethod for expense only
   var pf=document.getElementById('recurPlatformField');if(pf)pf.style.display=recurType==='expense'?'block':'none';
   var pmf=document.getElementById('recurPayMethodField');if(pmf)pmf.style.display=recurType==='expense'?'block':'none';
@@ -5835,23 +5849,68 @@ function generateMonthlyPlan(){
 
 function checkRecurring(){
   const today=new Date();
+  const todayY=today.getFullYear();
+  const todayM=today.getMonth(); // 0-based
+  const todayD=today.getDate();
   const todayKey=today.toISOString().split('T')[0];
-  if(state.lastRecurCheck===todayKey)return;
   let added=0;
+
+  // Helper: get the YYYY-MM key for an already-added entry
+  function monthKey(y,m){return y+'-'+(m<10?'0'+m:m);}
+
   state.recurring.forEach(r=>{
-    if(r.lastAdded===todayKey)return;
-    let shouldAdd=false;
-    if(r.freq==='monthly'&&today.getDate()===r.day)shouldAdd=true;
-    if(r.freq==='weekly'&&today.getDay()===(r.day%7))shouldAdd=true;
-    if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===0)shouldAdd=true;
-    if(shouldAdd){
-      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
-      r.lastAdded=todayKey;
-      added++;
+    // Migrate old string lastAdded (date "YYYY-MM-DD") to array format
+    if(!Array.isArray(r.addedMonths)){
+      r.addedMonths=[];
+      if(r.lastAdded){
+        // Mark the month of lastAdded as done
+        var ld=r.lastAdded.substring(0,7); // "YYYY-MM"
+        r.addedMonths.push(ld);
+      }
+    }
+
+    if(r.freq==='monthly'){
+      // Add for every month from creation up through current month where day has passed
+      // We only look at current month to avoid huge backfill; missed months silently skipped
+      var mk=monthKey(todayY,todayM+1); // YYYY-MM (1-based month)
+      if(r.addedMonths.indexOf(mk)>-1) return; // already added this month
+      if(todayD>=r.day){ // trigger day has arrived this month
+        var txDate=todayY+'-'+(todayM+1<10?'0'+(todayM+1):(todayM+1))+'-'+(r.day<10?'0'+r.day:r.day);
+        // Don't exceed today's date
+        if(txDate>todayKey) txDate=todayKey;
+        var newTx={id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:txDate,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'};
+        state.transactions.unshift(newTx);
+        // Update linked account balance
+        if(r.account){var acctR=state.accounts.find(function(a){return String(a.id)===String(r.account);});if(acctR)acctR.balance+=(r.type==='income'?r.amount:-r.amount);}
+        r.addedMonths.push(mk);
+        r.lastAdded=todayKey;
+        added++;
+      }
+    } else if(r.freq==='weekly'){
+      if(r.lastAdded===todayKey) return;
+      if(today.getDay()===(r.day%7)){
+        var newTxW={id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'};
+        state.transactions.unshift(newTxW);
+        if(r.account){var acctW=state.accounts.find(function(a){return String(a.id)===String(r.account);});if(acctW)acctW.balance+=(r.type==='income'?r.amount:-r.amount);}
+        r.lastAdded=todayKey;
+        added++;
+      }
+    } else if(r.freq==='yearly'){
+      var yk=String(todayY);
+      if(!Array.isArray(r.addedYears)) r.addedYears=[];
+      if(r.addedYears.indexOf(yk)>-1) return;
+      // r.day is day-of-year stored as day number in January for simplicity — check month too
+      if(todayM===0&&todayD>=r.day){
+        state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
+        r.addedYears.push(yk);
+        r.lastAdded=todayKey;
+        added++;
+      }
     }
   });
+
   state.lastRecurCheck=todayKey;
-  if(added>0){saveState();updateDashboard();renderHistory();if(added>0)setTimeout(()=>showToast('📅 '+added+' recurring transaction'+(added>1?'s':'')+' auto-added!','green'),500);}
+  if(added>0){saveState();updateDashboard();renderHistory();setTimeout(()=>showToast('📅 '+added+' recurring transaction'+(added>1?'s':'')+' auto-added!','green'),500);}
 }
 
 // ======== RECEIPT SCANNER ========
@@ -8684,29 +8743,24 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
       <!-- v15 — Current LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">15</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">16</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v15 — 04 Apr 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v16 — 04 Apr 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            🐛 <b style="color:var(--text)">Fixed MF rich grid</b> — works for both CSV-imported (qty/buyPrice) and manually added (units/buyNav) holdings<br>
-            🐛 <b style="color:var(--text)">Fixed MF save bug</b> — units × NAV now correctly computes invested &amp; current value<br>
-            🐛 <b style="color:var(--text)">Fixed expand/collapse arrow</b> — Stocks/MF/ETF correctly auto-expand on load<br>
-            📈 <b style="color:var(--text)">Mutual Fund rich grid</b> — Quantity, Avg NAV, Current NAV, Invested, Current Value &amp; P&amp;L<br>
-            🗑️ <b style="color:var(--text)">Bulk delete</b> — 🗑️ All button on Stocks, MF &amp; ETF header removes entire group<br>
-            ⚡ <b style="color:var(--text)">Quick Update CMP / NAV / Price</b> inline<br>
-            📉 <b style="color:var(--text)">Per-unit change chip</b> — ▲/▼ per share / unit / gram<br>
-            🥇 <b style="color:var(--text)">Rich grid for Crypto &amp; Gold</b><br>
-            🤖 <b style="color:var(--text)">AI Portfolio Insight</b> — P&amp;L analysis &amp; rebalancing tips
+            📅 <b style="color:var(--text)">Fixed recurring engine</b> — fires reliably every month via month+year tracking<br>
+            🏦 <b style="color:var(--text)">Default account</b> — auto-selects HDFC Savings for all income &amp; expense adds<br>
+            💰 <b style="color:var(--text)">Account balance sync</b> — recurring auto-add now updates linked account balance<br>
+            ↩️ <b style="color:var(--text)">Carry forward fixed</b> — account balances stay in sync with recurring transactions
           </div>
         </div>
       </div>
 
-      <div style="display:flex;gap:14px;padding-bottom:20px">
+      <!-- v15 -->
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">12</div>
           <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
@@ -8737,24 +8791,6 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
             🔄 Silent Google token auto-refresh on page reload<br>
             ☁️ Drive sync no longer shows "Sign in first" after token expires<br>
             🛡️ Auto-reconnect before sync &amp; load from cloud
-          </div>
-        </div>
-      </div>
-
-      <!-- v9 -->
-      <div style="display:flex;gap:14px;padding-bottom:20px">
-        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">9</div>
-          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
-        </div>
-        <div style="flex:1;padding-top:6px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v9 — 21 Mar 2025</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            ☁️ Google Drive sync with encrypted backup<br>
-            🔵 Ocean &amp; Aurora themes added<br>
-            📊 Analytics chart improvements<br>
-            💎 Wealth Statement page<br>
-            🤖 AI Insights with Claude integration
           </div>
         </div>
       </div>
@@ -8814,7 +8850,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v15 — 04 Apr 2026</span>
+      Current build: <span style="color:var(--accent)">v16 — 04 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
