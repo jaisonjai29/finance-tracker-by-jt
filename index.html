@@ -7280,40 +7280,120 @@ function showAcctBalBreakdown(){
   var sym=state.currSymbol;
   var html='';
   if(!state.accounts.length){
-    html='<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px;font-weight:700">No accounts added yet.<br>Add an account to track your bank balances.</div>';
+    html='<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px;font-weight:700">No accounts added yet.</div>';
   } else {
     var totalBal=state.accounts.reduce(function(s,a){return s+a.balance;},0);
-    html='<div style="font-size:12px;color:var(--text3);font-weight:700;margin-bottom:14px;line-height:1.6">Each account balance = <b style="color:var(--text)">Opening Balance</b> + all income credited − all expenses debited to that account. Tap ✏️ Edit on any account to correct the opening balance.</div>';
-    html+='<div style="background:var(--bg3);border-radius:12px;overflow:hidden;margin-bottom:12px">';
+
+    // Unlinked transaction summary
+    var unlinkedTxns=state.transactions.filter(function(t){return !t.account;});
+    var unlinkedInc=unlinkedTxns.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var unlinkedExp=unlinkedTxns.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+
+    html='<div style="font-size:12px;color:var(--text3);font-weight:700;margin-bottom:12px;line-height:1.6">'
+      +'Balance = <b style="color:var(--text)">Opening</b> + income credited − expenses debited, month by month. '
+      +'<b style="color:var(--yellow)">Only transactions linked to an account affect this balance.</b></div>';
+
+    // Unlinked warning block
+    if(unlinkedTxns.length>0){
+      html+='<div style="background:rgba(255,167,0,0.1);border:1.5px solid rgba(255,167,0,0.35);border-radius:12px;padding:12px 14px;margin-bottom:14px">'
+        +'<div style="font-size:12px;font-weight:900;color:#ffa700;margin-bottom:6px">⚠️ '+unlinkedTxns.length+' transaction'+(unlinkedTxns.length>1?'s':'')+' have NO account linked</div>'
+        +'<div style="font-size:11px;color:var(--text2);font-weight:700;line-height:1.8">'
+          +(unlinkedInc>0?'📥 Unlinked income: <b style="color:var(--green)">+'+sym+fmt(cv(unlinkedInc))+'</b><br>':'')
+          +(unlinkedExp>0?'📤 Unlinked expenses: <b style="color:var(--red)">−'+sym+fmt(cv(unlinkedExp))+'</b><br>':'')
+          +'These are <b>excluded from Cash & Bank</b>. To fix: go to History → tap each transaction → select an account.'
+        +'</div>'
+        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,167,0,0.2)">'
+          +'<div style="display:flex;justify-content:space-between">'
+            +'<span style="font-size:12px;font-weight:900;color:var(--text)">Shown Cash & Bank</span>'
+            +'<span style="font-family:var(--font);font-size:13px;font-weight:900;color:var(--blue)">'+sym+fmt(cv(totalBal))+'</span>'
+          +'</div>'
+          +'<div style="display:flex;justify-content:space-between;margin-top:4px">'
+            +'<span style="font-size:12px;font-weight:900;color:var(--text)">What it should be</span>'
+            +'<span style="font-family:var(--font);font-size:13px;font-weight:900;color:var(--green)">'+sym+fmt(cv(totalBal+unlinkedInc-unlinkedExp))+'</span>'
+          +'</div>'
+        +'</div>'
+      +'</div>';
+    }
+
     state.accounts.forEach(function(ac,i){
       var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[ac.type])||{emoji:'🏦'};
-      var txNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
       var opening=typeof ac.openingBalance==='number'?ac.openingBalance:0;
-      var incTxns=state.transactions.filter(function(t){return String(t.account)===String(ac.id)&&t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-      var expTxns=state.transactions.filter(function(t){return String(t.account)===String(ac.id)&&t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-      html+='<div style="padding:12px;'+(i<state.accounts.length-1?'border-bottom:1px solid var(--border)':'')+'">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-          +'<div style="display:flex;align-items:center;gap:8px">'
-            +'<span style="font-size:18px">'+info.emoji+'</span>'
-            +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">'+ac.name+'</div>'
-            +'<div style="font-size:10px;color:var(--text3);font-weight:600">'+ac.type+'</div></div>'
-          +'</div>'
-          +'<div style="font-family:var(--font);font-size:15px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
+
+      // Build month-by-month rows for THIS account
+      var acTxns=state.transactions.filter(function(t){return String(t.account)===String(ac.id);});
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var monthMap={};
+      acTxns.forEach(function(t){
+        var d=new Date(t.date);
+        var key=d.getFullYear()+'-'+(d.getMonth());
+        if(!monthMap[key])monthMap[key]={label:months[d.getMonth()]+' '+d.getFullYear(),inc:0,exp:0};
+        if(t.type==='income')monthMap[key].inc+=t.amount;
+        else monthMap[key].exp+=t.amount;
+      });
+      var monthKeys=Object.keys(monthMap).sort();
+
+      html+='<div style="background:var(--bg3);border-radius:12px;overflow:hidden;margin-bottom:12px">';
+      // Account header
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2)">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:18px">'+info.emoji+'</span>'
+          +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">'+ac.name+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);font-weight:600">'+ac.type+'</div></div>'
         +'</div>'
-        +'<div style="background:var(--bg2);border-radius:8px;padding:8px 10px;font-size:11px;font-weight:700">'
-          +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">🏁 Opening Balance</span><span style="color:var(--text)">'+sym+fmt(cv(opening))+'</span></div>'
-          +(incTxns>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">📥 Income credited</span><span style="color:var(--green)">+'+sym+fmt(cv(incTxns))+'</span></div>':'')
-          +(expTxns>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">📤 Expenses debited</span><span style="color:var(--red)">−'+sym+fmt(cv(expTxns))+'</span></div>':'')
-          +'<div style="display:flex;justify-content:space-between;padding-top:4px;border-top:1px solid var(--border)"><span style="color:var(--text)">= Current Balance</span><span style="color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(ac.balance))+'</span></div>'
-        +'</div>'
-        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="width:100%;margin-top:8px;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:7px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Opening Balance</button>'
+        +'<div style="font-family:var(--font);font-size:15px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
       +'</div>';
+
+      // Breakdown table
+      html+='<div style="padding:10px 14px">';
+
+      // Opening row
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">'
+        +'<span style="font-size:11px;font-weight:800;color:var(--text3)">🏁 Opening Balance</span>'
+        +'<span style="font-size:12px;font-weight:900;color:var(--text)">'+sym+fmt(cv(opening))+'</span>'
+      +'</div>';
+
+      // Month rows
+      var running=opening;
+      monthKeys.forEach(function(key){
+        var m=monthMap[key];
+        var net=m.inc-m.exp;
+        running+=net;
+        html+='<div style="padding:7px 0;border-bottom:1px solid var(--border)">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<span style="font-size:11px;font-weight:800;color:var(--text)">'+m.label+'</span>'
+            +'<span style="font-size:12px;font-weight:900;color:'+(net>=0?'var(--green)':'var(--red)')+'">'+( net>=0?'+':'-')+sym+fmt(cv(Math.abs(net)))+'</span>'
+          +'</div>'
+          +'<div style="display:flex;gap:12px;margin-top:3px">'
+            +(m.inc>0?'<span style="font-size:10px;color:var(--green);font-weight:700">📥 +'+sym+fmt(cv(m.inc))+'</span>':'')
+            +(m.exp>0?'<span style="font-size:10px;color:var(--red);font-weight:700">📤 −'+sym+fmt(cv(m.exp))+'</span>':'')
+          +'</div>'
+        +'</div>';
+      });
+
+      // Current balance total
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:2px">'
+        +'<span style="font-size:12px;font-weight:900;color:var(--text)">= Current Balance</span>'
+        +'<span style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(ac.balance))+'</span>'
+      +'</div>';
+
+      html+='</div>'; // end padding div
+
+      // Edit button
+      html+='<div style="padding:0 14px 12px">'
+        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Opening Balance</button>'
+      +'</div>';
+
+      html+='</div>'; // end account card
     });
-    html+='</div>';
+
+    // Total footer
     var totColor=totalBal>=0?'var(--green)':'var(--red)';
-    html+='<div style="background:var(--bg3);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">'
-      +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Total Cash & Bank</div>'
-      +'<div style="font-family:var(--font);font-size:16px;font-weight:900;color:'+totColor+'">'+(totalBal<0?'−':'')+sym+fmt(cv(Math.abs(totalBal)))+'</div>'
+    html+='<div style="background:var(--bg3);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div>'
+        +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Total Cash & Bank</div>'
+        +'<div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:2px">Sum of all account balances</div>'
+      +'</div>'
+      +'<div style="font-family:var(--font);font-size:17px;font-weight:900;color:'+totColor+'">'+(totalBal<0?'−':'')+sym+fmt(cv(Math.abs(totalBal)))+'</div>'
     +'</div>';
   }
   document.getElementById('acctBalBreakdownBody').innerHTML=html;
@@ -7326,6 +7406,10 @@ function renderWealth(){
 
   // Cash & Bank = sum of all real account balances (openingBalance + txNet each)
   const totalAccts=state.accounts.reduce((s,a)=>s+a.balance,0);
+  // Check for unlinked transactions — these are NOT reflected in account balances
+  const unlinkedIncome=state.transactions.filter(t=>t.type==='income'&&!t.account).reduce((s,t)=>s+t.amount,0);
+  const unlinkedExpense=state.transactions.filter(t=>t.type==='expense'&&!t.account).reduce((s,t)=>s+t.amount,0);
+  const unlinkedCount=state.transactions.filter(t=>!t.account).length;
   const netWorth=totalAssets+totalAccts-totalLiab;
 
   var nwEl=document.getElementById('wealthNetWorth');
@@ -7347,9 +7431,35 @@ function renderWealth(){
   document.getElementById('wealthAssetsTotal').textContent=state.currSymbol+fmt(cv(totalAssets));
   document.getElementById('wealthAcctsTotal').textContent=(totalAccts<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(totalAccts)));
   document.getElementById('wealthLiabTotal').textContent=state.currSymbol+fmt(cv(totalLiab));
-  // Store for use in renderWealthSection acct breakdown
-  // Pass real account totals so breakdown card is consistent with stat box
-  // Breakdown panel removed — each account card shows its own balance directly
+
+  // Show/update unlinked transaction warning banner
+  var warnEl=document.getElementById('wealthUnlinkedWarn');
+  if(!warnEl){
+    warnEl=document.createElement('div');
+    warnEl.id='wealthUnlinkedWarn';
+    var statGrid=document.querySelector('#pageWealth .stat-grid-3');
+    if(statGrid)statGrid.parentNode.insertBefore(warnEl,statGrid.nextSibling);
+  }
+  if(unlinkedCount>0){
+    var unlinkedNet=unlinkedIncome-unlinkedExpense;
+    warnEl.innerHTML='<div style="background:rgba(255,167,0,0.1);border:1.5px solid rgba(255,167,0,0.35);border-radius:12px;padding:12px 14px;margin-bottom:14px;cursor:pointer" onclick="showAcctBalBreakdown()">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px">'
+        +'<span style="font-size:18px;flex-shrink:0">⚠️</span>'
+        +'<div>'
+          +'<div style="font-size:12px;font-weight:900;color:#ffa700;margin-bottom:4px">'+unlinkedCount+' transaction'+(unlinkedCount>1?'s':'')+' not linked to any account</div>'
+          +'<div style="font-size:11px;color:var(--text2);font-weight:700;line-height:1.6">'
+            +'These are <b>not included</b> in Cash & Bank. '
+            +(unlinkedExpense>0?'Unlinked expenses: <b style="color:var(--red)">−'+state.currSymbol+fmt(cv(unlinkedExpense))+'</b>. ':'')
+            +(unlinkedIncome>0?'Unlinked income: <b style="color:var(--green)">+'+state.currSymbol+fmt(cv(unlinkedIncome))+'</b>. ':'')
+            +'Real balance may be <b style="color:var(--text)">'+(unlinkedNet<=0?'₹'+fmt(cv(Math.abs(unlinkedNet)))+' lower':'₹'+fmt(cv(unlinkedNet))+' higher')+'</b> than shown.'
+          +'</div>'
+          +'<div style="font-size:10px;color:#ffa700;font-weight:800;margin-top:6px">👆 Tap Cash & Bank to see breakdown & fix</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  } else {
+    warnEl.innerHTML='';
+  }
 
   const badge=document.getElementById('wealthBadge');
   if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent='📈 Surplus';}
