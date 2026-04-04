@@ -1610,7 +1610,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v15 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v16 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -1948,7 +1948,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     </div>
     <div class="field"><div class="field-label">🗂️ Category</div><div class="chips" id="recurCatChips"></div></div>
     <div class="field"><div class="field-label">🔄 Repeat Every</div><select class="field-input" id="recurFreq"><option value="monthly">Every Month</option><option value="weekly">Every Week</option><option value="yearly">Every Year</option></select></div>
-    <button class="btn-go" onclick="saveRecur()">✅ Add Recurring</button>
+    <div class="field" id="recurAccountField"><div class="field-label" id="recurAccountLabel">🏦 Deduct from Account</div><select class="field-input" id="recurAccount"><option value="">-- Select Account --</option></select></div>
+    <div class="field" id="recurPlatformField" style="display:none"><div class="field-label">🛒 Platform / Store</div><select class="field-input" id="recurPlatform"><option value="">-- None --</option></select></div>
+    <div class="field" id="recurPayMethodField" style="display:none"><div class="field-label">💳 Payment Method</div><select class="field-input" id="recurPayMethod"><option value="">-- None --</option><option value="UPI">📱 UPI</option><option value="Credit Card">💳 Credit Card</option><option value="Debit Card">💰 Debit Card</option><option value="Cash">💵 Cash</option><option value="Net Banking">🏦 Net Banking</option></select></div>
+    <div class="field"><div class="field-label">👤 Member</div><div class="chips" id="recurMemberChips" style="gap:6px"></div></div>
+    <button class="btn-go" id="recurSaveBtn" onclick="saveRecur()">✅ Add Recurring</button>
     <button class="btn-cancel" onclick="closeModal('recurModal')">Cancel</button>
   </div>
 </div>
@@ -2813,7 +2817,7 @@ function showModal(id){
   if(id==='budgetModal')renderBudgetInputs();
   if(id==='familyModal'){renderFamilyMembersList();document.getElementById('newMemberInput').value='';document.getElementById('familyModalError').style.display='none';}
   if(id==='billModal')renderBillCatChips();
-  if(id==='recurModal')renderRecurCatChips();
+  if(id==='recurModal'){renderRecurCatChips();initRecurModal();}
 }
 function closeModal(id){document.getElementById(id).classList.remove('on');if(id==='txModal')resetTxForm();if(id==='goalModal'){document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';goalIcon='🏠';document.querySelectorAll('#goalModal .chip').forEach(function(c,i){c.classList.toggle('on',i===0);});}if(id==='liabModal'){document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
   if(id==='acctModal'){var am=document.getElementById('acctModal');if(am)am.dataset.editId='';var ab=document.querySelector('#acctModal .btn-go');if(ab)ab.textContent='✅ Add Account';}if(id==='assetModal'){var m=document.getElementById('assetModal');m.dataset.editId='';m.dataset.invested='0';m.dataset.value='0';document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';var at=document.querySelector('#assetModal .modal-title');if(at)at.textContent='💼 Add Asset';var cp=document.getElementById('assetCalcPreview');if(cp)cp.style.display='none';document.getElementById('assetDynamicFields').innerHTML='';document.getElementById('assetName').value='';document.getElementById('assetScheme').value=document.querySelector('#assetScheme option').value;}}
@@ -3062,7 +3066,7 @@ function customConfirm(icon, title, msg, onOk){
 }
 
 function editTx(id){
-  const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
+  const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
   const todayStr=new Date().toISOString().split('T')[0];
   document.getElementById('editTxId').value=id;
   document.getElementById('editTxAmt').value=parseFloat((tx.amount*(state.currencyRate||1)).toFixed(2));
@@ -3183,7 +3187,7 @@ function getEditSelMember(){
   return ch?ch.dataset.member:'Self';
 }
 function saveEditTx(){
-  const id=parseInt(document.getElementById('editTxId').value);
+  const id=document.getElementById('editTxId').value;
   const amt=parseFloat(document.getElementById('editTxAmt').value);
   const desc=document.getElementById('editTxDesc').value.trim();
   const date=document.getElementById('editTxDate').value;
@@ -3201,7 +3205,7 @@ function saveEditTx(){
   const todayMax=new Date().toISOString().split('T')[0];
   if(date>todayMax){showToast('Future dates are not allowed','yellow');return;}
   const amtINR2=amt/(state.currencyRate||1);  // convert display currency back to INR
-  const tx=state.transactions.find(t=>t.id===id);if(!tx)return;
+  const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
   // Reverse original real-account balance effect (origAmt is already in INR)
   if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
   // Apply all updated fields
@@ -3220,12 +3224,12 @@ function saveEditTx(){
   showToast('Transaction updated!','green');
 }
 function deleteFromEdit(){
-  const id=parseInt(document.getElementById('editTxId').value);
+  const id=document.getElementById('editTxId').value;
   closeModal('editTxModal');
   customConfirm('🗑️','Delete Transaction','This cannot be undone.',function(){
-    const tx=state.transactions.find(t=>t.id===id);
+    const tx=state.transactions.find(t=>String(t.id)===String(id));
     if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
-    state.transactions=state.transactions.filter(t=>t.id!==id);
+    state.transactions=state.transactions.filter(t=>String(t.id)!==String(id));
     saveState();updateDashboard();renderHistory();updateBudget();renderAccounts();
     if(curPage==='analytics')renderAnalytics();
   });
@@ -5590,10 +5594,66 @@ function generateLocalInsights(savRate,topCats,overBudget,totalDebt,income,expen
 }
 
 // ======== RECURRING TRANSACTIONS ========
-function setRecurType(t){recurType=t;document.getElementById('recurTypeInc').classList.toggle('on',t==='income');document.getElementById('recurTypeExp').classList.toggle('on',t==='expense');renderRecurCatChips();}
+function setRecurType(t){recurType=t;document.getElementById('recurTypeInc').classList.toggle('on',t==='income');document.getElementById('recurTypeExp').classList.toggle('on',t==='expense');renderRecurCatChips();updateRecurAccountSelect();}
 function renderRecurCatChips(){const cats=recurType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
-function saveRecur(){const desc=document.getElementById('recurDesc').value.trim();const amt=parseFloat(document.getElementById('recurAmt').value||'0');const day=parseInt(document.getElementById('recurDay').value||'1');const freq=document.getElementById('recurFreq').value;const cat=document.querySelector('#recurCatChips .chip.on')?.dataset.cat||'Other';if(!desc||!amt){showToast('Fill description and amount','yellow');return;}const amtRecurINR=amt/(state.currencyRate||1);state.recurring.push({id:Date.now(),type:recurType,desc,amount:amtRecurINR,day,freq,category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:''});saveState();closeModal('recurModal');renderRecurring();['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');}
-function renderRecurring(){const c=document.getElementById('recurList');if(!state.recurring.length){c.innerHTML=`<div class="empty"><div class="empty-big">📅</div><div class="empty-title">No recurring transactions</div><div class="empty-desc">Add salary, EMI, subscriptions</div></div>`;return;}c.innerHTML=state.recurring.map(r=>`<div class="tx"><div class="tx-ico" style="background:${r.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)'}">${r.emoji}</div><div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${r.freq==='monthly'?'Every month on day '+r.day:r.freq==='weekly'?'Every week':'Every year'} · ${r.category}</div></div><div style="text-align:right"><div class="tx-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">${r.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(r.amount))}</div><div style="font-size:10px;color:var(--red);cursor:pointer;margin-top:4px;font-weight:900" onclick="deleteRecur(${r.id})">Remove</div></div></div>`).join('');}
+function initRecurModal(){
+  // Reset edit state
+  var modal=document.getElementById('recurModal');
+  modal.dataset.editId='';
+  document.querySelector('#recurModal .modal-title').textContent='📅 Add Recurring';
+  document.getElementById('recurSaveBtn').textContent='✅ Add Recurring';
+  // Reset type to expense
+  setRecurType('expense');
+  // Populate platform dropdown
+  var platSel=document.getElementById('recurPlatform');
+  platSel.innerHTML='<option value="">-- None --</option>'+PLATFORMS.map(function(p){return'<option value="'+p.name+'">'+p.emoji+' '+p.name+'</option>';}).join('');
+  // Render member chips
+  var wrap=document.getElementById('recurMemberChips');
+  var members=state.familyMembers&&state.familyMembers.length?state.familyMembers:['Self'];
+  wrap.innerHTML='';
+  members.forEach(function(m,i){var ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.textContent=m;ch.dataset.member=m;ch.onclick=function(){wrap.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});ch.classList.add('on');};wrap.appendChild(ch);});
+}
+function updateRecurAccountSelect(){
+  var sel=document.getElementById('recurAccount');
+  if(!sel)return;
+  var curr=sel.value;
+  var validTypes=INCOME_ACCT_TYPES;
+  var filtered=state.accounts.filter(function(a){return validTypes.indexOf(a.type)>-1;});
+  if(!filtered.length)filtered=state.accounts;
+  var lbl=document.getElementById('recurAccountLabel');
+  if(lbl)lbl.textContent=recurType==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
+  sel.innerHTML='<option value="">-- Select Account --</option>'+filtered.map(function(a){var info=ACCT_TYPES[a.type]||{emoji:'🏦'};return'<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+'</option>';}).join('');
+  if(!curr&&filtered.length>0)sel.value=filtered[0].id;
+  // Show/hide platform and payMethod for expense only
+  var pf=document.getElementById('recurPlatformField');if(pf)pf.style.display=recurType==='expense'?'block':'none';
+  var pmf=document.getElementById('recurPayMethodField');if(pmf)pmf.style.display=recurType==='expense'?'block':'none';
+}
+function saveRecur(){
+  var modal=document.getElementById('recurModal');
+  var editId=modal.dataset.editId;
+  const desc=document.getElementById('recurDesc').value.trim();
+  const amt=parseFloat(document.getElementById('recurAmt').value||'0');
+  const day=parseInt(document.getElementById('recurDay').value||'1');
+  const freq=document.getElementById('recurFreq').value;
+  const cat=document.querySelector('#recurCatChips .chip.on')?.dataset.cat||'Other';
+  const acct=document.getElementById('recurAccount')?.value||'';
+  const platform=recurType==='expense'?(document.getElementById('recurPlatform')?.value||''):'';
+  const payMethod=recurType==='expense'?(document.getElementById('recurPayMethod')?.value||''):'';
+  const memberChip=document.querySelector('#recurMemberChips .chip.on');
+  const member=memberChip?memberChip.dataset.member:'Self';
+  if(!desc||!amt){showToast('Fill description and amount','yellow');return;}
+  const amtRecurINR=amt/(state.currencyRate||1);
+  if(editId){
+    const r=state.recurring.find(function(r){return String(r.id)===String(editId);});
+    if(r){r.type=recurType;r.desc=desc;r.amount=amtRecurINR;r.day=day;r.freq=freq;r.category=cat;r.emoji=CAT_EMOJI[cat]||'🌀';r.account=acct;r.platform=platform;r.payMethod=payMethod;r.member=member;}
+  } else {
+    state.recurring.push({id:Date.now(),type:recurType,desc,amount:amtRecurINR,day,freq,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,platform,payMethod,member,lastAdded:''});
+  }
+  saveState();closeModal('recurModal');renderRecurring();
+  ['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');
+}
+function renderRecurring(){const c=document.getElementById('recurList');if(!state.recurring.length){c.innerHTML=`<div class="empty"><div class="empty-big">📅</div><div class="empty-title">No recurring transactions</div><div class="empty-desc">Add salary, EMI, subscriptions</div></div>`;return;}c.innerHTML=state.recurring.map(r=>{var schedText=r.freq==='monthly'?'Every month on day '+r.day:r.freq==='weekly'?'Every week':'Every year';var badges='';if(r.member&&r.member!=='Self')badges+=`<span class="tx-badge" style="background:rgba(99,102,241,0.1);color:var(--blue);border:1px solid rgba(99,102,241,0.25)">👤 ${r.member}</span>`;if(r.payMethod)badges+=`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${r.payMethod}</span>`;if(r.platform)badges+=`<span class="tx-badge" style="background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.25)">${r.platform}</span>`;var badgeRow=badges?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${badges}</div>`:'';return`<div class="tx"><div class="tx-ico" style="background:${r.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)'}">${r.emoji}</div><div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${schedText} · ${r.category}</div>${badgeRow}</div><div style="text-align:right;flex-shrink:0"><div class="tx-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">${r.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(r.amount))}</div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editRecur(${r.id})">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteRecur(${r.id})">✕ Remove</span></div></div></div>`;}).join('');}
+function editRecur(id){var r=state.recurring.find(function(x){return x.id===id;});if(!r)return;var modal=document.getElementById('recurModal');modal.dataset.editId=id;document.querySelector('#recurModal .modal-title').textContent='📅 Edit Recurring';document.getElementById('recurSaveBtn').textContent='✅ Save Changes';initRecurModal();recurType=r.type;document.getElementById('recurTypeInc').classList.toggle('on',r.type==='income');document.getElementById('recurTypeExp').classList.toggle('on',r.type==='expense');renderRecurCatChips();updateRecurAccountSelect();setTimeout(function(){document.getElementById('recurDesc').value=r.desc;document.getElementById('recurAmt').value=parseFloat((r.amount*(state.currencyRate||1)).toFixed(2));document.getElementById('recurDay').value=r.day||1;document.getElementById('recurFreq').value=r.freq||'monthly';var catChips=document.querySelectorAll('#recurCatChips .chip');catChips.forEach(function(ch){ch.classList.toggle('on',ch.dataset.cat===r.category);});var acctSel=document.getElementById('recurAccount');if(acctSel&&r.account)acctSel.value=r.account;var platSel=document.getElementById('recurPlatform');if(platSel&&r.platform)platSel.value=r.platform;var pmSel=document.getElementById('recurPayMethod');if(pmSel&&r.payMethod)pmSel.value=r.payMethod;var memberChips=document.querySelectorAll('#recurMemberChips .chip');memberChips.forEach(function(ch){ch.classList.toggle('on',ch.dataset.member===(r.member||'Self'));});},50);showModal('recurModal');}
 function deleteRecur(id){customConfirm('📅','Remove Recurring','This cannot be undone.',function(){state.recurring=state.recurring.filter(r=>r.id!==id);saveState();renderRecurring();});}
 // ═══ LOAN ADVISOR ═══════════════════════════════════════════════════════════
 function renderLoanAdvisor(){
@@ -5751,7 +5811,7 @@ function checkRecurring(){
     if(r.freq==='weekly'&&today.getDay()===(r.day%7))shouldAdd=true;
     if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===0)shouldAdd=true;
     if(shouldAdd){
-      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:''});
+      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
       r.lastAdded=todayKey;
       added++;
     }
@@ -7626,7 +7686,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   if(!('serviceWorker' in navigator)) return;
 
   // ── Version stamp: change this string on every release to force SW update ──
-  var BUILD = 'ft-build-20260331-v11';
+  var BUILD = 'ft-build-20260404-v16';
 
   var swCode = [
     "var CACHE_NAME = '" + BUILD + "';",
