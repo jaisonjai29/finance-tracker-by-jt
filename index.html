@@ -1479,6 +1479,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         </div>
       </div>
 
+      <div class="set-sec">
+        <div class="set-sec-title">🔢 Amount Display</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:10px;line-height:1.6">Choose how numbers appear across the app.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="amtFmtGrid">
+          <div id="amtFmtShort" onclick="setAmtFormat('short')" style="border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer;border:2px solid var(--accent);background:rgba(124,92,252,0.1)">
+            <div style="font-size:16px;font-weight:900;color:var(--accent)">15K · 1.5L · 3.33L</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:4px">Simplified</div>
+          </div>
+          <div id="amtFmtFull" onclick="setAmtFormat('full')" style="border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer;border:2px solid var(--border);background:var(--bg3)">
+            <div style="font-size:16px;font-weight:900;color:var(--text)">15,000 · 1,50,000</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:4px">Full Number</div>
+          </div>
+        </div>
+      </div>
 
       <div class="set-sec">
         <div class="set-sec-title">🔒 Security & Access</div>
@@ -1610,7 +1624,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v16 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v17 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -2389,7 +2403,7 @@ const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Accou
 
 // ======== STATE ========
 let state={
-  pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',
+  pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},bills:[],accounts:[],recurring:[],
   allocTargets:{},
@@ -2441,6 +2455,7 @@ function loadState(){
   state.currentYear=new Date().getFullYear();
   applyTheme(state.theme);
   applyFont(state.font);
+  if(!state.amtFormat) state.amtFormat='short';
   updateCurrSymbols();
   // Silently refresh exchange rate in background on page load if non-INR
   if(state.currency && state.currency!=='INR'){
@@ -2779,6 +2794,18 @@ function showPage(id){
       b.classList.toggle('on',matches);
     });
     updateCurrRateInfo();
+    // Sync amount format buttons
+    var fmt_=state.amtFormat||'short';
+    var shortEl=document.getElementById('amtFmtShort');
+    var fullEl=document.getElementById('amtFmtFull');
+    if(shortEl&&fullEl){
+      shortEl.style.border=fmt_==='short'?'2px solid var(--accent)':'2px solid var(--border)';
+      shortEl.style.background=fmt_==='short'?'rgba(124,92,252,0.1)':'var(--bg3)';
+      shortEl.querySelector('div').style.color=fmt_==='short'?'var(--accent)':'var(--text)';
+      fullEl.style.border=fmt_==='full'?'2px solid var(--accent)':'2px solid var(--border)';
+      fullEl.style.background=fmt_==='full'?'rgba(124,92,252,0.1)':'var(--bg3)';
+      fullEl.querySelector('div').style.color=fmt_==='full'?'var(--accent)':'var(--text)';
+    }
     // Sync auto-lock toggle
     // Restore auto-lock duration
     if(state.autoLockMs){ _inactivityMs=state.autoLockMs; var ald=document.getElementById('autoLockDuration'); if(ald) ald.value=String(state.autoLockMs); }
@@ -5412,9 +5439,8 @@ function updateTxAccountSelect(){
   if(!sel) return;
   var curr=sel.value;
 
-  // For expenses: txAccount = real source account (Savings/Cash etc.) that gets debited
-  // For income:   txAccount = real destination account where money lands
-  var validTypes=INCOME_ACCT_TYPES; // same list for both — real store-of-value accounts
+  // Show all real store-of-value accounts for both income and expense
+  var validTypes=INCOME_ACCT_TYPES;
   var filtered=state.accounts.filter(function(a){return validTypes.indexOf(a.type)>-1;});
   if(!filtered.length) filtered=state.accounts;
 
@@ -5424,16 +5450,24 @@ function updateTxAccountSelect(){
     fieldLbl.textContent=txType==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
   }
 
-  sel.innerHTML='<option value="">-- '+(txType==='income'?'Select Account':'Select Account') +' --</option>'+
+  if(!filtered.length){
+    sel.innerHTML='<option value="">-- No accounts added yet --</option>';
+    var pmField2=document.getElementById('txPayMethodField');
+    if(pmField2) pmField2.style.display=txType==='expense'?'block':'none';
+    return;
+  }
+
+  sel.innerHTML='<option value="">-- Select Account --</option>'+
     filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
-      var bal=a.balance!==0?' · '+state.currSymbol+fmt(cv(Math.abs(a.balance))):'';
+      var bal=a.balance!==0?' · '+state.currSymbol+fmtFull(cv(Math.abs(a.balance))):'';
       var typeLabel=a.type!==a.name?' ['+a.type+']':'';
       return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
     }).join('');
 
-  if(!curr || !filtered.find(function(a){return String(a.id)===String(curr);})){
-    if(filtered.length>0) sel.value=filtered[0].id;
+  // Restore previous selection; don't auto-pick — let user choose consciously
+  if(curr && filtered.find(function(a){return String(a.id)===String(curr);})){
+    sel.value=curr;
   }
 
   // Show/hide the payment method field (expenses only)
@@ -6019,6 +6053,21 @@ function chartColors(){
 }
 function syncThemeBtn(){document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));const t=state.theme||'dark';const match=[...document.querySelectorAll('.theme-sw')].find(s=>s.getAttribute('onclick')&&s.getAttribute('onclick').includes("'"+t+"'"));if(match)match.classList.add('on');}
 function setFont(f,el){state.font=f;saveState();applyFont(f);document.querySelectorAll('#fontGrid .font-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function setAmtFormat(f){
+  state.amtFormat=f;saveState();
+  var shortEl=document.getElementById('amtFmtShort');
+  var fullEl=document.getElementById('amtFmtFull');
+  if(shortEl&&fullEl){
+    shortEl.style.border=f==='short'?'2px solid var(--accent)':'2px solid var(--border)';
+    shortEl.style.background=f==='short'?'rgba(124,92,252,0.1)':'var(--bg3)';
+    shortEl.querySelector('div').style.color=f==='short'?'var(--accent)':'var(--text)';
+    fullEl.style.border=f==='full'?'2px solid var(--accent)':'2px solid var(--border)';
+    fullEl.style.background=f==='full'?'rgba(124,92,252,0.1)':'var(--bg3)';
+    fullEl.querySelector('div').style.color=f==='full'?'var(--accent)':'var(--text)';
+  }
+  // Re-render key UI areas so numbers update immediately
+  updateDashboard();renderHistory();if(curPage==='wealth')renderWealth();if(curPage==='assets')renderAssets();if(curPage==='analytics')renderAnalytics();renderAccounts();
+}
 function applyFont(f){document.documentElement.setAttribute('data-font',f);}
 function setLocalProfilePhoto(event){
   var file=event.target.files[0];
@@ -7524,6 +7573,20 @@ function renderWealth(){
   const badge=document.getElementById('wealthBadge');
   if(netWorth>=0){badge.className='hero-badge badge-up';badge.textContent='📈 Surplus';}
   else{badge.className='hero-badge badge-dn';badge.textContent='📉 Deficit';}
+
+  // Compute carry-forward data so wealthCashBreakdown popup has it
+  const _carry=getCarryForward(state.currentMonth,state.currentYear);
+  const _txs=getMonthTxs();
+  const _curIncome=_txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const _curExpense=_txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const _carryAfterExp=_carry-_curExpense;
+  const _cashBank=_carryAfterExp>=0?_carryAfterExp+_curIncome:_curIncome+_carryAfterExp;
+  window._wealthCashBreakdown={
+    carry:_carry,curIncome:_curIncome,curExpense:_curExpense,
+    carryAfterExpense:_carryAfterExp,cashBank:_cashBank,
+    hasAccounts:state.accounts.length>0,
+    totalAccts:totalAccts
+  };
   updateCurrSymbols();
 
   // Clamp indices within current list bounds (acct/liab/goal only now)
@@ -7596,14 +7659,30 @@ function exportWealth(){
     else showToast('Allow pop-ups and try again','red');
   } else showToast('✅ Wealth statement exported!','green');
 }
+function fmtFull(n){
+  // Always returns full number with commas — used where exact value matters
+  if(!n||isNaN(n))return'0';
+  const abs=Math.abs(n);
+  if((state.currency||'INR')==='INR'){
+    // Indian comma format: 1,23,456.78
+    if(abs%1===0){
+      return Math.round(abs).toLocaleString('en-IN');
+    }
+    return abs.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  if(abs%1===0) return Math.round(abs).toLocaleString();
+  return abs.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
 function fmt(n){
   if(!n||isNaN(n))return'0';
+  // If user chose full display, always use fmtFull
+  if(state.amtFormat==='full') return fmtFull(n);
   const abs=Math.abs(n);
   if((state.currency||'INR')==='INR'){
     if(abs>=10000000)return(abs/10000000).toFixed(2)+'Cr';
     if(abs>=100000)return(abs/100000).toFixed(2)+'L';
     if(abs>=1000)return(abs/1000).toFixed(1)+'K';
-    return Math.round(abs).toLocaleString();
+    return Math.round(abs).toLocaleString('en-IN');
   }
   if(abs>=1000000000)return(abs/1000000000).toFixed(2)+'B';
   if(abs>=1000000)return(abs/1000000).toFixed(2)+'M';
@@ -7686,7 +7765,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   if(!('serviceWorker' in navigator)) return;
 
   // ── Version stamp: change this string on every release to force SW update ──
-  var BUILD = 'ft-build-20260404-v16';
+  var BUILD = 'ft-build-20260404-v17';
 
   var swCode = [
     "var CACHE_NAME = '" + BUILD + "';",
