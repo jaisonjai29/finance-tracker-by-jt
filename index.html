@@ -983,8 +983,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="fpill" onclick="setHistFilter('expense',this)">📤 Out</div>
           <div class="fpill" onclick="setHistFilter('investment',this)">📈 Invest</div>
         </div>
-        <select class="field-input" id="histAcctFilter" onchange="filterHistory()" style="width:auto;padding:7px 10px;font-size:11px">
-          <option value="">All Accounts</option>
+        <select id="histAcctFilter" onchange="filterHistory()" style="flex-shrink:0;padding:5px 8px;font-size:11px;font-weight:700;border-radius:20px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);outline:none;cursor:pointer;max-width:110px;height:32px">
+          <option value="">🏦 Accounts</option>
         </select>
       </div>
       <div id="histMemberRow" style="margin-bottom:12px">
@@ -2197,7 +2197,7 @@ const CAT_EMOJI={
   // Income
   Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Bonus:'🎉',Dividend:'💹',Commission:'🤝',Pension:'👴',
   // Home & Utilities
-  Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🪔',Internet:'🌐',Mobile:'📱',
+  Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🛢️',Internet:'🌐',Mobile:'📱',
   // Food
   Grocery:'🧺',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',Bakery:'🥐',
   // Transport
@@ -2216,7 +2216,7 @@ const CAT_EMOJI={
   'Mutual Fund Buy':'📈','SIP':'🔁','Stocks Buy':'📊','ETF Buy':'📉',
   'Crypto Buy':'₿','Gold Buy':'🥇','NPS/PPF':'🏛️','Bonds Buy':'📜','FD Deposit':'🏦',
   // Other
-  'Personal Care':'🪥',Travel:'🗺️',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚍',Health:'🩹',Entertainment:'🎭',Other:'🌀'
+  'Personal Care':'🪥',Travel:'🗺️',Flowers:'🌸',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚍',Health:'🩹',Entertainment:'🎭',Other:'🌀'
 };
 const CAT_COLOR={
   // Top-level groups (used as fallback)
@@ -2251,7 +2251,7 @@ const CAT_COLOR={
   // Investment expense colors
   'Mutual Fund Buy':'#a78bfa','SIP':'#7c3aed','Stocks Buy':'#3b82f6','ETF Buy':'#22d3ee',
   'Crypto Buy':'#f97316','Gold Buy':'#eab308','NPS/PPF':'#22c55e','Bonds Buy':'#6366f1','FD Deposit':'#06b6d4',
-  'Personal Care':'#e879f9',Bonus:'#fde68a',
+  'Personal Care':'#e879f9',Flowers:'#f9a8d4',Bonus:'#fde68a',
   Dividend:'#34d399',Commission:'#60a5fa',Pension:'#a78bfa'
 };
 const RISK_BG={'Very Low':'rgba(34,197,94,.15)','Low':'rgba(34,197,94,.1)','Medium':'rgba(234,179,8,.15)','High':'rgba(249,115,22,.15)','Very High':'rgba(239,68,68,.15)','None':'rgba(148,163,184,.1)','Varies':'rgba(148,163,184,.1)'};
@@ -2285,6 +2285,10 @@ const PLATFORMS=[
   {name:'Rapido',            emoji:'🛵'},
   {name:'IRCTC',             emoji:'🚆'},
   {name:'Paytm',             emoji:'💙'},
+  {name:'mStock',             emoji:'📊'},
+  {name:'Zerodha',            emoji:'🟦'},
+  {name:'Groww',              emoji:'💚'},
+  {name:'Angel One',          emoji:'🔴'},
   {name:'Other',             emoji:'🌀'},
 ];
 const EXPENSE_CATS_GROUPED={
@@ -2297,7 +2301,7 @@ const EXPENSE_CATS_GROUPED={
   'Shopping':['Shopping','Clothing','Electronics','Furniture'],
   'Entertainment':['OTT','Movies','Games','Sports','Events'],
   'Investments':['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'],
-  'Other':['Personal Care','Travel','Other']
+  'Other':['Personal Care','Travel','Flowers','Other']
 };
 const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat();
 const INVEST_EXP_CATS=['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'];
@@ -5502,7 +5506,7 @@ function renderAccounts(){
     return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div>${openNote}</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:4px"><div style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:900;background:rgba(68,138,255,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(68,138,255,0.3)" onclick="editAcct('${a.id}')">✏️ Edit</div><div style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.1);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,69,105,0.2)" onclick="deleteAcct('${a.id}')">Remove</div></div></div></div>`;
   }).join('');
   // Update history filter dropdown
-  const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
+  const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">🏦 Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
 function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();});}
 // Real store-of-value accounts — income deposits here, expenses deduct from here
