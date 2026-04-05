@@ -981,6 +981,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="fpill on" onclick="setHistFilter('all',this)">🗂️ All</div>
           <div class="fpill" onclick="setHistFilter('income',this)">📥 In</div>
           <div class="fpill" onclick="setHistFilter('expense',this)">📤 Out</div>
+          <div class="fpill" onclick="setHistFilter('investment',this)">📈 Invest</div>
         </div>
         <select class="field-input" id="histAcctFilter" onchange="filterHistory()" style="width:auto;padding:7px 10px;font-size:11px">
           <option value="">All Accounts</option>
@@ -2211,6 +2212,9 @@ const CAT_EMOJI={
   Shopping:'🛍️',Clothing:'👗',Electronics:'🔌',Furniture:'🛋️',
   // Entertainment
   OTT:'📺',Movies:'🎬',Games:'🎮',Sports:'⚽',Events:'🎪',
+  // Investment Expenses
+  'Mutual Fund Buy':'📈','SIP':'🔁','Stocks Buy':'📊','ETF Buy':'📉',
+  'Crypto Buy':'₿','Gold Buy':'🥇','NPS/PPF':'🏛️','Bonds Buy':'📜','FD Deposit':'🏦',
   // Other
   'Personal Care':'🪥',Travel:'🗺️',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚍',Health:'🩹',Entertainment:'🎭',Other:'🌀'
 };
@@ -2244,6 +2248,9 @@ const CAT_COLOR={
   OTT:'#3b82f6',Movies:'#6366f1',Games:'#8b5cf6',
   Sports:'#10b981',Events:'#f472b6',
   // Other subcategories
+  // Investment expense colors
+  'Mutual Fund Buy':'#a78bfa','SIP':'#7c3aed','Stocks Buy':'#3b82f6','ETF Buy':'#22d3ee',
+  'Crypto Buy':'#f97316','Gold Buy':'#eab308','NPS/PPF':'#22c55e','Bonds Buy':'#6366f1','FD Deposit':'#06b6d4',
   'Personal Care':'#e879f9',Bonus:'#fde68a',
   Dividend:'#34d399',Commission:'#60a5fa',Pension:'#a78bfa'
 };
@@ -2289,9 +2296,12 @@ const EXPENSE_CATS_GROUPED={
   'Finance':['EMI','Loan Repayment','Credit Card','Tax'],
   'Shopping':['Shopping','Clothing','Electronics','Furniture'],
   'Entertainment':['OTT','Movies','Games','Sports','Events'],
+  'Investments':['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'],
   'Other':['Personal Care','Travel','Other']
 };
 const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat();
+const INVEST_EXP_CATS=['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'];
+function isInvestmentExpense(cat){ return INVEST_EXP_CATS.includes(cat); }
 
 // ── TRANSLATION STRINGS ──────────────────────────────────────────────────────
 const LANG = {
@@ -2378,6 +2388,7 @@ function applyTranslations(){
   if(histPills[0]) histPills[0].textContent=tr('all');
   if(histPills[1]) histPills[1].textContent=tr('income');
   if(histPills[2]) histPills[2].textContent=tr('expense');
+  if(histPills[3]) histPills[3].textContent='📈 Invest';
   // Debt summary labels
   ['totalDebt','monthlyEMI','debtRatio'].forEach(function(k){
     var els=document.querySelectorAll('.stat-lbl');
@@ -3415,7 +3426,11 @@ function renderHistory(){
   const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
   const acctFilter=document.getElementById('histAcctFilter')?.value||'';
   let txs=[...state.transactions];
-  if(histFilt!=='all')txs=txs.filter(t=>t.type===histFilt);
+  if(histFilt==='investment'){
+    txs=txs.filter(t=>isInvestmentExpense(t.category));
+  } else if(histFilt!=='all'){
+    txs=txs.filter(t=>t.type===histFilt);
+  }
   if(histMemberFilt!=='all')txs=txs.filter(t=>(t.member||'Self')===histMemberFilt);
   if(search)txs=txs.filter(t=>t.desc.toLowerCase().includes(search)||t.category.toLowerCase().includes(search));
   if(acctFilter)txs=txs.filter(t=>String(t.account)===String(acctFilter));
@@ -5927,7 +5942,7 @@ async function handleReceiptUpload(event){
     const base64=e.target.result.split(',')[1];
     const mediaType=file.type||'image/jpeg';
     try{
-      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:'Extract from this receipt: total amount (number only), merchant/store name, date (YYYY-MM-DD), and best category from: Food, Transport, Shopping, Bills, Health, Entertainment, Education, Insurance, Travel, Other. Return ONLY JSON like: {"amount":250,"description":"Store Name","date":"2025-03-01","category":"Food"}'}]}]})});
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:'Extract from this receipt: total amount (number only), merchant/store name, date (YYYY-MM-DD), and best category from: Food, Transport, Shopping, Bills, Health, Entertainment, Education, Insurance, Travel, Mutual Fund Buy, SIP, Stocks Buy, ETF Buy, Crypto Buy, Gold Buy, NPS/PPF, FD Deposit, Other. Return ONLY JSON like: {"amount":250,"description":"Store Name","date":"2025-03-01","category":"Food"}'}]}]})});
       const data=await resp.json();
       const raw=data.content?.[0]?.text||'{}';
       const clean=raw.replace(/```json|```/g,'').trim();
