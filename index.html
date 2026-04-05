@@ -7171,7 +7171,7 @@ function renderWealthSection(type){
   }else if(type==='acct'){
     var ac=item;
     var info=ACCT_TYPES[ac.type]||{emoji:'🏦'};
-    html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'      +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'      +'<div style="flex:1">'        +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'      +'</div>'      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'      +'</div>'      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'        +'<button onclick="editAcct(\''+ac.id+'\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'        +'<button onclick="wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="flex:1;background:rgba(255,69,105,0.12);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">🗑️ Delete</button>'      +'</div>';
+    html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'      +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'      +'<div style="flex:1">'        +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'      +'</div>'      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'      +'</div>'      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'        +'<button onclick="editAcct(\''+ac.id+'\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Account</button>'      +'</div>';
   }else if(type==='liab'){
     var l=item;
     var li=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
@@ -7221,7 +7221,7 @@ function wealthDeleteConfirm(type,id){
   var labels={asset:'Asset',acct:'Account',liab:'Liability',goal:'Goal'};
   customConfirm('🗑️','Delete '+labels[type],'This cannot be undone.',function(){
     if(type==='asset'){state.assets=state.assets.filter(a=>a.id!==id);var t=state.assets.reduce((s,a)=>s+a.value,0);state.assets.forEach(a=>{a.alloc=t>0?parseFloat((a.value/t*100).toFixed(2)):0;});saveState();renderAssets();renderAccounts();}
-    else if(type==='acct'){state.accounts=state.accounts.filter(a=>String(a.id)!==String(id));saveState();renderAccounts();updateTxAccountSelect();}
+    else if(type==='acct'){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();}
     else if(type==='liab'){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();}
     else if(type==='goal'){state.goals=state.goals.filter(g=>g.id!==id);saveState();renderGoals();}
     _wealthIdx[type]=Math.max(0,_wealthIdx[type]-1);
@@ -7342,11 +7342,7 @@ function renderWealthCashBreakdown(){
           +(Math.abs(opening)>0.5?'<div style="font-size:10px;font-weight:600;color:var(--text3)">Opening: '+sym+fmt(cv(opening))+(txNet!==0?' · Txns: '+(txNet>0?'+':'')+sym+fmt(cv(txNet)):'')+'</div>':'')
           +'</div>'
         +'</div>'
-        +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
-          +'<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
-          +'<button onclick="editAcct(\''+ac.id+'\')" style="background:rgba(68,138,255,0.15);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;cursor:pointer">✏️</button>'
-          +'<button onclick="wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="background:rgba(255,69,105,0.15);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;cursor:pointer">🗑️</button>'
-        +'</div>'
+        +'<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
       +'</div>';
     });
     var resultColor=totalBal>0?'var(--green)':totalBal<0?'var(--red)':'var(--text3)';
@@ -7524,10 +7520,9 @@ function showAcctBalBreakdown(){
 
       html+='</div>'; // end padding div
 
-      // Edit + Delete buttons
-      html+='<div style="padding:0 14px 12px;display:flex;gap:8px">'
-        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
-        +'<button onclick="closeModal(\'acctBalBreakdownModal\');wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="flex:1;background:rgba(255,69,105,0.12);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">🗑️ Delete</button>'
+      // Edit button
+      html+='<div style="padding:0 14px 12px">'
+        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Opening Balance</button>'
       +'</div>';
 
       html+='</div>'; // end account card
@@ -8691,35 +8686,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v11 — Current -->
-      <div style="display:flex;gap:14px;padding-bottom:20px">
-        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">11</div>
-          <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
-        </div>
-        <div style="flex:1;padding-top:6px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v11 — 31 Mar 2026</span>
-          </div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            ☁️ <b style="color:var(--text)">Scheduled auto-sync</b> to Drive every 30 min<br>
-            🔒 <b style="color:var(--text)">Auto-lock</b> after inactivity timeout<br>
-            📅 <b style="color:var(--text)">Bill payment calendar</b> view<br>
-            🔀 <b style="color:var(--text)">Inter-account transfer</b> tracking<br>
-            ⏱️ <b style="color:var(--text)">Debt payoff countdown</b> timer<br>
-            ⚡ <b style="color:var(--text)">Prepayment impact</b> calculator<br>
-            🧓 <b style="color:var(--text)">Retirement calculator</b> with inflation<br>
-            🆘 <b style="color:var(--text)">Emergency fund tracker</b> with arc gauge<br>
-            🔍 <b style="color:var(--text)">Duplicate transaction</b> detection<br>
-            📋 <b style="color:var(--text)">Advanced reports</b> with date range<br>
-            🔮 <b style="color:var(--text)">Income vs expense forecast</b> (next month)<br>
-            📊 <b style="color:var(--text)">Spending trends</b> week/month/year<br>
-            🎴 <b style="color:var(--text)">Shareable spending summary</b> card
-          </div>
-        </div>
-      </div>
-
-      <!-- v17 — Current LATEST -->
+      <!-- v17 — LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">17</div>
@@ -8731,47 +8698,110 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            💰 <b style="color:var(--text)">Account opening balance → Money In</b> — Cash/Savings added in Accounts now shows in Money In<br>
-            ↩️ <b style="color:var(--text)">Carry forward fixed</b> — opening balances flow into next month and all future months automatically<br>
-            📋 <b style="color:var(--text)">Carry breakdown updated</b> — breakdown modal shows each account's opening balance contribution<br>
-            📈 <b style="color:var(--text)">Investment expense categories</b> — MF, Stocks, Gold, ETF, Crypto, PPF/EPF, NPS, FD &amp; more<br>
-            🏦 <b style="color:var(--text)">History account filter</b> — compact dropdown, fits mobile screen
+            💰 <b style="color:var(--text)">Opening balance → Money In</b> — Cash/Savings added in Accounts now shows in Money In<br>
+            ↩️ <b style="color:var(--text)">Carry forward fixed</b> — opening balances flow into next month and all future months<br>
+            🏦 <b style="color:var(--text)">History account filter</b> — compact dropdown with investment expense categories
+          </div>
+        </div>
+      </div>
+
+      <!-- v16 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">16</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v16 — 04 Apr 2026</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            📥 <b style="color:var(--text)">EPFO passbook import</b> — EPS pension excluded from asset value, display-only<br>
+            🔢 <b style="color:var(--text)">Allocation % fix</b> — stale alloc percentages no longer trigger incorrect warnings<br>
+            🛠️ <b style="color:var(--text)">Edit transaction modal</b> — category, platform &amp; member chips all included
           </div>
         </div>
       </div>
 
       <!-- v15 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">15</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v15 — 02 Apr 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            🐛 <b style="color:var(--text)">Fixed MF rich grid</b> — works for both CSV-imported (qty/buyPrice) and manually added (units/buyNav) holdings<br>
-            🐛 <b style="color:var(--text)">Fixed MF save bug</b> — units × NAV now correctly computes invested &amp; current value<br>
-            🐛 <b style="color:var(--text)">Fixed expand/collapse arrow</b> — Stocks/MF/ETF correctly auto-expand on load<br>
-            📈 <b style="color:var(--text)">Mutual Fund rich grid</b> — Quantity, Avg NAV, Current NAV, Invested, Current Value &amp; P&amp;L<br>
-            🗑️ <b style="color:var(--text)">Bulk delete</b> — 🗑️ All button on Stocks, MF &amp; ETF header removes entire group<br>
-            ⚡ <b style="color:var(--text)">Quick Update CMP / NAV / Price</b> inline<br>
-            📉 <b style="color:var(--text)">Per-unit change chip</b> — ▲/▼ per share / unit / gram<br>
-            🥇 <b style="color:var(--text)">Rich grid for Crypto &amp; Gold</b><br>
+            📈 <b style="color:var(--text)">Mutual Fund rich grid</b> — Qty, Avg NAV, Current NAV, Invested, Value &amp; P&amp;L<br>
+            🥇 <b style="color:var(--text)">Rich grid for Crypto, Gold &amp; ETF</b> with per-unit change chip<br>
             🤖 <b style="color:var(--text)">AI Portfolio Insight</b> — P&amp;L analysis &amp; rebalancing tips
           </div>
         </div>
       </div>
 
+      <!-- v14 -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">12</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">14</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v14 — 01 Apr 2026</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🧾 <b style="color:var(--text)">EPFO passbook PDF import</b> — EE/ER/EPS/interest parsed automatically<br>
+            💼 <b style="color:var(--text)">Wealth statement fix</b> — no longer shows incorrect positive-only balances<br>
+            🏷️ <b style="color:var(--text)">P&amp;L &amp; interest badges</b> added to all asset types
+          </div>
+        </div>
+      </div>
+
+      <!-- v13 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">13</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v13 — 31 Mar 2026</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            ☝️ <b style="color:var(--text)">Fingerprint / Face ID unlock</b> via WebAuthn with auto-prompt on lock screen<br>
+            ☁️ <b style="color:var(--text)">Drive auto-sync on close</b> &amp; auto-restore on sign-in<br>
+            💳 <b style="color:var(--text)">UPI/Card as payment rails</b> — no longer treated as balance-holding accounts
+          </div>
+        </div>
+      </div>
+
+      <!-- v12 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">12</div>
           <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v12 — 31 Mar 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            ☝️ <b style="color:var(--text)">Fingerprint / Face ID unlock</b> via WebAuthn<br>
-            🔒 <b style="color:var(--text)">Biometric toggle</b> in Settings → Security<br>
-            ⚡ <b style="color:var(--text)">Auto-prompt fingerprint</b> on lock screen<br>
-            🛡️ <b style="color:var(--text)">Credential stored securely</b> on-device only
+            🔒 <b style="color:var(--text)">Auto-lock timer</b> — configurable 30s / 1 / 2 / 5 min inactivity timeout<br>
+            🎯 <b style="color:var(--text)">Allocation targets</b> moved to Wealth page with chart &amp; bottom-sheet editor<br>
+            🧓 <b style="color:var(--text)">Retirement &amp; emergency fund calculators</b> with inflation &amp; arc gauge
           </div>
         </div>
       </div>
 
-      <!-- v11 — Previous -->
+      <!-- v11 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">11</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v11 — 31 Mar 2026</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🔀 <b style="color:var(--text)">Inter-account transfers</b> &amp; debt payoff countdown timer<br>
+            📋 <b style="color:var(--text)">Advanced reports</b> with date range &amp; spending trends<br>
+            🎴 <b style="color:var(--text)">Shareable spending summary</b> card &amp; income vs expense forecast
+          </div>
+        </div>
+      </div>
+
+      <!-- v10 -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">10</div>
@@ -8780,12 +8810,9 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         <div style="flex:1;padding-top:6px">
           <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v10 — 29 Mar 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            🔴 Added <b style="color:var(--text)">Nebula</b> theme — Deep Space Galaxy<br>
-            🍵 Added <b style="color:var(--text)">Matcha</b> theme — Japanese Dark Tea<br>
-            🎨 Theme grid updated to 3-column layout<br>
-            🔄 Silent Google token auto-refresh on page reload<br>
-            ☁️ Drive sync no longer shows "Sign in first" after token expires<br>
-            🛡️ Auto-reconnect before sync &amp; load from cloud
+            🔴 <b style="color:var(--text)">Nebula &amp; Matcha themes</b> added — theme grid updated to 3-column layout<br>
+            🔄 <b style="color:var(--text)">Silent Google token auto-refresh</b> on page reload<br>
+            🛡️ <b style="color:var(--text)">Auto-reconnect before sync</b> — Drive no longer shows "Sign in first" on expiry
           </div>
         </div>
       </div>
@@ -8797,13 +8824,11 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
           <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v9 — 21 Mar 2025</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v9 — 21 Mar 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            ☁️ Google Drive sync with encrypted backup<br>
-            🔵 Ocean &amp; Aurora themes added<br>
-            📊 Analytics chart improvements<br>
-            💎 Wealth Statement page<br>
-            🤖 AI Insights with Claude integration
+            ☁️ <b style="color:var(--text)">Google Drive sync</b> with encrypted backup<br>
+            🌊 <b style="color:var(--text)">Ocean &amp; Aurora themes</b> added<br>
+            💎 <b style="color:var(--text)">Wealth Statement</b> &amp; AI Insights with Claude integration
           </div>
         </div>
       </div>
@@ -8815,13 +8840,11 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
           <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v8 — Previous</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v8 — Earlier</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            📅 Recurring transactions engine<br>
-            🔔 Bill reminders &amp; due-date tracking<br>
-            🏦 Multi-account support<br>
-            🎯 Budget categories with progress bars<br>
-            📷 Receipt scanner via camera
+            📅 <b style="color:var(--text)">Recurring transactions</b> engine &amp; bill reminders<br>
+            🏦 <b style="color:var(--text)">Multi-account support</b> with budget categories<br>
+            📷 <b style="color:var(--text)">Receipt scanner</b> via camera
           </div>
         </div>
       </div>
@@ -8833,12 +8856,11 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
           <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v7 — Previous</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v7 — Earlier</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            👨‍👩‍👧‍👦 Family member tracking per transaction<br>
-            💸 Debts &amp; loan EMI tracker<br>
-            💼 Assets &amp; investment portfolio<br>
-            🎯 Savings goals with progress
+            👨‍👩‍👧‍👦 <b style="color:var(--text)">Family member tracking</b> per transaction<br>
+            💸 <b style="color:var(--text)">Debts &amp; loan EMI tracker</b><br>
+            🎯 <b style="color:var(--text)">Assets portfolio &amp; savings goals</b> with progress
           </div>
         </div>
       </div>
@@ -8851,11 +8873,9 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         <div style="flex:1;padding-top:6px">
           <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v1–v6 — Foundation</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            💰 Core income &amp; expense tracking<br>
-            🌙 Dark / Light themes<br>
-            📤 JSON export &amp; import<br>
-            🔒 PIN lock screen<br>
-            📲 PWA install support
+            💰 <b style="color:var(--text)">Core income &amp; expense tracking</b><br>
+            🔒 <b style="color:var(--text)">PIN lock screen</b> &amp; Dark / Light themes<br>
+            📲 <b style="color:var(--text)">PWA install</b> &amp; JSON export / import
           </div>
         </div>
       </div>
