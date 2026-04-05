@@ -7171,7 +7171,7 @@ function renderWealthSection(type){
   }else if(type==='acct'){
     var ac=item;
     var info=ACCT_TYPES[ac.type]||{emoji:'🏦'};
-    html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'      +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'      +'<div style="flex:1">'        +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'      +'</div>'      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'      +'</div>'      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'        +'<button onclick="editAcct(\''+ac.id+'\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Account</button>'      +'</div>';
+    html='<div style="display:flex;align-items:center;gap:12px;padding:8px 0">'      +'<div style="width:44px;height:44px;border-radius:12px;background:'+ac.color+'22;border:2px solid '+ac.color+'44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+info.emoji+'</div>'      +'<div style="flex:1">'        +'<div style="font-size:14px;font-weight:900">'+ac.name+'</div>'        +'<div style="font-size:11px;color:var(--text3);font-weight:700">'+ac.type+'</div>'      +'</div>'      +'<div style="font-family:var(--font);font-size:16px;font-weight:700;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+(ac.balance<0?'－':'')+state.currSymbol+fmt(cv(Math.abs(ac.balance)))+'</div>'      +'</div>'      +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'        +'<button onclick="editAcct(\''+ac.id+'\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'        +'<button onclick="wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="flex:1;background:rgba(255,69,105,0.12);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">🗑️ Delete</button>'      +'</div>';
   }else if(type==='liab'){
     var l=item;
     var li=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
@@ -7221,7 +7221,7 @@ function wealthDeleteConfirm(type,id){
   var labels={asset:'Asset',acct:'Account',liab:'Liability',goal:'Goal'};
   customConfirm('🗑️','Delete '+labels[type],'This cannot be undone.',function(){
     if(type==='asset'){state.assets=state.assets.filter(a=>a.id!==id);var t=state.assets.reduce((s,a)=>s+a.value,0);state.assets.forEach(a=>{a.alloc=t>0?parseFloat((a.value/t*100).toFixed(2)):0;});saveState();renderAssets();renderAccounts();}
-    else if(type==='acct'){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();}
+    else if(type==='acct'){state.accounts=state.accounts.filter(a=>String(a.id)!==String(id));saveState();renderAccounts();updateTxAccountSelect();}
     else if(type==='liab'){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();}
     else if(type==='goal'){state.goals=state.goals.filter(g=>g.id!==id);saveState();renderGoals();}
     _wealthIdx[type]=Math.max(0,_wealthIdx[type]-1);
@@ -7342,7 +7342,11 @@ function renderWealthCashBreakdown(){
           +(Math.abs(opening)>0.5?'<div style="font-size:10px;font-weight:600;color:var(--text3)">Opening: '+sym+fmt(cv(opening))+(txNet!==0?' · Txns: '+(txNet>0?'+':'')+sym+fmt(cv(txNet)):'')+'</div>':'')
           +'</div>'
         +'</div>'
-        +'<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+          +'<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
+          +'<button onclick="editAcct(\''+ac.id+'\')" style="background:rgba(68,138,255,0.15);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;cursor:pointer">✏️</button>'
+          +'<button onclick="wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="background:rgba(255,69,105,0.15);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;cursor:pointer">🗑️</button>'
+        +'</div>'
       +'</div>';
     });
     var resultColor=totalBal>0?'var(--green)':totalBal<0?'var(--red)':'var(--text3)';
@@ -7520,9 +7524,10 @@ function showAcctBalBreakdown(){
 
       html+='</div>'; // end padding div
 
-      // Edit button
-      html+='<div style="padding:0 14px 12px">'
-        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="width:100%;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit Opening Balance</button>'
+      // Edit + Delete buttons
+      html+='<div style="padding:0 14px 12px;display:flex;gap:8px">'
+        +'<button onclick="editAcct(\''+ac.id+'\');closeModal(\'acctBalBreakdownModal\')" style="flex:1;background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">✏️ Edit</button>'
+        +'<button onclick="closeModal(\'acctBalBreakdownModal\');wealthDeleteConfirm(\'acct\',\''+ac.id+'\')" style="flex:1;background:rgba(255,69,105,0.12);color:var(--red);border:1px solid rgba(255,69,105,0.3);border-radius:8px;padding:8px;font-size:12px;font-weight:900;cursor:pointer">🗑️ Delete</button>'
       +'</div>';
 
       html+='</div>'; // end account card
