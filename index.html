@@ -2514,13 +2514,21 @@ function restoreFromLocalBackup(){
 }
 var _silentSyncTimer=null;
 function _scheduleSilentSync(){
-  if(!gAccessToken||!state.isLoggedIn) return;
+  // Only require isLoggedIn — gAccessToken may be null after page reload but can be refreshed silently
+  if(!state.isLoggedIn) return;
   clearTimeout(_silentSyncTimer);
   _silentSyncTimer=setTimeout(function(){
-    if(gAccessToken&&state.isLoggedIn) _silentSync();
+    if(!state.isLoggedIn) return;
+    if(gAccessToken){
+      _silentSync();
+    } else if(GIS_LOADED){
+      // Token missing after reload — try silent refresh then sync
+      refreshToken().then(function(ok){ if(ok) _silentSync(); });
+    }
   },4000);
 }
 function _silentSync(){
+  if(!state.isLoggedIn) return;
   // Refresh token if near expiry
   var _sess=localStorage.getItem('ft_gsession');
   try{var _so=JSON.parse(_sess);if(_so.expiry<Date.now()+60000)refreshToken();}catch(e){}
@@ -2532,29 +2540,42 @@ function _silentSync(){
   var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
   var CRLF='\r\n';
   var body='--'+boundary+CRLF+'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
-  // SAFE: PATCH existing file — never delete before upload
-  var uploadUrl=gDriveFileId
-    ?'https://www.googleapis.com/upload/drive/v3/files/'+gDriveFileId+'?uploadType=multipart'
-    :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-  var uploadMethod=gDriveFileId?'PATCH':'POST';
-  driveFetch(uploadUrl,{
-    method:uploadMethod,
-    headers:{'Content-Type':'multipart/related; boundary='+boundary},
-    body:body
-  }).then(function(r){return r.json();}).then(function(res){
-    if(res&&res.id){
-      gDriveFileId=res.id;
-      state.lastSync=safeState.lastSync;
-      localStorage.setItem('ft_v5',JSON.stringify(state));
-      updateCloudSyncStatus();
-      console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
-      _saveEmergencyDriveBackup(payload);
-    } else if(res&&res.error&&(res.error.code===404||res.error.code===403)){
-      // Stale file ID — reset and retry once as POST
-      gDriveFileId=null;
-      setTimeout(_silentSync,1500);
-    }
-  }).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
+
+  function doUpload(fileId){
+    var uploadUrl=fileId
+      ?'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=multipart'
+      :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    var uploadMethod=fileId?'PATCH':'POST';
+    return driveFetch(uploadUrl,{
+      method:uploadMethod,
+      headers:{'Content-Type':'multipart/related; boundary='+boundary},
+      body:body
+    }).then(function(r){return r.json();}).then(function(res){
+      if(res&&res.id){
+        gDriveFileId=res.id;
+        state.lastSync=safeState.lastSync;
+        localStorage.setItem('ft_v5',JSON.stringify(state));
+        updateCloudSyncStatus();
+        console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
+        _saveEmergencyDriveBackup(payload);
+      } else if(res&&res.error&&(res.error.code===404||res.error.code===403)){
+        // Stale file ID — clear and retry as POST
+        gDriveFileId=null;
+        setTimeout(function(){ doUpload(null); },1500);
+      } else if(res&&res.error){
+        console.warn('[SilentSync] API error:',res.error.message);
+      }
+    });
+  }
+
+  // If we don't have a file ID cached, find it first
+  if(!gDriveFileId){
+    findDriveFile().then(function(existing){
+      doUpload(existing?existing.id:null);
+    }).catch(function(e){ console.warn('[SilentSync] findDriveFile failed:',e.message); });
+  } else {
+    doUpload(gDriveFileId).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
+  }
 }
 
 // ======== LOCK ========
@@ -6228,6 +6249,7 @@ var gDriveFileId = null; // cached Drive file ID for ft_backup.json
 var emailAuthMode = 'login';
 var GIS_LOADED = false;
 var GAPI_LOADED = false;
+var _bootSyncDone = false; // ensures auto-load from Drive only fires once on boot
 var TOKEN_SCOPES = 'https://www.googleapis.com/auth/drive.file email profile';
 
 function getClientId(){
@@ -6327,6 +6349,11 @@ function tryBootGoogle(){
             if(sess.photo) currentUser.photo=sess.photo;
             if(sess.id) currentUser.id=sess.id;
           }
+          // Token is valid — auto-load from Drive on boot (only first time both SDKs ready)
+          if(state.isLoggedIn && !_bootSyncDone){
+            _bootSyncDone=true;
+            setTimeout(function(){ loadFromCloud(); }, 1200);
+          }
         } else {
           // Token expired — silently refresh if user was signed in, don't wipe gAccessToken yet
           localStorage.removeItem('ft_gsession');
@@ -6335,7 +6362,15 @@ function tryBootGoogle(){
             // Attempt silent refresh — no popup, no sign-out
             setTimeout(function(){
               refreshToken().then(function(ok){
-                if(!ok){
+                if(ok){
+                  // Refresh succeeded — now auto-load from Drive
+                  if(!_bootSyncDone){
+                    _bootSyncDone=true;
+                    setTimeout(function(){ loadFromCloud(); }, 800);
+                  }
+                  updateAuthUI();
+                  startAutoSync();
+                } else {
                   // Silent refresh failed (user revoked access etc) — now sign out cleanly
                   gAccessToken=null;
                   updateAuthUI();
@@ -6684,12 +6719,42 @@ function loadFromCloud(){
   findDriveFile().then(function(existing){
     if(!existing){
       clearTimeout(timer);
-      // ── STRICT: No backup found — DO NOT wipe local. Auto-push current data instead ──
-      if(el) el.textContent='No Drive backup — uploading now...';
-      showToast('⚠️ No backup on Drive. Uploading your current data to create one...','yellow');
-      // Push local data to Drive so backup always exists after this
-      setTimeout(function(){ syncToCloud(); }, 800);
-      return null; // bail — do NOT touch local state
+      // ── Main file missing — try restoring from the emergency backup copy first ──
+      if(el) el.textContent='Main file missing — checking backup copy...';
+      var eq=encodeURIComponent("name='"+DRIVE_EMERGENCY_NAME+"' and trashed=false");
+      return driveFetch('https://www.googleapis.com/drive/v3/files?q='+eq+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc')
+        .then(function(r){ return r.json(); })
+        .then(function(eres){
+          var emergencyFile=eres&&eres.files&&eres.files[0]?eres.files[0]:null;
+          if(emergencyFile){
+            // ✅ Backup copy found — restore from it
+            if(el) el.textContent='Restoring from backup copy...';
+            showToast('📋 Main file missing. Restoring from backup copy...','blue');
+            return driveFetch('https://www.googleapis.com/drive/v3/files/'+emergencyFile.id+'?alt=media')
+              .then(function(r){
+                if(!r.ok) throw new Error('HTTP '+r.status+' reading backup copy');
+                return r.json();
+              }).then(function(p){
+                // Tag so success path knows to re-create the main file
+                if(p) p._restoredFromEmergency=true;
+                return p;
+              });
+          } else {
+            // No emergency backup either — nothing to restore from
+            var hasLocalData=(localSnapshot.transactions||[]).length>0
+              ||(localSnapshot.assets||[]).length>0
+              ||(localSnapshot.goals||[]).length>0;
+            if(hasLocalData){
+              if(el) el.textContent='No backup found — uploading local data...';
+              showToast('☁️ No backup found on Drive. Uploading your local data now...','yellow');
+            } else {
+              if(el) el.textContent='No backup found';
+              showToast('No Drive backup found. Add data and it will sync automatically.','yellow');
+            }
+            setTimeout(function(){ syncToCloud(); }, 500);
+            return null; // nothing to restore
+          }
+        });
     }
     return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media')
       .then(function(r){
@@ -6763,12 +6828,24 @@ function loadFromCloud(){
     initApp();
 
     var added=mergedTx.length-driveTxCount;
-    var msg=added>0
-      ?'✅ Merged! '+added+' local entries kept + Drive data restored. Total: '+mergedTx.length+' transactions.'
-      :'✅ Loaded from Drive! '+state.transactions.length+' transactions restored.';
+    var restoredFromEmergency=!!(payload&&payload._restoredFromEmergency);
+    var msg;
+    if(restoredFromEmergency){
+      msg='✅ Restored from backup copy! '+state.transactions.length+' transactions recovered. Re-creating main file...';
+    } else {
+      msg=added>0
+        ?'✅ Merged! '+added+' local entries kept + Drive data restored. Total: '+mergedTx.length+' transactions.'
+        :'✅ Loaded from Drive! '+state.transactions.length+' transactions restored.';
+    }
     showToast(msg,'green');
     if(el) el.textContent='Last sync: '+new Date().toLocaleString();
     if(el2) el2.textContent='Last sync: '+new Date().toLocaleString();
+    // If we restored from emergency backup, re-create the main file now
+    if(restoredFromEmergency){
+      setTimeout(function(){ syncToCloud(); }, 1000);
+    }
+    // Start auto-sync now that we're loaded
+    startAutoSync();
 
   }).catch(function(e){
     clearTimeout(timer);
@@ -8023,11 +8100,14 @@ showModal=function(id){
 // ======== SCHEDULED AUTO-SYNC ========
 var _autoSyncInterval=null;
 function startAutoSync(){
-  if(!state.isLoggedIn||!gAccessToken) return;
+  if(!state.isLoggedIn) return;
   if(_autoSyncInterval) clearInterval(_autoSyncInterval);
   _autoSyncInterval=setInterval(function(){
-    if(state.isLoggedIn&&gAccessToken){
+    if(!state.isLoggedIn){ clearInterval(_autoSyncInterval); return; }
+    if(gAccessToken){
       _silentSync();
+    } else if(GIS_LOADED){
+      refreshToken().then(function(ok){ if(ok) _silentSync(); });
     }
   },5*60*1000); // every 5 min
 }
