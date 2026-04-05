@@ -976,15 +976,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <div class="page" id="page-history">
       <div class="search"><span style="font-size:18px">🔍</span><input type="text" placeholder="Search transactions…" id="searchInput" oninput="filterHistory()"></div>
-      <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:nowrap">
-        <div class="fpills" id="histFilter" style="flex:1;flex-wrap:nowrap;margin-bottom:0;overflow-x:auto;gap:4px">
-          <div class="fpill on" onclick="setHistFilter('all',this)" style="white-space:nowrap;padding:6px 10px;font-size:11px">🗂️ All</div>
-          <div class="fpill" onclick="setHistFilter('income',this)" style="white-space:nowrap;padding:6px 10px;font-size:11px">📥 In</div>
-          <div class="fpill" onclick="setHistFilter('expense',this)" style="white-space:nowrap;padding:6px 10px;font-size:11px">📤 Out</div>
-          <div class="fpill" onclick="setHistFilter('investment',this)" style="white-space:nowrap;padding:6px 10px;font-size:11px">📈 Invest</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <div class="fpills" id="histFilter" style="flex:1">
+          <div class="fpill on" onclick="setHistFilter('all',this)">🗂️ All</div>
+          <div class="fpill" onclick="setHistFilter('income',this)">📥 In</div>
+          <div class="fpill" onclick="setHistFilter('expense',this)">📤 Out</div>
         </div>
-        <select class="field-input" id="histAcctFilter" onchange="filterHistory()" style="width:auto;max-width:110px;min-width:0;padding:6px 8px;font-size:11px;flex-shrink:0">
-          <option value="">🏦 All</option>
+        <select class="field-input" id="histAcctFilter" onchange="filterHistory()" style="width:auto;padding:7px 10px;font-size:11px">
+          <option value="">All Accounts</option>
         </select>
       </div>
       <div id="histMemberRow" style="margin-bottom:12px">
@@ -2978,10 +2977,20 @@ function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx
 // Returns cumulative carry-forward amount from all months before the given month/year.
 // Positive = savings carried in; Negative = deficit carried in.
 function getCarryForward(month, year){
-  // If user set a manual opening balance for the tracker, add it as the base
+  // Base 1: manual tracker opening balance (legacy)
   var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
+  // Base 2: sum of all account opening balances created BEFORE the target month
+  // (accounts created in the target month show in that month's Money In instead)
+  var targetDateStr=year+'-'+(month+1<10?'0'+(month+1):(month+1))+'-01';
+  state.accounts.forEach(function(a){
+    if(typeof a.openingBalance==='number'&&a.openingBalance>0){
+      var created=a.createdAt||'2000-01-01';
+      // Include if account was created before the start of target month
+      if(created<targetDateStr) base+=a.openingBalance;
+    }
+  });
   var carry=base;
-  // Find the earliest transaction date to know how far back to go
+  // Accumulate tx net (income - expense) for all months before target month
   if(!state.transactions.length) return carry;
   var earliest=state.transactions.reduce(function(min,tx){return tx.date<min?tx.date:min;},state.transactions[0].date);
   var eDate=new Date(earliest);
@@ -3003,6 +3012,17 @@ function showCarryBreakdown(){
   var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
   var rows=[];
   if(base!==0) rows.push({label:'🏁 Tracker Opening Balance',inc:base>0?base:0,exp:base<0?Math.abs(base):0,net:base,note:'Manually set starting balance'});
+
+  // Account opening balances created before this month
+  var targetDateStr=year+'-'+(month+1<10?'0'+(month+1):(month+1))+'-01';
+  state.accounts.forEach(function(a){
+    if(typeof a.openingBalance==='number'&&a.openingBalance>0){
+      var created=a.createdAt||'2000-01-01';
+      if(created<targetDateStr){
+        rows.push({label:'🏦 '+a.name+' (Opening)',inc:a.openingBalance,exp:0,net:a.openingBalance,note:'Account opening balance'});
+      }
+    }
+  });
 
   if(state.transactions.length){
     var earliest=state.transactions.reduce(function(min,tx){return tx.date<min?tx.date:min;},state.transactions[0].date);
@@ -3271,19 +3291,30 @@ function updateDashboard(){
   const income=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const expense=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   const carry=getCarryForward(state.currentMonth,state.currentYear);
-  const effectiveIncome=income+carry;
+  // Opening balances of accounts created THIS viewed month count as Money In
+  const monthStart=state.currentYear+'-'+(state.currentMonth+1<10?'0'+(state.currentMonth+1):(state.currentMonth+1))+'-01';
+  const monthEnd=state.currentYear+'-'+(state.currentMonth+1<10?'0'+(state.currentMonth+1):(state.currentMonth+1))+'-31';
+  const openingThisMonth=state.accounts.reduce((s,a)=>{
+    if(typeof a.openingBalance==='number'&&a.openingBalance>0){
+      var cr=a.createdAt||'';
+      if(cr>=monthStart&&cr<=monthEnd) return s+a.openingBalance;
+    }
+    return s;
+  },0);
+  const totalIncome=income+openingThisMonth;
+  const effectiveIncome=totalIncome+carry;
   const net=effectiveIncome-expense;
   // Net worth: use real account balances if accounts exist, else fall back to carry-forward
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
   const carryAfterExp=carry-expense;
-  const cashBank=carryAfterExp>=0?carryAfterExp+income:income+carryAfterExp;
+  const cashBank=carryAfterExp>=0?carryAfterExp+totalIncome:totalIncome+carryAfterExp;
   const totalAcctsBal=state.accounts.length>0?state.accounts.reduce((s,a)=>s+a.balance,0):cashBank;
   const netWorth=totalAssets+totalAcctsBal-totalLiab;
   const savRate=effectiveIncome>0?Math.round((effectiveIncome-expense)/effectiveIncome*100):0;
   document.getElementById('netWorthAmt').textContent=fmt(cv(Math.abs(netWorth)));
-  // Money In shows only THIS month's actual income — carry is displayed separately, not added to income
-  document.getElementById('incAmt').textContent=fmt(cv(income));
+  // Money In = this month's income transactions + any account opening balances added this month
+  document.getElementById('incAmt').textContent=fmt(cv(totalIncome));
   document.getElementById('expAmt').textContent=fmt(cv(expense));
   document.getElementById('saveRate').textContent=Math.max(0,savRate)+'%';
   document.getElementById('saveBarFill').style.width=Math.max(0,Math.min(100,savRate))+'%';
@@ -5404,9 +5435,10 @@ function saveAcct(){
     }
   }else{
     // New account: opening balance stored separately; balance starts equal to opening (no txns yet)
-    state.accounts.push({id:String(Date.now()),name,type,openingBalance:balINR,balance:balINR,color:acctColor});
+    var today=new Date().toISOString().split('T')[0];
+    state.accounts.push({id:String(Date.now()),name,type,openingBalance:balINR,balance:balINR,color:acctColor,createdAt:today});
   }
-  saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();
+  saveState();closeModal('acctModal');renderAccounts();updateTxAccountSelect();updateDashboard();renderHistory();
   document.getElementById('acctModal').dataset.editId='';
   document.querySelector('#acctModal .btn-go').textContent='✅ Add Account';
   ['acctName','acctBalance'].forEach(id=>document.getElementById(id).value='');
@@ -5426,7 +5458,7 @@ function renderAccounts(){
     return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div>${openNote}</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:4px"><div style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:900;background:rgba(68,138,255,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(68,138,255,0.3)" onclick="editAcct('${a.id}')">✏️ Edit</div><div style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.1);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,69,105,0.2)" onclick="deleteAcct('${a.id}')">Remove</div></div></div></div>`;
   }).join('');
   // Update history filter dropdown
-  const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">🏦 All</option>'+state.accounts.map(a=>{const short=a.name.length>12?a.name.slice(0,12)+'…':a.name;return`<option value="${a.id}"${a.id===curr?' selected':''}>${short}</option>`;}).join('');}
+  const sel=document.getElementById('histAcctFilter');if(sel){const curr=sel.value;sel.innerHTML='<option value="">All Accounts</option>'+state.accounts.map(a=>`<option value="${a.id}"${a.id===curr?' selected':''}>${a.name}</option>`).join('');}
 }
 function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();});}
 // Real store-of-value accounts — income deposits here, expenses deduct from here
@@ -8682,17 +8714,28 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
         </div>
       </div>
 
-      <!-- v15 — Current LATEST -->
+      <!-- v17 — Current LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">15</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">17</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v15 — 04 Apr 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v17 — 05 Apr 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            💰 <b style="color:var(--text)">Account opening balance → Money In</b> — Cash/Savings added in Accounts now shows in Money In<br>
+            ↩️ <b style="color:var(--text)">Carry forward fixed</b> — opening balances flow into next month and all future months automatically<br>
+            📋 <b style="color:var(--text)">Carry breakdown updated</b> — breakdown modal shows each account's opening balance contribution<br>
+            📈 <b style="color:var(--text)">Investment expense categories</b> — MF, Stocks, Gold, ETF, Crypto, PPF/EPF, NPS, FD &amp; more<br>
+            🏦 <b style="color:var(--text)">History account filter</b> — compact dropdown, fits mobile screen
+          </div>
+        </div>
+      </div>
+
+      <!-- v15 -->
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             🐛 <b style="color:var(--text)">Fixed MF rich grid</b> — works for both CSV-imported (qty/buyPrice) and manually added (units/buyNav) holdings<br>
             🐛 <b style="color:var(--text)">Fixed MF save bug</b> — units × NAV now correctly computes invested &amp; current value<br>
@@ -8815,7 +8858,7 @@ if(!localStorage.getItem('ft_v5')){setTimeout(function(){unlock();},100);}
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v15 — 04 Apr 2026</span>
+      Current build: <span style="color:var(--accent)">v17 — 05 Apr 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
