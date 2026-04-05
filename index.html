@@ -2988,9 +2988,9 @@ function saveTx(){
 
 function addAsRecurring(desc,amt,type,cat){
   var today=new Date().getDate();
-  state.recurring.push({id:Date.now(),type:type,desc:desc,amount:amt,day:today,freq:'monthly',category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:new Date().toISOString().split('T')[0]});
+  var amtINR=amt/(state.currencyRate||1);
+  state.recurring.push({id:Date.now(),type:type,desc:desc,amount:amtINR,day:today,freq:'monthly',category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:''});
   saveState();renderRecurring();
-
   showToast('Added as monthly recurring on day '+today,'green');
 }
 function setRecurToggle(val){
@@ -5766,6 +5766,7 @@ function saveRecur(){
   }
   saveState();closeModal('recurModal');renderRecurring();
   ['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');
+  checkRecurring();
 }
 function renderRecurring(){const c=document.getElementById('recurList');if(!state.recurring.length){c.innerHTML=`<div class="empty"><div class="empty-big">📅</div><div class="empty-title">No recurring transactions</div><div class="empty-desc">Add salary, EMI, subscriptions</div></div>`;return;}c.innerHTML=state.recurring.map(r=>{var schedText=r.freq==='monthly'?'Every month on day '+r.day:r.freq==='weekly'?'Every week':'Every year';var badges='';if(r.member&&r.member!=='Self')badges+=`<span class="tx-badge" style="background:rgba(99,102,241,0.1);color:var(--blue);border:1px solid rgba(99,102,241,0.25)">👤 ${r.member}</span>`;if(r.payMethod)badges+=`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${r.payMethod}</span>`;if(r.platform)badges+=`<span class="tx-badge" style="background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.25)">${r.platform}</span>`;var badgeRow=badges?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${badges}</div>`:'';return`<div class="tx"><div class="tx-ico" style="background:${r.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)'}">${r.emoji}</div><div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${schedText} · ${r.category}</div>${badgeRow}</div><div style="text-align:right;flex-shrink:0"><div class="tx-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">${r.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(r.amount))}</div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:900" onclick="editRecur(${r.id})">✏️ Edit</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteRecur(${r.id})">✕ Remove</span></div></div></div>`;}).join('');}
 function editRecur(id){var r=state.recurring.find(function(x){return x.id===id;});if(!r)return;var modal=document.getElementById('recurModal');modal.dataset.editId=id;document.querySelector('#recurModal .modal-title').textContent='📅 Edit Recurring';document.getElementById('recurSaveBtn').textContent='✅ Save Changes';initRecurModal();recurType=r.type;document.getElementById('recurTypeInc').classList.toggle('on',r.type==='income');document.getElementById('recurTypeExp').classList.toggle('on',r.type==='expense');renderRecurCatChips();updateRecurAccountSelect();setTimeout(function(){document.getElementById('recurDesc').value=r.desc;document.getElementById('recurAmt').value=parseFloat((r.amount*(state.currencyRate||1)).toFixed(2));document.getElementById('recurDay').value=r.day||1;document.getElementById('recurFreq').value=r.freq||'monthly';var catChips=document.querySelectorAll('#recurCatChips .chip');catChips.forEach(function(ch){ch.classList.toggle('on',ch.dataset.cat===r.category);});var acctSel=document.getElementById('recurAccount');if(acctSel&&r.account)acctSel.value=r.account;var platSel=document.getElementById('recurPlatform');if(platSel&&r.platform)platSel.value=r.platform;var pmSel=document.getElementById('recurPayMethod');if(pmSel&&r.payMethod)pmSel.value=r.payMethod;var memberChips=document.querySelectorAll('#recurMemberChips .chip');memberChips.forEach(function(ch){ch.classList.toggle('on',ch.dataset.member===(r.member||'Self'));});},50);showModal('recurModal');}
@@ -5917,7 +5918,6 @@ function generateMonthlyPlan(){
 function checkRecurring(){
   const today=new Date();
   const todayKey=today.toISOString().split('T')[0];
-  if(state.lastRecurCheck===todayKey)return;
   let added=0;
   state.recurring.forEach(r=>{
     if(r.lastAdded===todayKey)return;
@@ -5927,12 +5927,12 @@ function checkRecurring(){
     if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===0)shouldAdd=true;
     if(shouldAdd){
       state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
+      if(r.account){const a=state.accounts.find(a=>String(a.id)===String(r.account));if(a){a.balance+=(r.type==='income'?r.amount:-r.amount);}}
       r.lastAdded=todayKey;
       added++;
     }
   });
-  state.lastRecurCheck=todayKey;
-  if(added>0){saveState();updateDashboard();renderHistory();if(added>0)setTimeout(()=>showToast('📅 '+added+' recurring transaction'+(added>1?'s':'')+' auto-added!','green'),500);}
+  if(added>0){saveState();updateDashboard();renderHistory();renderAccounts();setTimeout(()=>showToast('📅 '+added+' recurring transaction'+(added>1?'s':'')+' auto-added!','green'),500);}
 }
 
 // ======== RECEIPT SCANNER ========
