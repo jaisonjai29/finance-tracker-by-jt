@@ -228,23 +228,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
 .us-card:active,.us-card:hover{background:rgba(var(--accent-rgb,124,92,252),0.1);border-color:var(--accent)}
-.us-avatar{
-  width:48px;height:48px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
+.us-avatar{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
 .us-name{font-size:15px;font-weight:700;color:var(--text)}
 .us-hint{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px}
-.us-add{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  background:transparent;border:1.5px dashed var(--border2);border-radius:18px;
-  padding:14px 16px;cursor:pointer;transition:all .18s;
-  font-size:13px;font-weight:700;color:var(--text3);width:100%;max-width:320px;
-}
+.us-add{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1.5px dashed var(--border2);border-radius:18px;padding:14px 16px;cursor:pointer;transition:all .18s;font-size:13px;font-weight:700;color:var(--text3);width:100%;max-width:320px}
 .us-add:active,.us-add:hover{border-color:var(--accent);color:var(--accent)}
-
-/* ══ PROFILE SETUP FLOW in lock screen ══ */
 .lock-user-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
 .lock-user-avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .lock-user-name{font-size:17px;font-weight:700;color:var(--text)}
@@ -1737,38 +1725,35 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div style="text-align:center;margin-bottom:14px">
       <div id="profileAvatarPreview" style="width:72px;height:72px;border-radius:20px;display:inline-flex;align-items:center;justify-content:center;font-size:36px;background:var(--bg3);border:2px solid var(--border2);margin-bottom:8px">😊</div>
     </div>
-    <div class="field">
-      <div class="field-label">✏️ Name</div>
-      <input type="text" class="field-input" id="profileNameInput" placeholder="e.g. Jaison, Spouse, Dad…" maxlength="20">
-    </div>
+    <div class="field"><div class="field-label">✏️ Name</div><input type="text" class="field-input" id="profileNameInput" placeholder="e.g. Jaison, Spouse, Dad…" maxlength="20"></div>
     <div class="field">
       <div class="field-label">😊 Avatar Emoji</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="profileEmojiPicker">
-        <span onclick="selectProfileEmoji(this,'😊')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji on">😊</span>
-        <span onclick="selectProfileEmoji(this,'👤')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👤</span>
-        <span onclick="selectProfileEmoji(this,'👨')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👨</span>
-        <span onclick="selectProfileEmoji(this,'👩')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👩</span>
-        <span onclick="selectProfileEmoji(this,'👦')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👦</span>
-        <span onclick="selectProfileEmoji(this,'👧')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👧</span>
-        <span onclick="selectProfileEmoji(this,'👴')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👴</span>
-        <span onclick="selectProfileEmoji(this,'👵')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">👵</span>
-        <span onclick="selectProfileEmoji(this,'🧒')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">🧒</span>
-        <span onclick="selectProfileEmoji(this,'🧑')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">🧑</span>
-        <span onclick="selectProfileEmoji(this,'🐱')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">🐱</span>
-        <span onclick="selectProfileEmoji(this,'⭐')" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s" class="pemoji">⭐</span>
+        <span onclick="selectProfileEmoji(this,'😊')" class="pemoji on" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid var(--accent);background:rgba(124,92,252,0.15);transition:all .15s">😊</span>
+        <span onclick="selectProfileEmoji(this,'👤')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👤</span>
+        <span onclick="selectProfileEmoji(this,'👨')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👨</span>
+        <span onclick="selectProfileEmoji(this,'👩')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👩</span>
+        <span onclick="selectProfileEmoji(this,'👦')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👦</span>
+        <span onclick="selectProfileEmoji(this,'👧')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👧</span>
+        <span onclick="selectProfileEmoji(this,'👴')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👴</span>
+        <span onclick="selectProfileEmoji(this,'👵')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">👵</span>
+        <span onclick="selectProfileEmoji(this,'🧒')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">🧒</span>
+        <span onclick="selectProfileEmoji(this,'🧑')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">🧑</span>
+        <span onclick="selectProfileEmoji(this,'🐱')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">🐱</span>
+        <span onclick="selectProfileEmoji(this,'⭐')" class="pemoji" style="font-size:26px;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;transition:all .15s">⭐</span>
       </div>
     </div>
     <div class="field">
       <div class="field-label">🎨 Color</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="profileColorPicker">
-        <div onclick="selectProfileColor(this,'#7c5cfc')" style="width:32px;height:32px;border-radius:50%;background:#7c5cfc;cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 2px #7c5cfc;transition:all .15s" class="pcolor on"></div>
-        <div onclick="selectProfileColor(this,'#22c55e')" style="width:32px;height:32px;border-radius:50%;background:#22c55e;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
-        <div onclick="selectProfileColor(this,'#3b82f6')" style="width:32px;height:32px;border-radius:50%;background:#3b82f6;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
-        <div onclick="selectProfileColor(this,'#f97316')" style="width:32px;height:32px;border-radius:50%;background:#f97316;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
-        <div onclick="selectProfileColor(this,'#ec4899')" style="width:32px;height:32px;border-radius:50%;background:#ec4899;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
-        <div onclick="selectProfileColor(this,'#eab308')" style="width:32px;height:32px;border-radius:50%;background:#eab308;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
-        <div onclick="selectProfileColor(this,'#14b8a6')" style="width:32px;height:32px;border-radius:50%;background:#14b8a6;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
-        <div onclick="selectProfileColor(this,'#a855f7')" style="width:32px;height:32px;border-radius:50%;background:#a855f7;cursor:pointer;border:3px solid transparent;transition:all .15s" class="pcolor"></div>
+        <div onclick="selectProfileColor(this,'#7c5cfc')" class="pcolor on" data-color="#7c5cfc" style="width:32px;height:32px;border-radius:50%;background:#7c5cfc;cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 2px #7c5cfc;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#22c55e')" class="pcolor" data-color="#22c55e" style="width:32px;height:32px;border-radius:50%;background:#22c55e;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#3b82f6')" class="pcolor" data-color="#3b82f6" style="width:32px;height:32px;border-radius:50%;background:#3b82f6;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#f97316')" class="pcolor" data-color="#f97316" style="width:32px;height:32px;border-radius:50%;background:#f97316;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#ec4899')" class="pcolor" data-color="#ec4899" style="width:32px;height:32px;border-radius:50%;background:#ec4899;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#eab308')" class="pcolor" data-color="#eab308" style="width:32px;height:32px;border-radius:50%;background:#eab308;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#14b8a6')" class="pcolor" data-color="#14b8a6" style="width:32px;height:32px;border-radius:50%;background:#14b8a6;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
+        <div onclick="selectProfileColor(this,'#a855f7')" class="pcolor" data-color="#a855f7" style="width:32px;height:32px;border-radius:50%;background:#a855f7;cursor:pointer;border:3px solid transparent;transition:all .15s"></div>
       </div>
     </div>
     <div class="field">
@@ -2536,72 +2521,59 @@ const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color
 const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI / GPay':{emoji:'📱',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💰',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
 // ======== MULTI-USER PROFILE SYSTEM ========
-// Profiles list stored at: ft_profiles  (array of {id, name, emoji, color})
-// Each profile's state stored at: ft_state_{id}
-// Active profile stored at: ft_active_profile
+// Profiles list: ft_profiles  → [{id,name,emoji,color}]
+// Each profile's data: ft_state_{id}
+// Active profile: ft_active_profile
 
 var _currentProfileId = null;
 var _profileSetupEmoji = '😊';
 var _profileSetupColor = '#7c5cfc';
 
 function getProfiles(){
-  try{
-    var raw = localStorage.getItem('ft_profiles');
-    if(raw) return JSON.parse(raw)||[];
-  }catch(e){}
+  try{ var r=localStorage.getItem('ft_profiles'); if(r) return JSON.parse(r)||[]; }catch(e){}
   return [];
 }
-function saveProfiles(profiles){
-  try{ localStorage.setItem('ft_profiles', JSON.stringify(profiles)); }catch(e){}
-}
-function getActiveProfileId(){
-  return localStorage.getItem('ft_active_profile')||null;
-}
-function setActiveProfileId(id){
-  localStorage.setItem('ft_active_profile', id);
-  _currentProfileId = id;
-}
+function saveProfiles(p){ try{ localStorage.setItem('ft_profiles',JSON.stringify(p)); }catch(e){} }
+function getActiveProfileId(){ return localStorage.getItem('ft_active_profile')||null; }
+function setActiveProfileId(id){ localStorage.setItem('ft_active_profile',id); _currentProfileId=id; }
 function getProfileStateKey(id){ return 'ft_state_'+id; }
 
-// Called on very first load — migrate existing ft_v5 data into a default profile
+// On first run: migrate existing ft_v5 data into a default profile
 function migrateOrBootProfiles(){
-  var profiles = getProfiles();
-  // Already have profiles — nothing to migrate
-  if(profiles.length > 0){
-    _currentProfileId = getActiveProfileId() || profiles[0].id;
+  var profiles=getProfiles();
+  if(profiles.length>0){
+    _currentProfileId=getActiveProfileId()||profiles[0].id;
     setActiveProfileId(_currentProfileId);
     return;
   }
-  // Check if there's existing ft_v5 data to migrate
-  var existing = localStorage.getItem('ft_v5');
+  // No profiles yet — check for existing data to migrate
+  var existing=localStorage.getItem('ft_v5');
+  var pid='p_'+Date.now();
+  var profile={id:pid,name:'My Profile',emoji:'😊',color:'#7c5cfc'};
   if(existing){
-    var profileId = 'p_'+Date.now();
-    var profile = {id:profileId, name:'My Profile', emoji:'😊', color:'#7c5cfc'};
-    saveProfiles([profile]);
-    // Copy ft_v5 data as this profile's state
-    localStorage.setItem(getProfileStateKey(profileId), existing);
-    setActiveProfileId(profileId);
-    _currentProfileId = profileId;
-    console.log('[Profiles] Migrated existing ft_v5 data to profile:', profileId);
+    // Migrate existing data into the new profile key
+    localStorage.setItem(getProfileStateKey(pid),existing);
   }
-  // If no existing data either, profiles remain empty → will show setup on start
+  saveProfiles([profile]);
+  setActiveProfileId(pid);
+  _currentProfileId=pid;
 }
 
 function renderUserSelectScreen(){
-  var profiles = getProfiles();
-  var grid = document.getElementById('usGrid');
+  var profiles=getProfiles();
+  var grid=document.getElementById('usGrid');
   if(!grid) return;
   if(!profiles.length){
-    grid.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;font-weight:700;padding:20px">No profiles yet.<br>Create your first profile below.</div>';
+    grid.innerHTML='<div style="text-align:center;color:var(--text3);font-size:13px;font-weight:700;padding:20px">No profiles yet.<br>Create your first profile below.</div>';
     return;
   }
-  grid.innerHTML = profiles.map(function(p){
-    var isCurrent = p.id === _currentProfileId;
+  grid.innerHTML=profiles.map(function(p){
+    var isCurrent=p.id===_currentProfileId;
     return '<div class="us-card" onclick="selectProfile(\''+p.id+'\')">'
       +'<div class="us-avatar" style="background:'+p.color+'22;border:2px solid '+p.color+'44">'+p.emoji+'</div>'
       +'<div style="flex:1"><div class="us-name">'+escHtml(p.name)+'</div>'
       +'<div class="us-hint">'+(isCurrent?'🟢 Last active':'Tap to switch')+'</div></div>'
-      +(profiles.length>1?'<div onclick="event.stopPropagation();confirmDeleteProfile(\''+p.id+'\')" style="font-size:16px;color:var(--text3);padding:4px 6px;cursor:pointer">🗑️</div>':'')
+      +(profiles.length>1?'<div onclick="event.stopPropagation();confirmDeleteProfile(\''+p.id+'\')" style="font-size:18px;color:var(--text3);padding:4px 6px;cursor:pointer;line-height:1">🗑️</div>':'')
     +'</div>';
   }).join('');
 }
@@ -2609,250 +2581,226 @@ function renderUserSelectScreen(){
 function showUserSelect(){
   renderUserSelectScreen();
   document.getElementById('userSelect').classList.remove('hidden');
-  document.getElementById('lock').style.display = 'none';
+  document.getElementById('lock').style.display='none';
   document.getElementById('app').classList.remove('on');
 }
 
 function selectProfile(id){
   setActiveProfileId(id);
-  _currentProfileId = id;
-  // Reload state for this profile
+  _currentProfileId=id;
+  // Reset state to defaults then load profile data
+  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null});
   loadState();
   applyTheme(state.theme);
   applyFont(state.font);
   document.getElementById('userSelect').classList.add('hidden');
-  // Show lock screen for this profile
   showLockForCurrentProfile();
 }
 
 function showLockForCurrentProfile(){
-  var profiles = getProfiles();
-  var profile = profiles.find(function(p){ return p.id === _currentProfileId; });
-  var lockUserRow = document.getElementById('lockUserRow');
-  var lockTitleFallback = document.getElementById('lockTitleFallback');
-  if(profile && lockUserRow){
-    document.getElementById('lockUserAvatar').style.cssText = 'width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:'+profile.color+'22;border:2px solid '+profile.color+'44';
-    document.getElementById('lockUserAvatar').textContent = profile.emoji;
-    document.getElementById('lockUserName').textContent = profile.name;
-    lockUserRow.style.display = 'flex';
-    if(lockTitleFallback) lockTitleFallback.style.display = 'none';
+  var profiles=getProfiles();
+  var profile=profiles.find(function(p){ return p.id===_currentProfileId; });
+  var row=document.getElementById('lockUserRow');
+  var fallback=document.getElementById('lockTitleFallback');
+  if(profile&&row){
+    var av=document.getElementById('lockUserAvatar');
+    av.style.cssText='width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:'+profile.color+'22;border:2px solid '+profile.color+'44;flex-shrink:0';
+    av.textContent=profile.emoji;
+    document.getElementById('lockUserName').textContent=profile.name;
+    row.style.display='flex';
+    if(fallback) fallback.style.display='none';
   } else {
-    if(lockUserRow) lockUserRow.style.display = 'none';
-    if(lockTitleFallback) lockTitleFallback.style.display = 'block';
+    if(row) row.style.display='none';
+    if(fallback) fallback.style.display='block';
   }
-  document.getElementById('lock').style.display = 'flex';
+  document.getElementById('lock').style.display='flex';
   document.getElementById('app').classList.remove('on');
-  pinBuf = ''; updateDots();
-  document.getElementById('lockErr').textContent = '';
-  if(state.fpEnabled) setTimeout(fpAuth, 600);
+  pinBuf=''; updateDots();
+  document.getElementById('lockErr').textContent='';
+  if(state.fpEnabled) setTimeout(fpAuth,600);
 }
 
-// Profile setup modal
 function showProfileSetup(editId){
-  var modal = document.getElementById('profileSetupModal');
-  var titleEl = document.getElementById('profileSetupTitle');
-  var editIdEl = document.getElementById('profileEditId');
-  var nameEl = document.getElementById('profileNameInput');
-  var pinEl = document.getElementById('profilePinInput');
-  var errEl = document.getElementById('profileSetupError');
-  errEl.style.display = 'none';
-  _profileSetupEmoji = '😊';
-  _profileSetupColor = '#7c5cfc';
-
+  var errEl=document.getElementById('profileSetupError');
+  errEl.style.display='none';
+  _profileSetupEmoji='😊';
+  _profileSetupColor='#7c5cfc';
+  var titleEl=document.getElementById('profileSetupTitle');
+  var editIdEl=document.getElementById('profileEditId');
+  var nameEl=document.getElementById('profileNameInput');
+  var pinEl=document.getElementById('profilePinInput');
   if(editId){
-    var profiles = getProfiles();
-    var p = profiles.find(function(x){ return x.id === editId; });
+    var profiles=getProfiles();
+    var p=profiles.find(function(x){ return x.id===editId; });
     if(!p) return;
-    titleEl.textContent = '✏️ Edit Profile';
-    editIdEl.value = editId;
-    nameEl.value = p.name;
-    _profileSetupEmoji = p.emoji||'😊';
-    _profileSetupColor = p.color||'#7c5cfc';
-    pinEl.value = '';
-    pinEl.placeholder = '(leave blank to keep current PIN)';
+    titleEl.textContent='✏️ Edit Profile';
+    editIdEl.value=editId;
+    nameEl.value=p.name;
+    _profileSetupEmoji=p.emoji||'😊';
+    _profileSetupColor=p.color||'#7c5cfc';
+    pinEl.value='';
+    pinEl.placeholder='(leave blank to keep current PIN)';
   } else {
-    titleEl.textContent = '👤 Create Profile';
-    editIdEl.value = '';
-    nameEl.value = '';
-    pinEl.value = '';
-    pinEl.placeholder = 'e.g. 1234';
+    titleEl.textContent='👤 Create Profile';
+    editIdEl.value='';
+    nameEl.value='';
+    pinEl.value='';
+    pinEl.placeholder='e.g. 1234';
   }
-
-  // Reset emoji picker
+  // Sync emoji picker
   document.querySelectorAll('.pemoji').forEach(function(el){
-    var isOn = el.textContent === _profileSetupEmoji;
-    el.style.borderColor = isOn ? 'var(--accent)' : 'transparent';
-    el.style.background = isOn ? 'rgba(124,92,252,0.15)' : 'transparent';
-    el.classList.toggle('on', isOn);
+    var on=el.textContent===_profileSetupEmoji;
+    el.style.borderColor=on?'var(--accent)':'transparent';
+    el.style.background=on?'rgba(124,92,252,0.15)':'transparent';
   });
-  document.getElementById('profileAvatarPreview').textContent = _profileSetupEmoji;
-  document.getElementById('profileAvatarPreview').style.background = _profileSetupColor+'22';
-  document.getElementById('profileAvatarPreview').style.borderColor = _profileSetupColor+'66';
-
-  // Reset color picker
+  // Sync color picker
   document.querySelectorAll('.pcolor').forEach(function(el){
-    var col = el.onclick ? el.getAttribute('onclick').match(/'(#[^']+)'/)?.[1] : null;
-    var isOn = col === _profileSetupColor;
-    el.style.border = isOn ? '3px solid #fff' : '3px solid transparent';
-    el.style.boxShadow = isOn ? '0 0 0 2px '+_profileSetupColor : 'none';
-    el.classList.toggle('on', isOn);
+    var col=el.getAttribute('data-color');
+    var on=col===_profileSetupColor;
+    el.style.border=on?'3px solid #fff':'3px solid transparent';
+    el.style.boxShadow=on?'0 0 0 2px '+col:'none';
   });
-
-  modal.classList.add('on');
+  var prev=document.getElementById('profileAvatarPreview');
+  prev.textContent=_profileSetupEmoji;
+  prev.style.background=_profileSetupColor+'22';
+  prev.style.borderColor=_profileSetupColor+'66';
+  document.getElementById('profileSetupModal').classList.add('on');
 }
 
-function selectProfileEmoji(el, emoji){
-  _profileSetupEmoji = emoji;
+function selectProfileEmoji(el,emoji){
+  _profileSetupEmoji=emoji;
   document.querySelectorAll('.pemoji').forEach(function(e){
-    e.style.borderColor = 'transparent';
-    e.style.background = 'transparent';
+    e.style.borderColor='transparent'; e.style.background='transparent';
   });
-  el.style.borderColor = 'var(--accent)';
-  el.style.background = 'rgba(124,92,252,0.15)';
-  document.getElementById('profileAvatarPreview').textContent = emoji;
+  el.style.borderColor='var(--accent)';
+  el.style.background='rgba(124,92,252,0.15)';
+  document.getElementById('profileAvatarPreview').textContent=emoji;
 }
 
-function selectProfileColor(el, color){
-  _profileSetupColor = color;
+function selectProfileColor(el,color){
+  _profileSetupColor=color;
   document.querySelectorAll('.pcolor').forEach(function(e){
-    e.style.border = '3px solid transparent';
-    e.style.boxShadow = 'none';
+    e.style.border='3px solid transparent'; e.style.boxShadow='none';
   });
-  el.style.border = '3px solid #fff';
-  el.style.boxShadow = '0 0 0 2px '+color;
-  document.getElementById('profileAvatarPreview').style.background = color+'22';
-  document.getElementById('profileAvatarPreview').style.borderColor = color+'66';
+  el.style.border='3px solid #fff';
+  el.style.boxShadow='0 0 0 2px '+color;
+  var prev=document.getElementById('profileAvatarPreview');
+  prev.style.background=color+'22';
+  prev.style.borderColor=color+'66';
 }
 
 function saveProfile(){
-  var name = (document.getElementById('profileNameInput').value||'').trim();
-  var pinVal = (document.getElementById('profilePinInput').value||'').trim();
-  var editId = (document.getElementById('profileEditId').value||'').trim();
-  var errEl = document.getElementById('profileSetupError');
-  errEl.style.display = 'none';
-
-  if(!name){ errEl.textContent = 'Please enter a name'; errEl.style.display='block'; return; }
-  if(!editId && (!pinVal || pinVal.length !== 4 || !/^\d{4}$/.test(pinVal))){
-    errEl.textContent = 'PIN must be exactly 4 digits'; errEl.style.display='block'; return;
+  var name=(document.getElementById('profileNameInput').value||'').trim();
+  var pinVal=(document.getElementById('profilePinInput').value||'').trim();
+  var editId=(document.getElementById('profileEditId').value||'').trim();
+  var errEl=document.getElementById('profileSetupError');
+  errEl.style.display='none';
+  if(!name){ errEl.textContent='Please enter a name'; errEl.style.display='block'; return; }
+  if(!editId&&(!pinVal||pinVal.length!==4||!/^\d{4}$/.test(pinVal))){
+    errEl.textContent='PIN must be exactly 4 digits'; errEl.style.display='block'; return;
   }
-  if(pinVal && (pinVal.length !== 4 || !/^\d{4}$/.test(pinVal))){
-    errEl.textContent = 'PIN must be exactly 4 digits'; errEl.style.display='block'; return;
+  if(pinVal&&(pinVal.length!==4||!/^\d{4}$/.test(pinVal))){
+    errEl.textContent='PIN must be exactly 4 digits'; errEl.style.display='block'; return;
   }
-
-  var profiles = getProfiles();
-
+  var profiles=getProfiles();
   if(editId){
-    // Edit existing
-    var idx = profiles.findIndex(function(p){ return p.id === editId; });
-    if(idx < 0){ errEl.textContent = 'Profile not found'; errEl.style.display='block'; return; }
-    profiles[idx].name = name;
-    profiles[idx].emoji = _profileSetupEmoji;
-    profiles[idx].color = _profileSetupColor;
+    var idx=profiles.findIndex(function(p){ return p.id===editId; });
+    if(idx<0){ errEl.textContent='Profile not found'; errEl.style.display='block'; return; }
+    profiles[idx].name=name; profiles[idx].emoji=_profileSetupEmoji; profiles[idx].color=_profileSetupColor;
     saveProfiles(profiles);
-    // Update PIN in that profile's state
     if(pinVal){
-      var stateKey = getProfileStateKey(editId);
       try{
-        var raw = localStorage.getItem(stateKey);
-        var s = raw ? JSON.parse(raw) : {};
-        s.pin = pinVal;
-        localStorage.setItem(stateKey, JSON.stringify(s));
+        var sk=getProfileStateKey(editId);
+        var raw=localStorage.getItem(sk);
+        var s=raw?JSON.parse(raw):{};
+        s.pin=pinVal;
+        localStorage.setItem(sk,JSON.stringify(s));
       }catch(e){}
+      if(editId===_currentProfileId) state.pin=pinVal;
     }
-    // If editing current profile, refresh state.pin
-    if(editId === _currentProfileId && pinVal){ state.pin = pinVal; }
     closeModal('profileSetupModal');
-    renderProfilesList();
-    renderUserSelectScreen();
-    showToast('Profile updated ✅', 'green');
+    renderProfilesList(); renderUserSelectScreen();
+    showToast('Profile updated ✅','green');
   } else {
-    // Create new
-    var newId = 'p_'+Date.now();
-    var newProfile = {id:newId, name:name, emoji:_profileSetupEmoji, color:_profileSetupColor};
-    // Bootstrap a fresh state for this profile
-    var freshState = {pin:pinVal, theme:'dark', font:'system', currency:'INR', currSymbol:'₹', lang:'en', currencyRate:1, baseCurrency:'INR', amtFormat:'short', transactions:[], goals:[], assets:[], liabilities:[], budgets:{}, bills:[], accounts:[], recurring:[], allocTargets:{}, familyMembers:['Self'], currentMonth:new Date().getMonth(), currentYear:new Date().getFullYear(), isLoggedIn:false, userName:'', userEmail:'', lastRecurCheck:'', driveConnected:false, driveEmail:'', drivePassword:'', lastSync:'', trackerOpeningBalance:null};
-    localStorage.setItem(getProfileStateKey(newId), JSON.stringify(freshState));
-    profiles.push(newProfile);
+    var newId='p_'+Date.now();
+    // Fresh minimal state — no copy of existing data
+    var fresh={pin:pinVal,fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null};
+    // Write ONLY to the profile key — no ft_v5 write here
+    try{ localStorage.setItem(getProfileStateKey(newId),JSON.stringify(fresh)); }catch(e){
+      errEl.textContent='Storage full — please export a backup and clear data first';
+      errEl.style.display='block'; return;
+    }
+    profiles.push({id:newId,name:name,emoji:_profileSetupEmoji,color:_profileSetupColor});
     saveProfiles(profiles);
     closeModal('profileSetupModal');
-    renderProfilesList();
-    renderUserSelectScreen();
-    showToast('Profile "'+name+'" created! 🎉', 'green');
-    // If this is the first profile, select it immediately
-    if(profiles.length === 1){
-      selectProfile(newId);
-    }
+    renderProfilesList(); renderUserSelectScreen();
+    showToast('Profile "'+name+'" created! 🎉','green');
+    if(profiles.length===1) selectProfile(newId);
   }
 }
 
 function confirmDeleteProfile(id){
-  var profiles = getProfiles();
-  var p = profiles.find(function(x){ return x.id===id; });
+  var profiles=getProfiles();
+  var p=profiles.find(function(x){ return x.id===id; });
   if(!p) return;
-  if(profiles.length <= 1){ showToast('Cannot delete the only profile', 'red'); return; }
-  customConfirm('🗑️', 'Delete Profile?', 'This will permanently delete "'+p.name+'" and all their data. This cannot be undone.', function(){
-    deleteProfile(id);
-  });
+  if(profiles.length<=1){ showToast('Cannot delete the only profile','red'); return; }
+  customConfirm('🗑️','Delete Profile?','This will permanently delete "'+p.name+'" and all their data. This cannot be undone.',function(){ deleteProfile(id); });
 }
 
 function deleteProfile(id){
-  var profiles = getProfiles();
-  if(profiles.length <= 1){ showToast('Cannot delete the only profile', 'red'); return; }
-  profiles = profiles.filter(function(p){ return p.id !== id; });
+  var profiles=getProfiles();
+  if(profiles.length<=1){ showToast('Cannot delete the only profile','red'); return; }
+  profiles=profiles.filter(function(p){ return p.id!==id; });
   saveProfiles(profiles);
-  // Remove state
   try{ localStorage.removeItem(getProfileStateKey(id)); }catch(e){}
-  // If deleted current profile, switch to first
-  if(id === _currentProfileId){
+  if(id===_currentProfileId){
     setActiveProfileId(profiles[0].id);
-    _currentProfileId = profiles[0].id;
+    _currentProfileId=profiles[0].id;
+    Object.assign(state,{pin:'0000',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{}});
     loadState();
-    applyTheme(state.theme);
-    applyFont(state.font);
+    applyTheme(state.theme); applyFont(state.font);
     initApp();
   }
-  renderProfilesList();
-  renderUserSelectScreen();
-  showToast('Profile deleted', 'yellow');
+  renderProfilesList(); renderUserSelectScreen();
+  showToast('Profile deleted','yellow');
 }
 
 function renderProfilesList(){
-  var el = document.getElementById('profilesList');
+  var el=document.getElementById('profilesList');
   if(!el) return;
-  var profiles = getProfiles();
+  var profiles=getProfiles();
   if(!profiles.length){
-    el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--text3);font-weight:700;text-align:center">No profiles yet.</div>';
+    el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);font-weight:700;text-align:center">No profiles yet.</div>';
     return;
   }
-  el.innerHTML = profiles.map(function(p){
-    var isCurrent = p.id === _currentProfileId;
+  el.innerHTML=profiles.map(function(p){
+    var isCurrent=p.id===_currentProfileId;
     return '<div class="set-row" style="cursor:default;'+(isCurrent?'border-color:rgba(124,92,252,0.3);background:rgba(124,92,252,0.05)':'')+'">'
       +'<div class="set-row-left">'
-      +'<span style="width:32px;height:32px;border-radius:9px;background:'+p.color+'22;border:1.5px solid '+p.color+'44;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">'+p.emoji+'</span>'
-      +'<div><div class="set-row-label">'+escHtml(p.name)+(isCurrent?' <span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);padding:2px 6px;border-radius:6px;font-weight:900;vertical-align:middle">ACTIVE</span>':'')+'</div>'
-      +'<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">'+(isCurrent?'Currently logged in':'Tap to manage')+'</div></div>'
+        +'<span style="width:32px;height:32px;border-radius:9px;background:'+p.color+'22;border:1.5px solid '+p.color+'44;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">'+p.emoji+'</span>'
+        +'<div>'
+          +'<div class="set-row-label">'+escHtml(p.name)+(isCurrent?' <span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);padding:2px 6px;border-radius:6px;font-weight:900;vertical-align:middle">ACTIVE</span>':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">'+(isCurrent?'Currently active':'Tap to manage')+'</div>'
+        +'</div>'
       +'</div>'
       +'<div style="display:flex;gap:6px;align-items:center">'
-      +'<button onclick="showProfileSetup(\''+p.id+'\')" style="background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">✏️</button>'
-      +(profiles.length>1?'<button onclick="confirmDeleteProfile(\''+p.id+'\')" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🗑️</button>':'')
-      +(isCurrent?'':'<button onclick="switchToProfile(\''+p.id+'\')" style="background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">Switch</button>')
+        +'<button onclick="showProfileSetup(\''+p.id+'\')" style="background:rgba(68,138,255,0.12);color:var(--blue);border:1px solid rgba(68,138,255,0.3);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">✏️</button>'
+        +(profiles.length>1?'<button onclick="confirmDeleteProfile(\''+p.id+'\')" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🗑️</button>':'')
+        +(!isCurrent?'<button onclick="switchToProfile(\''+p.id+'\')" style="background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">Switch</button>':'')
       +'</div>'
     +'</div>';
   }).join('');
 }
 
 function switchToProfile(id){
-  // Save current state first
   saveState();
   setActiveProfileId(id);
-  _currentProfileId = id;
+  _currentProfileId=id;
+  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null});
   loadState();
-  applyTheme(state.theme);
-  applyFont(state.font);
-  updateCurrSymbols();
-  initApp();
-  renderProfilesList();
-  showToast('Switched profile ✅', 'green');
+  applyTheme(state.theme); applyFont(state.font); updateCurrSymbols();
+  initApp(); renderProfilesList();
+  showToast('Switched to '+id,'green');
   showPage('home');
 }
 
@@ -2880,11 +2828,10 @@ let acctColor='#22c55e',recurType='expense',selectedBillCat='Bills',scanResult=n
 // ======== PERSIST ========
 function loadState(){
   try{
-    // Determine storage key: profile-specific or legacy fallback
-    var storeKey = _currentProfileId ? getProfileStateKey(_currentProfileId) : 'ft_v5';
+    // Use profile-specific key if available, fall back to legacy ft_v5
+    var storeKey=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
     var s=localStorage.getItem(storeKey);
-    // Fallback to legacy ft_v5 if profile key is empty
-    if(!s && _currentProfileId) s=localStorage.getItem('ft_v5');
+    if(!s&&_currentProfileId) s=localStorage.getItem('ft_v5'); // one-time migration fallback
     if(s){
       try{
         var p=JSON.parse(s);
@@ -2939,13 +2886,9 @@ function loadState(){
 }
 function saveState(){
   try{
-    var storeKey = _currentProfileId ? getProfileStateKey(_currentProfileId) : 'ft_v5';
-    // Keep previous save as a rolling local safety backup before overwriting
-    var prev=localStorage.getItem(storeKey);
-    if(prev) localStorage.setItem('ft_prev_backup',prev);
+    // Write ONLY to the profile-specific key (or legacy ft_v5 if no profile active)
+    var storeKey=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
     localStorage.setItem(storeKey,JSON.stringify(state));
-    // Also keep legacy key in sync for single-profile apps (backward compat)
-    if(_currentProfileId) localStorage.setItem('ft_v5', JSON.stringify(state));
   }catch(e){
     console.warn('Could not save state:',e.message);
     if(e.name==='QuotaExceededError'){
@@ -2957,8 +2900,7 @@ function saveState(){
 }
 // Restore from local emergency or previous backup if main state is corrupted/empty
 function restoreFromLocalBackup(){
-  var storeKey = _currentProfileId ? getProfileStateKey(_currentProfileId) : 'ft_v5';
-  var sources=['ft_emergency_backup','ft_prev_backup', storeKey];
+  var sources=['ft_emergency_backup','ft_prev_backup'];
   for(var i=0;i<sources.length;i++){
     try{
       var raw=localStorage.getItem(sources[i]);
@@ -3019,7 +2961,8 @@ function _silentSync(){
       if(res&&res.id){
         gDriveFileId=res.id;
         state.lastSync=safeState.lastSync;
-        localStorage.setItem('ft_v5',JSON.stringify(state));
+        var _sk=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
+        localStorage.setItem(_sk,JSON.stringify(state));
         updateCloudSyncStatus();
         console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
         _saveEmergencyDriveBackup(payload);
@@ -3220,14 +3163,8 @@ function unlock(){initFpButton();document.getElementById('lock').style.display='
 function lockApp(){
   saveState();
   document.getElementById('app').classList.remove('on');
-  var profiles = getProfiles();
-  if(profiles.length > 1){
-    // Show user select if multiple profiles
-    showUserSelect();
-  } else {
-    // Single profile — go straight to lock screen
-    showLockForCurrentProfile();
-  }
+  if(getProfiles().length>1){ showUserSelect(); }
+  else { showLockForCurrentProfile(); }
 }
 
 // ======== INIT ========
@@ -3255,20 +3192,15 @@ function initApp(){
   } else {
     renderAuthSignedOut();
   }
-  // Update avatar letter from username or email
+  // Update avatar — show active profile emoji and color
   var avatarLetter=document.getElementById('avatarLetter');
   if(avatarLetter){
-    // Prefer profile emoji
-    var profiles = getProfiles();
-    var activeProfile = profiles.find(function(p){ return p.id === _currentProfileId; });
-    if(activeProfile){
-      avatarLetter.textContent = activeProfile.emoji;
-      var avatarEl = document.getElementById('avatar');
-      if(avatarEl){
-        avatarEl.style.background = 'linear-gradient(135deg,'+activeProfile.color+','+activeProfile.color+'99)';
-        avatarEl.style.borderColor = activeProfile.color+'55';
-        avatarEl.title = activeProfile.name;
-      }
+    var _profiles=getProfiles();
+    var _ap=_profiles.find(function(p){ return p.id===_currentProfileId; });
+    if(_ap){
+      avatarLetter.textContent=_ap.emoji;
+      var _av=document.getElementById('avatar');
+      if(_av){ _av.style.background='linear-gradient(135deg,'+_ap.color+','+_ap.color+'99)'; _av.style.borderColor=_ap.color+'55'; _av.title=_ap.name; }
     } else {
       var displayName=state.userName||state.userEmail||'';
       if(displayName) avatarLetter.textContent=displayName[0].toUpperCase();
@@ -3367,7 +3299,13 @@ function showModal(id){
 }
 function closeModal(id){document.getElementById(id).classList.remove('on');if(id==='txModal')resetTxForm();if(id==='goalModal'){document.getElementById('goalModal').dataset.editId='';document.querySelector('#goalModal .btn-go').textContent='✅ Add Goal';goalIcon='🏠';document.querySelectorAll('#goalModal .chip').forEach(function(c,i){c.classList.toggle('on',i===0);});}if(id==='liabModal'){document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
   if(id==='acctModal'){var am=document.getElementById('acctModal');if(am)am.dataset.editId='';var ab=document.querySelector('#acctModal .btn-go');if(ab)ab.textContent='✅ Add Account';}if(id==='assetModal'){var m=document.getElementById('assetModal');m.dataset.editId='';m.dataset.invested='0';m.dataset.value='0';document.querySelector('#assetModal .btn-go').textContent='✅ Add Asset';var at=document.querySelector('#assetModal .modal-title');if(at)at.textContent='💼 Add Asset';var cp=document.getElementById('assetCalcPreview');if(cp)cp.style.display='none';document.getElementById('assetDynamicFields').innerHTML='';document.getElementById('assetName').value='';document.getElementById('assetScheme').value=document.querySelector('#assetScheme option').value;}}
-document.querySelectorAll('.modal-bg').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});});
+document.querySelectorAll('.modal-bg').forEach(function(o){
+  o.addEventListener('click',function(e){
+    // Close if tap was not inside the .modal panel
+    var panel=o.querySelector('.modal');
+    if(!panel||!panel.contains(e.target)) closeModal(o.id);
+  });
+});
 
 // ======== TRANSACTIONS ========
 function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';var pmf=document.getElementById('txPayMethodField');if(pmf)pmf.style.display=(t==='expense')?'block':'none';}
@@ -9280,36 +9218,23 @@ saveState=function(){
 function navToPage(id){ showPage(id); }
 
 // ======== BOOT ========
-// 1. Migrate/init profiles
 migrateOrBootProfiles();
-// 2. Load state for the active profile
 loadState();
 initFpButton();
 initGoogleDrive();
-// 3. Decide what to show
 (function(){
-  var profiles = getProfiles();
+  var profiles=getProfiles();
   if(!profiles.length){
-    // No profiles at all — show setup
     document.getElementById('userSelect').classList.remove('hidden');
-    document.getElementById('lock').style.display = 'none';
+    document.getElementById('lock').style.display='none';
     renderUserSelectScreen();
     return;
   }
-  // Single profile with no data → skip lock screen
-  var storeKey = _currentProfileId ? getProfileStateKey(_currentProfileId) : 'ft_v5';
-  var hasData = !!localStorage.getItem(storeKey) || !!localStorage.getItem('ft_v5');
-  if(!hasData && profiles.length === 1){
-    setTimeout(function(){ unlock(); }, 100);
-    return;
-  }
-  if(profiles.length > 1){
-    // Multiple profiles → show user select
-    showUserSelect();
-  } else {
-    // Single profile → show lock screen directly
-    showLockForCurrentProfile();
-  }
+  var storeKey=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
+  var hasData=!!localStorage.getItem(storeKey)||!!localStorage.getItem('ft_v5');
+  if(!hasData){ setTimeout(function(){ unlock(); },100); return; }
+  if(profiles.length>1){ showUserSelect(); }
+  else { showLockForCurrentProfile(); }
 })();
 </script>
 <!-- ALLOCATION TARGET MODAL -->
