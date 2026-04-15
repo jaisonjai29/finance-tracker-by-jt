@@ -1027,6 +1027,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="fpill" onclick="setHistFilter('income',this)">📥 In</div>
           <div class="fpill" onclick="setHistFilter('expense',this)">📤 Out</div>
           <div class="fpill" onclick="setHistFilter('investment',this)">📈 Invest</div>
+          <div class="fpill" onclick="setHistFilter('transfer',this)">🔀 Transfer</div>
         </div>
         <select id="histAcctFilter" onchange="filterHistory()" style="flex-shrink:0;padding:5px 8px;font-size:11px;font-weight:700;border-radius:20px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);outline:none;cursor:pointer;max-width:110px;height:32px">
           <option value="">🏦 Accounts</option>
@@ -3845,17 +3846,75 @@ function renderHistory(){
   let txs=[...state.transactions];
   if(histFilt==='investment'){
     txs=txs.filter(t=>isInvestmentExpense(t.category));
+  } else if(histFilt==='transfer'){
+    txs=[];
   } else if(histFilt!=='all'){
     txs=txs.filter(t=>t.type===histFilt);
   }
   if(histMemberFilt!=='all')txs=txs.filter(t=>(t.member||'Self')===histMemberFilt);
   if(search)txs=txs.filter(t=>t.desc.toLowerCase().includes(search)||t.category.toLowerCase().includes(search));
   if(acctFilter)txs=txs.filter(t=>String(t.account)===String(acctFilter));
+
+  // Build combined items list — include transfers for 'all' and 'transfer' filters
+  var items=txs.map(function(tx){ return{date:tx.date,sortKey:tx.date+'_'+tx.id,isTx:true,data:tx}; });
+  if(histFilt==='all'||histFilt==='transfer'){
+    (state.transfers||[]).forEach(function(tr){
+      // Apply search filter to transfers
+      if(search){
+        var haystack=(tr.fromName+' '+tr.toName+' '+(tr.note||'')).toLowerCase();
+        if(!haystack.includes(search)) return;
+      }
+      // Apply account filter to transfers
+      if(acctFilter && String(tr.from)!==String(acctFilter) && String(tr.to)!==String(acctFilter)) return;
+      items.push({date:tr.date,sortKey:tr.date+'_t'+tr.id,isTx:false,data:tr});
+    });
+  }
+
   const c=document.getElementById('histList');
-  if(!txs.length){c.innerHTML=`<div class="empty"><div class="empty-big">🔍</div><div class="empty-title">${tr('noTx')}</div></div>`;return;}
-  const groups={};txs.forEach(tx=>{if(!groups[tx.date])groups[tx.date]=[];groups[tx.date].push(tx);});
-  let html='';Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(date=>{html+=`<div style="font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px">${formatDate(date)}</div><div class="box" style="padding:8px 14px">${groups[date].map(tx=>txHTML(tx)).join('')}</div>`;});
+  if(!items.length){c.innerHTML=`<div class="empty"><div class="empty-big">🔍</div><div class="empty-title">${tr('noTx')}</div></div>`;return;}
+
+  // Group by date, sorted newest first
+  const groups={};
+  items.forEach(function(item){
+    if(!groups[item.date]) groups[item.date]=[];
+    groups[item.date].push(item);
+  });
+  let html='';
+  Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(function(date){
+    var rows=groups[date];
+    // Within a date, sort by sortKey descending (newest id first)
+    rows.sort(function(a,b){ return b.sortKey.localeCompare(a.sortKey); });
+    html+=`<div style="font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px">${formatDate(date)}</div><div class="box" style="padding:8px 14px">`;
+    rows.forEach(function(item){
+      if(item.isTx){
+        html+=txHTML(item.data);
+      } else {
+        html+=transferHistHTML(item.data);
+      }
+    });
+    html+='</div>';
+  });
   c.innerHTML=html;
+}
+
+function transferHistHTML(t){
+  var fromAcct=state.accounts.find(function(a){return String(a.id)===String(t.from);});
+  var toAcct=state.accounts.find(function(a){return String(a.id)===String(t.to);});
+  var fromColor=(fromAcct&&fromAcct.color)||'#448aff';
+  var toColor=(toAcct&&toAcct.color)||'#22c55e';
+  return '<div class="tx" style="cursor:default">'
+    +'<div class="tx-ico" style="background:rgba(68,138,255,0.12)">🔀</div>'
+    +'<div class="tx-body">'
+      +'<div class="tx-name">Transfer</div>'
+      +'<div class="tx-meta">'+formatDate(t.date)+(t.note?' · '+t.note:'')+'</div>'
+      +'<div class="tx-badges">'
+        +'<span class="tx-badge" style="background:'+fromColor+'22;color:'+fromColor+';border:1px solid '+fromColor+'44">'+t.fromName+'</span>'
+        +'<span style="font-size:10px;color:var(--text3);font-weight:700">→</span>'
+        +'<span class="tx-badge" style="background:'+toColor+'22;color:'+toColor+';border:1px solid '+toColor+'44">'+t.toName+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="tx-amt" style="color:var(--blue);align-self:flex-start;padding-top:2px">'+state.currSymbol+fmt(cv(t.amount))+'</div>'
+  +'</div>';
 }
 function setHistFilter(f,el){histFilt=f;document.querySelectorAll('#histFilter .fpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderHistory();}
 function filterHistory(){renderHistory();}
