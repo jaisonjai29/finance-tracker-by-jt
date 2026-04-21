@@ -3485,143 +3485,201 @@ function showCarryBreakdown(){
   var month=state.currentMonth, year=state.currentYear;
   var sym=state.currSymbol;
   var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var targetDateStr=year+'-'+(month+1<10?'0'+(month+1):(month+1))+'-01';
   var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
+  var accounts=state.accounts||[];
 
-  // ── Build list of all months that have any data (past + current) ──
+  // ── Build full month range (earliest tx or account creation → current month) ──
   var allMonths=[];
-  if(state.transactions.length){
-    var earliest=state.transactions.reduce(function(min,tx){return tx.date<min?tx.date:min;},state.transactions[0].date);
-    var eDate=new Date(earliest);
+  var rangeStart=null;
+  // Find earliest date from transactions or account creation
+  state.transactions.forEach(function(tx){ if(!rangeStart||tx.date<rangeStart) rangeStart=tx.date; });
+  accounts.forEach(function(a){ var c=a.createdAt||''; if(c&&(!rangeStart||c<rangeStart)) rangeStart=c; });
+  if(rangeStart){
+    var eDate=new Date(rangeStart);
     var curM=eDate.getMonth(), curY=eDate.getFullYear();
     while(curY<year||(curY===year&&curM<=month)){
       allMonths.push({m:curM,y:curY});
       curM++;if(curM>11){curM=0;curY++;}
     }
   }
-  // Always include current month even if no txs yet
   if(!allMonths.length||allMonths[allMonths.length-1].m!==month||allMonths[allMonths.length-1].y!==year){
     allMonths.push({m:month,y:year});
   }
 
-  // ── Identify all accounts ──
-  var accounts = state.accounts || [];
-
-  // ── Compute per-account monthly data ──
-  // acctData[acctId][monthIdx] = {inc, exp, runningBalance}
-  function getMonthKey(m,y){return y*100+m;}
-
-  // Build overall total carry (global, for the badge) — same logic as before
-  var globalCarry = base;
-  state.accounts.forEach(function(a){
-    if(typeof a.openingBalance==='number'&&a.openingBalance>0){
-      var created=a.createdAt||'2000-01-01';
-      if(created<targetDateStr) globalCarry+=a.openingBalance;
-    }
-  });
-  if(state.transactions.length){
-    var earliest2=state.transactions.reduce(function(min,tx){return tx.date<min?tx.date:min;},state.transactions[0].date);
-    var eDate2=new Date(earliest2);
-    var cM2=eDate2.getMonth(),cY2=eDate2.getFullYear();
-    while(cY2<year||(cY2===year&&cM2<month)){
-      var txsG=state.transactions.filter(function(tx){var d=new Date(tx.date);return d.getMonth()===cM2&&d.getFullYear()===cY2;});
-      var incG=txsG.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-      var expG=txsG.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-      globalCarry+=incG-expG;
-      cM2++;if(cM2>11){cM2=0;cY2++;}
-    }
+  // ── Per-account: compute cumulative income, expense, closing balance up to each month ──
+  // acctSummary[id] = {opening, totalInc (all-time), totalExp (all-time), closingBal}
+  // For Overall tab: each account row shows opening + all-time inc/exp/closing
+  function acctTotals(acct){
+    var opening=typeof acct.openingBalance==='number'?acct.openingBalance:0;
+    var txAll=state.transactions.filter(function(t){return String(t.account)===String(acct.id);});
+    var inc=txAll.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var exp=txAll.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    return {opening:opening,inc:inc,exp:exp,closing:opening+inc-exp};
   }
 
-  // ── HTML builder ──
+  // ── Global carry = sum of all account closings (excluding current month txs) + tracker base ──
+  // carry = base + sum_accounts(opening + inc_before_cur - exp_before_cur)
+  var globalCarry=base;
+  accounts.forEach(function(a){
+    var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
+    var txPrev=state.transactions.filter(function(t){
+      if(String(t.account)!==String(a.id)) return false;
+      var d=new Date(t.date); var dY=d.getFullYear(),dM=d.getMonth();
+      return dY<year||(dY===year&&dM<month);
+    });
+    var incP=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var expP=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    globalCarry+=opening+incP-expP;
+  });
+
+  // ── HTML ──
   var html='';
+  html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:14px;line-height:1.6">'
+    +'Each account: <b style="color:var(--text)">Opening + Income − Expense = Closing balance</b>. '
+    +'Sum of all account closing balances = carry-forward into next month.</div>';
 
-  // Intro
-  html+='<div style="font-size:12px;color:var(--text3);font-weight:700;margin-bottom:14px;line-height:1.6">'
-    +'Full account-wise breakdown for every month. '
-    +'<b style="color:var(--text)">Opening → Income → Expense → Closing balance</b> per account per month. '
-    +'Editing an account\'s opening balance updates all future months automatically.</div>';
-
-  // ── VIEW TOGGLE ──
+  // Tab buttons
   html+='<div style="display:flex;gap:6px;margin-bottom:14px">'
-    +'<button id="cfTabOverall" onclick="cfSwitchTab(\'overall\')" style="flex:1;padding:8px;border-radius:10px;border:none;font-size:11px;font-weight:900;cursor:pointer;background:var(--accent);color:#fff">📊 Overall</button>'
-    +'<button id="cfTabAccount" onclick="cfSwitchTab(\'account\')" style="flex:1;padding:8px;border-radius:10px;border:none;font-size:11px;font-weight:900;cursor:pointer;background:var(--bg3);color:var(--text2)">🏦 Per Account</button>'
+    +'<button id="cfTabOverall" onclick="cfSwitchTab(\'overall\')" style="flex:1;padding:9px;border-radius:10px;border:none;font-size:11px;font-weight:900;cursor:pointer;background:var(--accent);color:#fff">📊 Overall</button>'
+    +'<button id="cfTabAccount" onclick="cfSwitchTab(\'account\')" style="flex:1;padding:9px;border-radius:10px;border:none;font-size:11px;font-weight:900;cursor:pointer;background:var(--bg3);color:var(--text2)">🏦 Per Account</button>'
   +'</div>';
 
-  // ═══════════════════════════════
-  // TAB 1: OVERALL (month-by-month global)
-  // ═══════════════════════════════
+  // ══════════════════════════════════════════
+  // TAB 1 — OVERALL: one row per account showing opening/income/expense/closing
+  // ══════════════════════════════════════════
   html+='<div id="cfPanelOverall">';
-  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px">';
-  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto;padding:8px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
-    +'<span>Period</span><span style="text-align:right">Income</span><span style="text-align:right;padding-left:8px">Expense</span><span style="text-align:right;padding-left:8px">Net</span></div>';
 
-  // Tracker opening balance row
-  if(base!==0){
-    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto;padding:9px 12px;border-bottom:1px solid var(--border);background:rgba(124,92,252,0.06)">'
-      +'<div><div style="font-size:11px;font-weight:800;color:var(--accent)">🏁 Tracker Opening</div><div style="font-size:9px;color:var(--text3)">Manually set</div></div>'
-      +'<div style="font-size:11px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:8px">'+(base>0?sym+fmt(cv(base)):'—')+'</div>'
-      +'<div style="font-size:11px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:8px">'+(base<0?sym+fmt(cv(Math.abs(base))):'—')+'</div>'
-      +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:8px;color:'+(base>=0?'var(--green)':'var(--red)')+'">'+(base>=0?'+':'-')+sym+fmt(cv(Math.abs(base)))+'</div>'
+  // ── Section A: Account balances (all accounts, always shown) ──
+  html+='<div style="font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;padding:0 2px">Account Balances (upto end of last month)</div>';
+  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px">';
+  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
+    +'<span>Account</span>'
+    +'<span style="text-align:right;padding-left:6px">Open</span>'
+    +'<span style="text-align:right;padding-left:6px">Income</span>'
+    +'<span style="text-align:right;padding-left:6px">Expense</span>'
+    +'<span style="text-align:right;padding-left:6px">Balance</span>'
+  +'</div>';
+
+  if(!accounts.length){
+    html+='<div style="padding:14px;text-align:center;color:var(--text3);font-size:12px;font-weight:700">No accounts configured yet.</div>';
+  } else {
+    var totalOpen=0,totalInc2=0,totalExp2=0,totalClose=0;
+    accounts.forEach(function(a){
+      // All txs BEFORE current month only (carry = what went into current month)
+      var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
+      var txPrev=state.transactions.filter(function(t){
+        if(String(t.account)!==String(a.id)) return false;
+        var d=new Date(t.date); var dY=d.getFullYear(),dM=d.getMonth();
+        return dY<year||(dY===year&&dM<month);
+      });
+      var inc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+      var exp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+      var closing=opening+inc-exp;
+      totalOpen+=opening; totalInc2+=inc; totalExp2+=exp; totalClose+=closing;
+      var acctColor=a.color||'var(--accent)';
+      html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:8px 12px;border-bottom:1px solid var(--border)">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<div style="width:7px;height:7px;border-radius:50%;background:'+acctColor+';flex-shrink:0"></div>'
+          +'<div><div style="font-size:11px;font-weight:800;color:var(--text)">'+a.name+'</div>'
+          +'<div style="font-size:9px;color:var(--text3)">'+a.type+'</div></div>'
+        +'</div>'
+        +'<div style="font-size:10px;font-weight:700;color:var(--text2);text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(opening))+'</div>'
+        +'<div style="font-size:10px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:6px">'+(inc>0?'+'+sym+fmt(cv(inc)):'—')+'</div>'
+        +'<div style="font-size:10px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:6px">'+(exp>0?'-'+sym+fmt(cv(exp)):'—')+'</div>'
+        +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:6px;color:'+(closing>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(closing))+'</div>'
+      +'</div>';
+    });
+    // Totals row
+    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:8px 12px;background:var(--bg2)">'
+      +'<div style="font-size:11px;font-weight:900;color:var(--text)">All Accounts</div>'
+      +'<div style="font-size:10px;font-weight:900;color:var(--text2);text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(totalOpen))+'</div>'
+      +'<div style="font-size:10px;font-weight:900;color:var(--green);text-align:right;white-space:nowrap;padding-left:6px">'+(totalInc2>0?'+'+sym+fmt(cv(totalInc2)):'—')+'</div>'
+      +'<div style="font-size:10px;font-weight:900;color:var(--red);text-align:right;white-space:nowrap;padding-left:6px">'+(totalExp2>0?'-'+sym+fmt(cv(totalExp2)):'—')+'</div>'
+      +'<div style="font-size:12px;font-weight:900;text-align:right;white-space:nowrap;padding-left:6px;color:'+(totalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(totalClose))+'</div>'
     +'</div>';
   }
+  html+='</div>'; // end account table
 
-  // Account opening balance rows (for accounts created before current month)
-  state.accounts.forEach(function(a){
-    if(typeof a.openingBalance==='number'&&a.openingBalance!==0){
-      var created=a.createdAt||'2000-01-01';
-      if(created<targetDateStr){
-        var ob=a.openingBalance;
-        html+='<div style="display:grid;grid-template-columns:1fr auto auto auto;padding:9px 12px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">'
-          +'<div><div style="font-size:11px;font-weight:800;color:var(--text)">🏦 '+a.name+' <span style="font-size:9px;color:var(--text3)">(Opening)</span></div><div style="font-size:9px;color:var(--text3)">Account opening balance</div></div>'
-          +'<div style="font-size:11px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:8px">'+(ob>0?sym+fmt(cv(ob)):'—')+'</div>'
-          +'<div style="font-size:11px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:8px">'+(ob<0?sym+fmt(cv(Math.abs(ob))):'—')+'</div>'
-          +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:8px;color:'+(ob>=0?'var(--green)':'var(--red)')+'">'+(ob>=0?'+':'-')+sym+fmt(cv(Math.abs(ob)))+'</div>'
-        +'</div>';
-      }
-    }
-  });
-
-  // Monthly rows
-  allMonths.forEach(function(mo){
-    var isCurrent=(mo.m===month&&mo.y===year);
-    var txs=state.transactions.filter(function(tx){var d=new Date(tx.date);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;});
-    var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-    var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    var net=inc-exp;
-    if(!inc&&!exp&&!isCurrent) return;
-    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto;padding:9px 12px;border-bottom:1px solid var(--border)'+(isCurrent?';background:rgba(124,92,252,0.08)':'')+'">'
-      +'<div><div style="font-size:11px;font-weight:800;color:'+(isCurrent?'var(--accent)':'var(--text)')+'">'+mNames[mo.m]+' '+mo.y+(isCurrent?' <span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px">current</span>':'')+'</div>'
-      +'<div style="font-size:9px;color:var(--text3)">'+txs.length+' transaction'+(txs.length!==1?'s':'')+'</div></div>'
-      +'<div style="font-size:11px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:8px">'+(inc>0?sym+fmt(cv(inc)):'—')+'</div>'
-      +'<div style="font-size:11px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:8px">'+(exp>0?sym+fmt(cv(exp)):'—')+'</div>'
-      +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:8px;color:'+(net>=0?'var(--green)':'var(--red)')+'">'+(net>=0?'+':'-')+sym+fmt(cv(Math.abs(net)))+'</div>'
+  // ── Section B: Current month activity ──
+  html+='<div style="font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;padding:0 2px">'+mNames[month]+' '+year+' (Current Month)</div>';
+  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px">';
+  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
+    +'<span>Account</span>'
+    +'<span style="text-align:right;padding-left:6px">Open</span>'
+    +'<span style="text-align:right;padding-left:6px">Income</span>'
+    +'<span style="text-align:right;padding-left:6px">Expense</span>'
+    +'<span style="text-align:right;padding-left:6px">Balance</span>'
+  +'</div>';
+  var curTotalOpen=0,curTotalInc=0,curTotalExp=0,curTotalClose=0;
+  accounts.forEach(function(a){
+    var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
+    // Opening for current month = opening + all prior txs
+    var txPrev=state.transactions.filter(function(t){
+      if(String(t.account)!==String(a.id)) return false;
+      var d=new Date(t.date); var dY=d.getFullYear(),dM=d.getMonth();
+      return dY<year||(dY===year&&dM<month);
+    });
+    var prevInc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var prevExp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    var curOpen=opening+prevInc-prevExp;
+    // Current month txs
+    var txCur=state.transactions.filter(function(t){
+      if(String(t.account)!==String(a.id)) return false;
+      var d=new Date(t.date); return d.getFullYear()===year&&d.getMonth()===month;
+    });
+    var curInc=txCur.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var curExp=txCur.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    var curClose=curOpen+curInc-curExp;
+    curTotalOpen+=curOpen; curTotalInc+=curInc; curTotalExp+=curExp; curTotalClose+=curClose;
+    var acctColor=a.color||'var(--accent)';
+    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:8px 12px;border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+        +'<div style="width:7px;height:7px;border-radius:50%;background:'+acctColor+';flex-shrink:0"></div>'
+        +'<div><div style="font-size:11px;font-weight:800;color:var(--text)">'+a.name+'</div>'
+        +'<div style="font-size:9px;color:var(--text3)">'+txCur.length+' tx this month</div></div>'
+      +'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--text2);text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(curOpen))+'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:6px">'+(curInc>0?'+'+sym+fmt(cv(curInc)):'—')+'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:6px">'+(curExp>0?'-'+sym+fmt(cv(curExp)):'—')+'</div>'
+      +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:6px;color:'+(curClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curClose))+'</div>'
     +'</div>';
   });
-
-  // Total carry row (excludes current month)
-  html+='<div style="display:grid;grid-template-columns:1fr auto;padding:10px 12px;background:var(--bg2)">'
-    +'<div style="font-size:12px;font-weight:900;color:var(--text)">↩️ Carry Into '+mNames[month]+' '+year+'</div>'
-    +'<div style="font-size:14px;font-weight:900;color:'+(globalCarry>=0?'var(--green)':'var(--red)')+'">'+(globalCarry>=0?'+':'-')+sym+fmt(cv(Math.abs(globalCarry)))+'</div>'
+  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:8px 12px;background:var(--bg2)">'
+    +'<div style="font-size:11px;font-weight:900;color:var(--accent)">All Accounts Now</div>'
+    +'<div style="font-size:10px;font-weight:900;color:var(--text2);text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(curTotalOpen))+'</div>'
+    +'<div style="font-size:10px;font-weight:900;color:var(--green);text-align:right;white-space:nowrap;padding-left:6px">'+(curTotalInc>0?'+'+sym+fmt(cv(curTotalInc)):'—')+'</div>'
+    +'<div style="font-size:10px;font-weight:900;color:var(--red);text-align:right;white-space:nowrap;padding-left:6px">'+(curTotalExp>0?'-'+sym+fmt(cv(curTotalExp)):'—')+'</div>'
+    +'<div style="font-size:12px;font-weight:900;text-align:right;white-space:nowrap;padding-left:6px;color:'+(curTotalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curTotalClose))+'</div>'
   +'</div>';
-  html+='</div>'; // end table
+  html+='</div>'; // end current month table
+
+  // ── Carry-forward total ──
+  if(base!==0){
+    html+='<div style="background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--accent)">🏁 Tracker Opening Balance</div>'
+      +'<div style="font-size:12px;font-weight:900;color:'+(base>=0?'var(--green)':'var(--red)')+'">'+( base>=0?'+':'')+sym+fmt(cv(base))+'</div>'
+    +'</div>';
+  }
+  html+='<div style="background:var(--bg2);border:2px solid '+(globalCarry>=0?'var(--green)':'var(--red)')+';border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
+    +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">↩️ Carry Into '+mNames[month]+' '+year+'</div>'
+    +'<div style="font-size:9px;color:var(--text3);margin-top:2px">Sum of all account opening balances + prior income − prior expense'+(base?'+tracker opening':'')+'</div></div>'
+    +'<div style="font-size:18px;font-weight:900;color:'+(globalCarry>=0?'var(--green)':'var(--red)')+'">'+( globalCarry>=0?'+':'-')+sym+fmt(cv(Math.abs(globalCarry)))+'</div>'
+  +'</div>';
+
   html+='</div>'; // end cfPanelOverall
 
-  // ═══════════════════════════════
-  // TAB 2: PER-ACCOUNT DETAIL
-  // ═══════════════════════════════
+  // ══════════════════════════════════════════
+  // TAB 2 — PER ACCOUNT: month-by-month per account
+  // ══════════════════════════════════════════
   html+='<div id="cfPanelAccount" style="display:none">';
-
   if(!accounts.length){
     html+='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;font-weight:700">No accounts configured yet.</div>';
   } else {
     accounts.forEach(function(acct){
       var acctColor=acct.color||'var(--accent)';
       var opening=typeof acct.openingBalance==='number'?acct.openingBalance:0;
-
-      // Compute running balance month by month
       var runBal=opening;
       var acctMonthRows=[];
-
       allMonths.forEach(function(mo){
         var isCurrent=(mo.m===month&&mo.y===year);
         var txs=state.transactions.filter(function(tx){
@@ -3634,81 +3692,71 @@ function showCarryBreakdown(){
         runBal=runBal+inc-exp;
         acctMonthRows.push({mo:mo,isCurrent:isCurrent,inc:inc,exp:exp,openBal:openBal,closeBal:runBal,txCount:txs.length});
       });
-
-      // Only show accounts with activity OR current month
-      var hasActivity=acctMonthRows.some(function(r){return r.inc>0||r.exp>0||r.isCurrent;});
+      var finalBal=runBal;
 
       html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:14px">';
-      // Account header with edit button
+      // Header
       html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-bottom:2px solid '+acctColor+'44">'
         +'<div style="display:flex;align-items:center;gap:8px">'
           +'<div style="width:10px;height:10px;border-radius:50%;background:'+acctColor+'"></div>'
-          +'<div>'
-            +'<div style="font-size:13px;font-weight:900;color:var(--text)">'+acct.name+'</div>'
-            +'<div style="font-size:10px;color:var(--text3)">'+acct.type+' · Opening: '+sym+fmt(cv(opening))+'</div>'
-          +'</div>'
+          +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">'+acct.name+'</div>'
+          +'<div style="font-size:10px;color:var(--text3)">'+acct.type+' · Opening: '+sym+fmt(cv(opening))+'</div></div>'
         +'</div>'
         +'<button onclick="cfEditAccountOpening(\''+acct.id+'\')" style="background:'+acctColor+'22;color:'+acctColor+';border:1px solid '+acctColor+'44;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:900;cursor:pointer">✏️ Edit</button>'
       +'</div>';
-
       // Column headers
-      html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:6px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
-        +'<span>Month</span><span style="text-align:right">Open Bal</span><span style="text-align:right;padding-left:6px">In</span><span style="text-align:right;padding-left:6px">Out</span><span style="text-align:right;padding-left:6px">Close Bal</span></div>';
-
-      // Opening balance row
-      html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015)">'
-        +'<div><div style="font-size:10px;font-weight:800;color:var(--text3)">Account Created</div><div style="font-size:9px;color:var(--text3)">'+(acct.createdAt||'—')+'</div></div>'
-        +'<div style="font-size:10px;font-weight:700;color:'+(opening>=0?'var(--green)':'var(--red)')+';text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(opening))+'</div>'
-        +'<div style="text-align:right;padding-left:6px;color:var(--text3)">—</div>'
-        +'<div style="text-align:right;padding-left:6px;color:var(--text3)">—</div>'
-        +'<div style="font-size:10px;font-weight:900;color:'+(opening>=0?'var(--green)':'var(--red)')+';text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(opening))+'</div>'
+      html+='<div style="display:grid;grid-template-columns:80px auto auto auto auto;padding:6px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
+        +'<span>Month</span>'
+        +'<span style="text-align:right">Open</span>'
+        +'<span style="text-align:right;padding-left:6px">In</span>'
+        +'<span style="text-align:right;padding-left:6px">Out</span>'
+        +'<span style="text-align:right;padding-left:6px">Close</span>'
       +'</div>';
-
+      // Month rows — show ALL months (even zero-activity months show the running balance)
       acctMonthRows.forEach(function(r){
-        if(!r.inc&&!r.exp&&!r.isCurrent) return;
         var netColor=r.closeBal>=0?'var(--green)':'var(--red)';
-        html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border)'+(r.isCurrent?';background:rgba(124,92,252,0.08)':'')+'">'
-          +'<div><div style="font-size:10px;font-weight:800;color:'+(r.isCurrent?'var(--accent)':'var(--text)')+'">'+mNames[r.mo.m]+' '+r.mo.y+(r.isCurrent?' ↙':'')+'</div>'
-          +'<div style="font-size:9px;color:var(--text3)">'+r.txCount+' tx</div></div>'
+        var rowBg=r.isCurrent?';background:rgba(124,92,252,0.08)':'';
+        html+='<div style="display:grid;grid-template-columns:80px auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border)'+rowBg+'">'
+          +'<div>'
+            +'<div style="font-size:10px;font-weight:800;color:'+(r.isCurrent?'var(--accent)':'var(--text)')+'">'+mNames[r.mo.m]+' '+(r.mo.y)+(r.isCurrent?' ◀':'')+'</div>'
+            +'<div style="font-size:9px;color:var(--text3)">'+r.txCount+' tx</div>'
+          +'</div>'
           +'<div style="font-size:10px;font-weight:700;color:var(--text2);text-align:right;white-space:nowrap;padding-left:6px">'+sym+fmt(cv(r.openBal))+'</div>'
           +'<div style="font-size:10px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:6px">'+(r.inc>0?'+'+sym+fmt(cv(r.inc)):'—')+'</div>'
           +'<div style="font-size:10px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:6px">'+(r.exp>0?'-'+sym+fmt(cv(r.exp)):'—')+'</div>'
           +'<div style="font-size:10px;font-weight:900;text-align:right;white-space:nowrap;padding-left:6px;color:'+netColor+'">'+sym+fmt(cv(r.closeBal))+'</div>'
         +'</div>';
       });
-
-      // Closing balance summary
-      var finalBal=runBal;
-      var prevBal=acctMonthRows.length>1?acctMonthRows[acctMonthRows.length-2].closeBal:opening;
-      html+='<div style="display:grid;grid-template-columns:1fr auto;padding:8px 12px;background:var(--bg2)">'
-        +'<div style="font-size:11px;font-weight:900;color:var(--text)">💳 Balance into next month</div>'
+      // Footer: balance into next month
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2)">'
+        +'<div style="font-size:11px;font-weight:900;color:var(--text)">💳 Current Balance</div>'
         +'<div style="font-size:13px;font-weight:900;color:'+(finalBal>=0?'var(--green)':'var(--red)')+';white-space:nowrap">'+sym+fmt(cv(finalBal))+'</div>'
       +'</div>';
-      html+='</div>'; // end account card
+      html+='</div>'; // end acct card
     });
   }
   html+='</div>'; // end cfPanelAccount
 
-  // ── Edit opening balance section ──
+  // ── Edit account opening balance (inline) ──
   html+='<div id="cfEditAccountSection" style="display:none;background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:12px;padding:14px;margin-bottom:12px">'
     +'<div id="cfEditAcctTitle" style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px">✏️ Edit Opening Balance</div>'
-    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.5">Updating this will recalculate all monthly running balances and carry-forward for this account going forward.</div>'
+    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.5">Updating this recalculates all monthly running balances for this account going forward.</div>'
     +'<div style="display:flex;gap:8px;align-items:center">'
       +'<input id="cfEditAcctInput" type="number" placeholder="Opening balance" style="flex:1;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-weight:700;font-family:var(--font);outline:none">'
-      +'<button onclick="cfSaveAccountOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap">Save</button>'
+      +'<button onclick="cfSaveAccountOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer">Save</button>'
     +'</div>'
-    +'<button onclick="document.getElementById(\'cfEditAccountSection\').style.display=\'none\'" style="margin-top:8px;background:transparent;border:none;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;width:100%;text-align:center">Cancel</button>'
+    +'<button onclick="document.getElementById(\'cfEditAccountSection\').style.display=\'none\'" style="margin-top:8px;background:transparent;border:none;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;width:100%;text-align:center">✕ Cancel</button>'
   +'</div>';
 
-  // Tracker opening balance
+  // ── Tracker opening balance ──
   html+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:4px">'
-    +'<div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">🏁 Tracker Opening Balance</div>'
-    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.5">Set a global starting balance if you had savings or debt <b style="color:var(--text)">before you started using this app</b>.</div>'
+    +'<div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:4px">🏁 Tracker Opening Balance</div>'
+    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.5">Global starting balance you had <b style="color:var(--text)">before using this app</b>.</div>'
     +'<div style="display:flex;gap:8px;align-items:center">'
       +'<input id="carryOpeningInput" type="number" placeholder="e.g. 11600" value="'+(base?cv(base):'')+'" style="flex:1;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-weight:700;font-family:var(--font);outline:none">'
-      +'<button onclick="saveCarryOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap">Save</button>'
+      +'<button onclick="saveCarryOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer">Save</button>'
     +'</div>'
-    +'<div style="font-size:10px;color:var(--text3);margin-top:8px;font-weight:600">💡 Enter negative for deficit. Enter 0 to reset.</div>'
+    +'<div style="font-size:10px;color:var(--text3);margin-top:8px;font-weight:600">💡 Negative = deficit. Enter 0 to reset.</div>'
   +'</div>';
 
   document.getElementById('carryBreakdownBody').innerHTML=html;
