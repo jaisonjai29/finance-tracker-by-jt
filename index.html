@@ -3552,15 +3552,24 @@ function showCarryBreakdown(){
 
   // Section A: prior months (carry into current month)
   html+='<div style="font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;padding:0 2px">Account Balances — End of Last Month (Carry-In)</div>';
-  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px">';
-  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
-    +'<span>Account</span>'
-    +'<span style="text-align:right;padding-left:4px">Open</span>'
-    +'<span style="text-align:right;padding-left:4px">Income</span>'
-    +'<span style="text-align:right;padding-left:4px">Expense</span>'
-    +'<span style="text-align:right;padding-left:4px">Transfer</span>'
-    +'<span style="text-align:right;padding-left:4px">Balance</span>'
-  +'</div>';
+  var tblStyle='width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"';
+  var thStyle='font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:6px 6px 6px 0;text-align:right;border-bottom:1px solid var(--border)';
+  var thL='font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border);text-align:left';
+  var tdN='font-size:10px;font-weight:700;text-align:right;white-space:nowrap;padding:7px 6px 7px 0;border-bottom:1px solid var(--border)';
+  var numCell=tdN; // alias kept for per-account section below
+
+  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px;padding:0 12px">';
+  html+='<table style="'+tblStyle+'">'
+    +'<colgroup><col style="width:32%"><col style="width:14%"><col style="width:16%"><col style="width:16%"><col style="width:11%"><col style="width:11%"></colgroup>'
+    +'<thead><tr>'
+      +'<th style="'+thL+'">Account</th>'
+      +'<th style="'+thStyle+'">Open</th>'
+      +'<th style="'+thStyle+'">Income</th>'
+      +'<th style="'+thStyle+'">Expense</th>'
+      +'<th style="'+thStyle+'">Tr</th>'
+      +'<th style="'+thStyle+'">Bal</th>'
+    +'</tr></thead>'
+    +'<tbody>';
 
   var totalOpen=0,totalInc2=0,totalExp2=0,totalTr2=0,totalClose=0;
   accounts.forEach(function(a){
@@ -3571,7 +3580,6 @@ function showCarryBreakdown(){
     });
     var inc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
     var exp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    // transfers for ALL months before current
     var trTotal=0;
     transfers.forEach(function(tr){
       var d=new Date(tr.date); var dY=d.getFullYear(),dM=d.getMonth();
@@ -3582,45 +3590,50 @@ function showCarryBreakdown(){
     var closing=opening+inc-exp+trTotal;
     totalOpen+=opening; totalInc2+=inc; totalExp2+=exp; totalTr2+=trTotal; totalClose+=closing;
     var ac=a.color||'var(--accent)';
-    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;padding:8px 12px;border-bottom:1px solid var(--border)">'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-        +'<div style="width:7px;height:7px;border-radius:50%;background:'+ac+';flex-shrink:0"></div>'
-        +'<div><div style="font-size:11px;font-weight:800;color:var(--text)">'+a.name+'</div>'
-        +'<div style="font-size:9px;color:var(--text3)">'+a.type+'</div></div>'
-      +'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px">'+sym+fmt(cv(opening))+'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:4px">'+(inc>0?'+'+sym+fmt(cv(inc)):'—')+'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:4px">'+(exp>0?'-'+sym+fmt(cv(exp)):'—')+'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:'+(trTotal>0?'var(--blue)':trTotal<0?'var(--orange)':'var(--text3)')+';text-align:right;white-space:nowrap;padding-left:4px">'+(trTotal!==0?(trTotal>0?'+':'')+sym+fmt(cv(trTotal)):'—')+'</div>'
-      +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:4px;color:'+(closing>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(closing))+'</div>'
-    +'</div>';
+    html+='<tr>'
+      +'<td style="padding:7px 6px 7px 0;border-bottom:1px solid var(--border)">'
+        +'<div style="display:flex;align-items:center;gap:5px">'
+          +'<div style="width:6px;height:6px;border-radius:50%;background:'+ac+';flex-shrink:0"></div>'
+          +'<div style="overflow:hidden">'
+            +'<div style="font-size:10px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+a.name+'</div>'
+            +'<div style="font-size:8px;color:var(--text3)">'+a.type+'</div>'
+          +'</div>'
+        +'</div>'
+      +'</td>'
+      +'<td style="'+tdN+';color:var(--text2)">'+sym+fmt(cv(opening))+'</td>'
+      +'<td style="'+tdN+';color:var(--green)">'+(inc>0?'+'+sym+fmt(cv(inc)):'—')+'</td>'
+      +'<td style="'+tdN+';color:var(--red)">'+(exp>0?'-'+sym+fmt(cv(exp)):'—')+'</td>'
+      +'<td style="'+tdN+';color:'+(trTotal>0?'var(--blue)':trTotal<0?'var(--orange)':'var(--text3)')+'">'+(trTotal!==0?(trTotal>0?'+':'')+sym+fmt(cv(trTotal)):'—')+'</td>'
+      +'<td style="'+tdN+';font-weight:900;color:'+(closing>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(closing))+'</td>'
+    +'</tr>';
   });
-  // Totals
-  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;padding:8px 12px;background:var(--bg2)">'
-    +'<div style="font-size:11px;font-weight:900;color:var(--text)">All Accounts</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px">'+sym+fmt(cv(totalOpen))+'</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--green);text-align:right;white-space:nowrap;padding-left:4px">'+(totalInc2>0?'+'+sym+fmt(cv(totalInc2)):'—')+'</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--red);text-align:right;white-space:nowrap;padding-left:4px">'+(totalExp2>0?'-'+sym+fmt(cv(totalExp2)):'—')+'</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right;white-space:nowrap;padding-left:4px">—</div>'
-    +'<div style="font-size:12px;font-weight:900;text-align:right;white-space:nowrap;padding-left:4px;color:'+(totalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(totalClose))+'</div>'
-  +'</div>';
+  // Totals row
+  html+='</tbody><tfoot><tr style="background:var(--bg2)">'
+    +'<td style="padding:7px 6px 7px 0;font-size:10px;font-weight:900;color:var(--text)">All Accounts</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--text2)">'+sym+fmt(cv(totalOpen))+'</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--green)">'+(totalInc2>0?'+'+sym+fmt(cv(totalInc2)):'—')+'</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--red)">'+(totalExp2>0?'-'+sym+fmt(cv(totalExp2)):'—')+'</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--text3)">—</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;font-size:11px;color:'+(totalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(totalClose))+'</td>'
+  +'</tr></tfoot></table>';
   html+='</div>';
 
   // Section B: current month
   html+='<div style="font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;padding:0 2px">'+mNames[month]+' '+year+' — Current Month</div>';
-  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px">';
-  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
-    +'<span>Account</span>'
-    +'<span style="text-align:right;padding-left:4px">Open</span>'
-    +'<span style="text-align:right;padding-left:4px">Income</span>'
-    +'<span style="text-align:right;padding-left:4px">Expense</span>'
-    +'<span style="text-align:right;padding-left:4px">Transfer</span>'
-    +'<span style="text-align:right;padding-left:4px">Balance</span>'
-  +'</div>';
+  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px;padding:0 12px">';
+  html+='<table style="'+tblStyle+'">'
+    +'<colgroup><col style="width:32%"><col style="width:14%"><col style="width:16%"><col style="width:16%"><col style="width:11%"><col style="width:11%"></colgroup>'
+    +'<thead><tr>'
+      +'<th style="'+thL+'">Account</th>'
+      +'<th style="'+thStyle+'">Open</th>'
+      +'<th style="'+thStyle+'">Income</th>'
+      +'<th style="'+thStyle+'">Expense</th>'
+      +'<th style="'+thStyle+'">Tr</th>'
+      +'<th style="'+thStyle+'">Bal</th>'
+    +'</tr></thead><tbody>';
   var curTotalOpen=0,curTotalInc=0,curTotalExp=0,curTotalTr=0,curTotalClose=0;
   accounts.forEach(function(a){
     var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
-    // Opening for current month = all prior months closing
     var txPrev=state.transactions.filter(function(t){
       if(String(t.account)!==String(a.id)) return false;
       var d=new Date(t.date); return d.getFullYear()<year||(d.getFullYear()===year&&d.getMonth()<month);
@@ -3635,7 +3648,6 @@ function showCarryBreakdown(){
       if(String(tr.from)===String(a.id)) prevTr-=tr.amount;
     });
     var curOpen=opening+prevInc-prevExp+prevTr;
-    // Current month
     var txCur=state.transactions.filter(function(t){
       if(String(t.account)!==String(a.id)) return false;
       var d=new Date(t.date); return d.getFullYear()===year&&d.getMonth()===month;
@@ -3646,27 +3658,31 @@ function showCarryBreakdown(){
     var curClose=curOpen+curInc-curExp+curTr;
     curTotalOpen+=curOpen; curTotalInc+=curInc; curTotalExp+=curExp; curTotalTr+=curTr; curTotalClose+=curClose;
     var ac=a.color||'var(--accent)';
-    html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;padding:8px 12px;border-bottom:1px solid var(--border)">'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-        +'<div style="width:7px;height:7px;border-radius:50%;background:'+ac+';flex-shrink:0"></div>'
-        +'<div><div style="font-size:11px;font-weight:800;color:var(--text)">'+a.name+'</div>'
-        +'<div style="font-size:9px;color:var(--text3)">'+txCur.length+' tx</div></div>'
-      +'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px">'+sym+fmt(cv(curOpen))+'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:4px">'+(curInc>0?'+'+sym+fmt(cv(curInc)):'—')+'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:4px">'+(curExp>0?'-'+sym+fmt(cv(curExp)):'—')+'</div>'
-      +'<div style="font-size:10px;font-weight:700;color:'+(curTr>0?'var(--blue)':curTr<0?'var(--orange)':'var(--text3)')+';text-align:right;white-space:nowrap;padding-left:4px">'+(curTr!==0?(curTr>0?'+':'')+sym+fmt(cv(curTr)):'—')+'</div>'
-      +'<div style="font-size:11px;font-weight:900;text-align:right;white-space:nowrap;padding-left:4px;color:'+(curClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curClose))+'</div>'
-    +'</div>';
+    html+='<tr>'
+      +'<td style="padding:7px 6px 7px 0;border-bottom:1px solid var(--border)">'
+        +'<div style="display:flex;align-items:center;gap:5px">'
+          +'<div style="width:6px;height:6px;border-radius:50%;background:'+ac+';flex-shrink:0"></div>'
+          +'<div style="overflow:hidden">'
+            +'<div style="font-size:10px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+a.name+'</div>'
+            +'<div style="font-size:8px;color:var(--text3)">'+txCur.length+' tx</div>'
+          +'</div>'
+        +'</div>'
+      +'</td>'
+      +'<td style="'+tdN+';color:var(--text2)">'+sym+fmt(cv(curOpen))+'</td>'
+      +'<td style="'+tdN+';color:var(--green)">'+(curInc>0?'+'+sym+fmt(cv(curInc)):'—')+'</td>'
+      +'<td style="'+tdN+';color:var(--red)">'+(curExp>0?'-'+sym+fmt(cv(curExp)):'—')+'</td>'
+      +'<td style="'+tdN+';color:'+(curTr>0?'var(--blue)':curTr<0?'var(--orange)':'var(--text3)')+'">'+(curTr!==0?(curTr>0?'+':'')+sym+fmt(cv(curTr)):'—')+'</td>'
+      +'<td style="'+tdN+';font-weight:900;color:'+(curClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curClose))+'</td>'
+    +'</tr>';
   });
-  html+='<div style="display:grid;grid-template-columns:1fr auto auto auto auto auto;padding:8px 12px;background:var(--bg2)">'
-    +'<div style="font-size:11px;font-weight:900;color:var(--accent)">All Accounts Now</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px">'+sym+fmt(cv(curTotalOpen))+'</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--green);text-align:right;white-space:nowrap;padding-left:4px">'+(curTotalInc>0?'+'+sym+fmt(cv(curTotalInc)):'—')+'</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--red);text-align:right;white-space:nowrap;padding-left:4px">'+(curTotalExp>0?'-'+sym+fmt(cv(curTotalExp)):'—')+'</div>'
-    +'<div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right;white-space:nowrap;padding-left:4px">—</div>'
-    +'<div style="font-size:12px;font-weight:900;text-align:right;white-space:nowrap;padding-left:4px;color:'+(curTotalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curTotalClose))+'</div>'
-  +'</div>';
+  html+='</tbody><tfoot><tr style="background:var(--bg2)">'
+    +'<td style="padding:7px 6px 7px 0;font-size:10px;font-weight:900;color:var(--accent)">All Accounts Now</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--text2)">'+sym+fmt(cv(curTotalOpen))+'</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--green)">'+(curTotalInc>0?'+'+sym+fmt(cv(curTotalInc)):'—')+'</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--red)">'+(curTotalExp>0?'-'+sym+fmt(cv(curTotalExp)):'—')+'</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--text3)">—</td>'
+    +'<td style="'+tdN+';font-weight:900;border-bottom:none;font-size:11px;color:'+(curTotalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curTotalClose))+'</td>'
+  +'</tr></tfoot></table>';
   html+='</div>';
 
   if(base!==0){
@@ -3713,34 +3729,50 @@ function showCarryBreakdown(){
       html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-bottom:2px solid '+ac+'44">'
         +'<div style="display:flex;align-items:center;gap:8px">'
           +'<div style="width:10px;height:10px;border-radius:50%;background:'+ac+'"></div>'
-          +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">'+acct.name+'</div>'
-          +'<div style="font-size:10px;color:var(--text3)">'+acct.type+' · Opening: '+sym+fmt(cv(opening))+'</div></div>'
+          +'<div>'
+            +'<div style="font-size:13px;font-weight:900;color:var(--text)">'+acct.name+'</div>'
+            +'<div style="font-size:9px;color:var(--text3)">'+acct.type+'</div>'
+          +'</div>'
         +'</div>'
-        +'<button onclick="cfEditAccountOpening(\''+acct.id+'\')" style="background:'+ac+'22;color:'+ac+';border:1px solid '+ac+'44;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:900;cursor:pointer">✏️ Edit</button>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<div style="text-align:right">'
+            +'<div style="font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">Opening</div>'
+            +'<div style="font-size:11px;font-weight:900;color:var(--text2)">'+sym+fmt(cv(opening))+'</div>'
+          +'</div>'
+          +'<button onclick="cfEditAccountOpening(\''+acct.id+'\')" style="background:'+ac+'22;color:'+ac+';border:1px solid '+ac+'44;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:900;cursor:pointer">✏️</button>'
+        +'</div>'
       +'</div>';
-      html+='<div style="display:grid;grid-template-columns:72px auto auto auto auto auto;padding:6px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">'
-        +'<span>Month</span>'
-        +'<span style="text-align:right">Open</span>'
-        +'<span style="text-align:right;padding-left:4px">In</span>'
-        +'<span style="text-align:right;padding-left:4px">Out</span>'
-        +'<span style="text-align:right;padding-left:4px">🔀</span>'
-        +'<span style="text-align:right;padding-left:4px">Close</span>'
-      +'</div>';
+      var tblB='width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"';
+      var thB='font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:5px 5px 5px 0;text-align:right;border-bottom:1px solid var(--border)';
+      var thBL='font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:5px 0;border-bottom:1px solid var(--border);text-align:left';
+      var tdB='font-size:10px;font-weight:700;text-align:right;white-space:nowrap;padding:6px 5px 6px 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums';
+      html+='<div style="padding:0 12px">';
+      html+='<table style="'+tblB+'">'
+        +'<colgroup><col style="width:22%"><col style="width:16%"><col style="width:16%"><col style="width:16%"><col style="width:14%"><col style="width:16%"></colgroup>'
+        +'<thead><tr>'
+          +'<th style="'+thBL+'">Month</th>'
+          +'<th style="'+thB+'">Open</th>'
+          +'<th style="'+thB+'">In</th>'
+          +'<th style="'+thB+'">Out</th>'
+          +'<th style="'+thB+'">🔀</th>'
+          +'<th style="'+thB+'">Close</th>'
+        +'</tr></thead><tbody>';
       acctMonthRows.forEach(function(r){
         var netColor=r.closeBal>=0?'var(--green)':'var(--red)';
-        var rowBg=r.isCurrent?';background:rgba(124,92,252,0.08)':'';
-        html+='<div style="display:grid;grid-template-columns:72px auto auto auto auto auto;padding:7px 12px;border-bottom:1px solid var(--border)'+rowBg+'">'
-          +'<div>'
-            +'<div style="font-size:10px;font-weight:800;color:'+(r.isCurrent?'var(--accent)':'var(--text)')+'">'+mNames[r.mo.m]+' '+r.mo.y+(r.isCurrent?' ◀':'')+'</div>'
-            +'<div style="font-size:9px;color:var(--text3)">'+r.txCount+' tx</div>'
-          +'</div>'
-          +'<div style="font-size:10px;font-weight:700;color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px">'+sym+fmt(cv(r.openBal))+'</div>'
-          +'<div style="font-size:10px;font-weight:700;color:var(--green);text-align:right;white-space:nowrap;padding-left:4px">'+(r.inc>0?'+'+sym+fmt(cv(r.inc)):'—')+'</div>'
-          +'<div style="font-size:10px;font-weight:700;color:var(--red);text-align:right;white-space:nowrap;padding-left:4px">'+(r.exp>0?'-'+sym+fmt(cv(r.exp)):'—')+'</div>'
-          +'<div style="font-size:10px;font-weight:700;color:'+(r.tr>0?'var(--blue)':r.tr<0?'var(--orange)':'var(--text3)')+';text-align:right;white-space:nowrap;padding-left:4px">'+(r.tr!==0?(r.tr>0?'+':'')+sym+fmt(cv(r.tr)):'—')+'</div>'
-          +'<div style="font-size:10px;font-weight:900;text-align:right;white-space:nowrap;padding-left:4px;color:'+netColor+'">'+sym+fmt(cv(r.closeBal))+'</div>'
-        +'</div>';
+        var rowBg=r.isCurrent?' style="background:rgba(124,92,252,0.08)"':'';
+        html+='<tr'+rowBg+'>'
+          +'<td style="padding:6px 5px 6px 0;border-bottom:1px solid var(--border)">'
+            +'<div style="font-size:10px;font-weight:800;color:'+(r.isCurrent?'var(--accent)':'var(--text)')+'">'+mNames[r.mo.m].slice(0,3)+' '+String(r.mo.y).slice(2)+'</div>'
+            +'<div style="font-size:8px;color:var(--text3)">'+r.txCount+' tx'+(r.isCurrent?' ◀':'')+'</div>'
+          +'</td>'
+          +'<td style="'+tdB+';color:var(--text2)">'+sym+fmt(cv(r.openBal))+'</td>'
+          +'<td style="'+tdB+';color:var(--green)">'+(r.inc>0?'+'+sym+fmt(cv(r.inc)):'—')+'</td>'
+          +'<td style="'+tdB+';color:var(--red)">'+(r.exp>0?'-'+sym+fmt(cv(r.exp)):'—')+'</td>'
+          +'<td style="'+tdB+';color:'+(r.tr>0?'var(--blue)':r.tr<0?'var(--orange)':'var(--text3)')+'">'+(r.tr!==0?(r.tr>0?'+':'')+sym+fmt(cv(r.tr)):'—')+'</td>'
+          +'<td style="'+tdB+';font-weight:900;color:'+netColor+'">'+sym+fmt(cv(r.closeBal))+'</td>'
+        +'</tr>';
       });
+      html+='</tbody></table></div>';
       html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2)">'
         +'<div style="font-size:11px;font-weight:900;color:var(--text)">💳 Current Balance</div>'
         +'<div style="font-size:13px;font-weight:900;color:'+(finalBal>=0?'var(--green)':'var(--red)')+';white-space:nowrap">'+sym+fmt(cv(finalBal))+'</div>'
