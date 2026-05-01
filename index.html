@@ -1636,6 +1636,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <!-- NEW TOOLS SECTION -->
       <div class="set-sec">
+        <div class="set-sec-title">✏️ Customize Lists</div>
+        <div class="set-row" onclick="showModal('customCatsModal')">
+          <div class="set-row-left"><span class="set-row-icon">🗂️</span><div><div class="set-row-label">Expense Categories</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="customCatsPreview">Add or remove categories</div></div></div>
+          <div class="set-row-right">Edit ▶</div>
+        </div>
+        <div class="set-row" onclick="showModal('customPlatformsModal')">
+          <div class="set-row-left"><span class="set-row-icon">🏪</span><div><div class="set-row-label">Platforms / Where Bought</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="customPlatformsPreview">Add or remove platforms</div></div></div>
+          <div class="set-row-right">Edit ▶</div>
+        </div>
+        <div class="set-row" onclick="showModal('customPayModal')">
+          <div class="set-row-left"><span class="set-row-icon">💳</span><div><div class="set-row-label">Payment Methods</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="customPayPreview">Add or remove payment methods</div></div></div>
+          <div class="set-row-right">Edit ▶</div>
+        </div>
+      </div>
+      <!-- NEW TOOLS SECTION -->
+      <div class="set-sec">
         <div class="set-sec-title">🧰 Tools & Calculators</div>
         <div class="set-row" onclick="showPage('assets')">
           <div class="set-row-left"><span class="set-row-icon">💼</span><div><div class="set-row-label">Assets & Portfolio</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">View investments, import demat CSV</div></div></div>
@@ -1809,13 +1825,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
       <select class="field-input" id="editTxPayMethod">
         <option value="">-- Select Method --</option>
-        <option value="UPI / GPay">📱 UPI / GPay</option>
-        <option value="Credit Card">💳 Credit Card</option>
-        <option value="Debit Card">💳 Debit Card</option>
-        <option value="Net Banking / NEFT">🏦 Net Banking / NEFT</option>
-        <option value="Cash">💵 Cash</option>
-        <option value="Wallet">👛 Wallet</option>
-        <option value="Other">🌀 Other</option>
       </select>
     </div>
     <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="editTxNotes" placeholder="Optional notes"></div>
@@ -1862,13 +1871,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
       <select class="field-input" id="txPayMethod">
         <option value="">-- Select Method --</option>
-        <option value="UPI / GPay">📱 UPI / GPay</option>
-        <option value="Credit Card">💳 Credit Card</option>
-        <option value="Debit Card">💳 Debit Card</option>
-        <option value="Net Banking / NEFT">🏦 Net Banking / NEFT</option>
-        <option value="Cash">💵 Cash</option>
-        <option value="Wallet">👛 Wallet</option>
-        <option value="Other">🌀 Other</option>
       </select>
     </div>
     <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
@@ -2070,7 +2072,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="field"><div class="field-label">🔄 Repeat Every</div><select class="field-input" id="recurFreq"><option value="monthly">Every Month</option><option value="weekly">Every Week</option><option value="yearly">Every Year</option></select></div>
     <div class="field" id="recurAccountField"><div class="field-label" id="recurAccountLabel">🏦 Deduct from Account</div><select class="field-input" id="recurAccount"><option value="">-- Select Account --</option></select></div>
     <div class="field" id="recurPlatformField" style="display:none"><div class="field-label">🛒 Platform / Store</div><select class="field-input" id="recurPlatform"><option value="">-- None --</option></select></div>
-    <div class="field" id="recurPayMethodField" style="display:none"><div class="field-label">💳 Payment Method</div><select class="field-input" id="recurPayMethod"><option value="">-- None --</option><option value="UPI">📱 UPI</option><option value="Credit Card">💳 Credit Card</option><option value="Debit Card">💰 Debit Card</option><option value="Cash">💵 Cash</option><option value="Net Banking">🏦 Net Banking</option></select></div>
+    <div class="field" id="recurPayMethodField" style="display:none"><div class="field-label">💳 Payment Method</div><select class="field-input" id="recurPayMethod"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">👤 Member</div><div class="chips" id="recurMemberChips" style="gap:6px"></div></div>
     <button class="btn-go" id="recurSaveBtn" onclick="saveRecur()">✅ Add Recurring</button>
     <button class="btn-cancel" onclick="closeModal('recurModal')">Cancel</button>
@@ -2118,6 +2120,89 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div id="familyModalError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
     <button class="btn-go" onclick="addFamilyMember()" style="margin-bottom:8px">➕ Add Member</button>
     <button class="btn-cancel" onclick="closeModal('familyModal')">✅ Done</button>
+  </div>
+</div>
+
+<!-- CUSTOM EXPENSE CATEGORIES MODAL -->
+<div class="modal-bg" id="customCatsModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🗂️ Expense Categories</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom categories to any group. Built-in categories cannot be deleted.</div>
+    <div id="customCatsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
+    <div class="field" style="margin-bottom:8px">
+      <div class="field-label">➕ Add New Category</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="field-input" id="newCatGroup" style="flex:1;min-width:0">
+          <option value="Home">🏠 Home</option>
+          <option value="Food">🍔 Food</option>
+          <option value="Transport">🚗 Transport</option>
+          <option value="Health">🏥 Health</option>
+          <option value="Education">📚 Education</option>
+          <option value="Finance">💰 Finance</option>
+          <option value="Shopping">🛍️ Shopping</option>
+          <option value="Entertainment">🎬 Entertainment</option>
+          <option value="Other" selected>🌀 Other</option>
+        </select>
+        <span id="newCatEmojiPreview" style="font-size:22px;min-width:28px;text-align:center;line-height:1">✨</span>
+        <input type="text" class="field-input" id="newCatInput" placeholder="e.g. Pet Care…" style="flex:2;min-width:0"
+          oninput="document.getElementById('newCatEmojiPreview').textContent=autoPickEmoji(this.value)||'✨'"
+          onkeydown="if(event.key==='Enter')addCustomCat()">
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">✨ Icon auto-suggested from name</div>
+    </div>
+    <div id="customCatError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
+    <button class="btn-go" onclick="addCustomCat()" style="margin-bottom:8px">➕ Add Category</button>
+    <button class="btn-cancel" onclick="closeModal('customCatsModal')">✅ Done</button>
+  </div>
+</div>
+
+<!-- CUSTOM PLATFORMS MODAL -->
+<div class="modal-bg" id="customPlatformsModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏪 Platforms / Where Bought</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom platforms or shops. Built-in platforms cannot be deleted.</div>
+    <div id="customPlatformsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
+    <div class="field" style="margin-bottom:8px">
+      <div class="field-label">➕ Add New Platform</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="newPlatEmojiPreview" style="font-size:22px;min-width:32px;text-align:center;line-height:1">✨</span>
+        <input type="text" class="field-input" id="newPlatEmoji" placeholder="optional" style="width:68px;text-align:center;font-size:20px;padding:8px 4px"
+          oninput="document.getElementById('newPlatEmojiPreview').textContent=this.value.trim()||autoPickEmoji(document.getElementById('newPlatName').value)||'✨'"
+          onkeydown="if(event.key==='Enter')document.getElementById('newPlatName').focus()">
+        <input type="text" class="field-input" id="newPlatName" placeholder="e.g. Lenskart, Decathlon…" style="flex:1;min-width:0"
+          oninput="var ei=document.getElementById('newPlatEmoji');if(!ei.value.trim())document.getElementById('newPlatEmojiPreview').textContent=autoPickEmoji(this.value)||'✨'"
+          onkeydown="if(event.key==='Enter')addCustomPlatform()">
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">✨ Icon auto-suggested · Type in left box to override</div>
+    </div>
+    <div id="customPlatError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
+    <button class="btn-go" onclick="addCustomPlatform()" style="margin-bottom:8px">➕ Add Platform</button>
+    <button class="btn-cancel" onclick="closeModal('customPlatformsModal')">✅ Done</button>
+  </div>
+</div>
+
+<!-- CUSTOM PAYMENT METHODS MODAL -->
+<div class="modal-bg" id="customPayModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💳 Payment Methods</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom payment methods. Built-in methods cannot be deleted.</div>
+    <div id="customPayList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
+    <div class="field" style="margin-bottom:8px">
+      <div class="field-label">➕ Add New Method</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="newPayEmojiPreview" style="font-size:22px;min-width:28px;text-align:center;line-height:1">✨</span>
+        <input type="text" class="field-input" id="newPayInput" placeholder="e.g. BNPL, Cheque, Gold Card…" style="flex:1;min-width:0"
+          oninput="document.getElementById('newPayEmojiPreview').textContent=autoPickEmoji(this.value)||'✨'"
+          onkeydown="if(event.key==='Enter')addCustomPayMethod()">
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">✨ Icon auto-suggested from name</div>
+    </div>
+    <div id="customPayError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
+    <button class="btn-go" onclick="addCustomPayMethod()" style="margin-bottom:8px">➕ Add Method</button>
+    <button class="btn-cancel" onclick="closeModal('customPayModal')">✅ Done</button>
   </div>
 </div>
 
@@ -2368,35 +2453,7 @@ const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min
 const THRESHOLD=2;
 const INCOME_CATS=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Gift','Other'];
 
-const PLATFORMS=[
-  {name:'Offline / Store',   emoji:'🏪'},
-  {name:'Amazon',            emoji:'📦'},
-  {name:'Flipkart',          emoji:'🛒'},
-  {name:'Meesho',            emoji:'🛍️'},
-  {name:'Myntra',            emoji:'👗'},
-  {name:'Nykaa',             emoji:'💄'},
-  {name:'Reliance / JioMart',emoji:'🏬'},
-  {name:'DMart',             emoji:'🛒'},
-  {name:'BigBasket',         emoji:'🥦'},
-  {name:'Zepto',             emoji:'⚡'},
-  {name:'Blinkit',           emoji:'💛'},
-  {name:'Swiggy',            emoji:'🧡'},
-  {name:'Zomato',            emoji:'❤️'},
-  {name:'Swiggy Instamart',  emoji:'🟠'},
-  {name:'PharmEasy',         emoji:'💊'},
-  {name:'1mg',               emoji:'🩺'},
-  {name:'BookMyShow',        emoji:'🎬'},
-  {name:'MakeMyTrip',        emoji:'✈️'},
-  {name:'Ola / Uber',        emoji:'🚕'},
-  {name:'Rapido',            emoji:'🛵'},
-  {name:'IRCTC',             emoji:'🚆'},
-  {name:'Paytm',             emoji:'💙'},
-  {name:'mStock',             emoji:'📊'},
-  {name:'Zerodha',            emoji:'🟦'},
-  {name:'Groww',              emoji:'💚'},
-  {name:'Angel One',          emoji:'🔴'},
-  {name:'Other',             emoji:'🌀'},
-];
+// PLATFORMS is now dynamic — see getPlatforms()
 const EXPENSE_CATS_GROUPED={
   'Home':['Rent','Electricity','Water','LPG/Gas','Internet','Mobile'],
   'Food':['Grocery','Fruits','Restaurant','Food Delivery','Bakery'],
@@ -2409,7 +2466,44 @@ const EXPENSE_CATS_GROUPED={
   'Investments':['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'],
   'Other':['Personal Care','Travel','Flowers','Other']
 };
-const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat();
+function getExpenseCatsGrouped(){
+  var base=JSON.parse(JSON.stringify(EXPENSE_CATS_GROUPED));
+  if(state&&state.customExpCats){
+    Object.entries(state.customExpCats).forEach(function([grp,cats]){
+      if(!base[grp]) base[grp]=[];
+      cats.forEach(function(c){ if(!base[grp].includes(c)) base[grp].push(c); });
+    });
+  }
+  return base;
+}
+function getExpenseCats(){ return Object.values(getExpenseCatsGrouped()).flat(); }
+function getPlatforms(){
+  var base=[
+    {name:'Offline / Store',emoji:'🏪'},{name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
+    {name:'Meesho',emoji:'🛍️'},{name:'Myntra',emoji:'👗'},{name:'Nykaa',emoji:'💄'},
+    {name:'Reliance / JioMart',emoji:'🏬'},{name:'DMart',emoji:'🛒'},{name:'BigBasket',emoji:'🥦'},
+    {name:'Zepto',emoji:'⚡'},{name:'Blinkit',emoji:'💛'},{name:'Swiggy',emoji:'🧡'},
+    {name:'Zomato',emoji:'❤️'},{name:'Swiggy Instamart',emoji:'🟠'},{name:'PharmEasy',emoji:'💊'},
+    {name:'1mg',emoji:'🩺'},{name:'BookMyShow',emoji:'🎬'},{name:'MakeMyTrip',emoji:'✈️'},
+    {name:'Ola / Uber',emoji:'🚕'},{name:'Rapido',emoji:'🛵'},{name:'IRCTC',emoji:'🚆'},
+    {name:'Paytm',emoji:'💙'},{name:'mStock',emoji:'📊'},{name:'Zerodha',emoji:'🟦'},
+    {name:'Groww',emoji:'💚'},{name:'Angel One',emoji:'🔴'},{name:'Other',emoji:'🌀'}
+  ];
+  if(state&&Array.isArray(state.customPlatforms)){
+    state.customPlatforms.forEach(function(p){
+      if(!base.find(function(b){ return b.name===p.name; })) base.splice(base.length-1,0,p);
+    });
+  }
+  return base;
+}
+function getPaymentMethods(){
+  var base=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
+  if(state&&Array.isArray(state.customPaymentMethods)){
+    state.customPaymentMethods.forEach(function(m){ if(!base.includes(m)) base.splice(base.length-1,0,m); });
+  }
+  return base;
+}
+const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat(); // base list — use getExpenseCats() for dynamic (custom) list
 const INVEST_EXP_CATS=['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'];
 function isInvestmentExpense(cat){ return INVEST_EXP_CATS.includes(cat); }
 
@@ -2818,7 +2912,10 @@ let state={
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
   driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',
-  trackerOpeningBalance:null
+  trackerOpeningBalance:null,
+  customExpCats:{},
+  customPlatforms:[],
+  customPaymentMethods:[]
 };
 let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=9999;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
@@ -2855,6 +2952,15 @@ function loadState(){
   if(!Array.isArray(state.goals)) state.goals=[];
   if(!state.budgets||typeof state.budgets!=='object') state.budgets={};
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
+  if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
+  if(!state.customCatEmojis) state.customCatEmojis={};
+  if(!state.customPayIcons) state.customPayIcons={};
+  // Re-hydrate CAT_EMOJI with any saved custom category emojis
+  Object.entries(state.customCatEmojis).forEach(function(e){if(!CAT_EMOJI[e[0]])CAT_EMOJI[e[0]]=e[1];});
+  // Re-hydrate _pmIcons with saved custom payment method icons
+  Object.entries(state.customPayIcons).forEach(function(e){if(!_pmIcons[e[0]])_pmIcons[e[0]]=e[1];});
+  if(!Array.isArray(state.customPlatforms)) state.customPlatforms=[];
+  if(!Array.isArray(state.customPaymentMethods)) state.customPaymentMethods=[];
   if(!state.lang) state.lang='en';
   if(!state.pin) state.pin='0000';
   if(!state.currencyRate) state.currencyRate=1;
@@ -3277,6 +3383,14 @@ function showPage(id){
     }
     var fpLbl=document.getElementById('fpStatusLabel');
     if(fpLbl) fpLbl.textContent=state.fpEnabled?'✅ Enabled — tap ☝️ on lock screen':'Use biometrics to unlock the app';
+    // Update customize list previews
+    var customCatCount=Object.values(state.customExpCats||{}).reduce(function(s,a){return s+a.length;},0);
+    var cp=document.getElementById('customCatsPreview');
+    if(cp) cp.textContent=customCatCount>0?customCatCount+' custom added':'Add or remove categories';
+    var pp=document.getElementById('customPlatformsPreview');
+    if(pp) pp.textContent=(state.customPlatforms||[]).length>0?(state.customPlatforms.length)+' custom added':'Add or remove platforms';
+    var pyp=document.getElementById('customPayPreview');
+    if(pyp) pyp.textContent=(state.customPaymentMethods||[]).length>0?(state.customPaymentMethods.length)+' custom added':'Add or remove payment methods';
   }
 }
 function showModal(id){
@@ -3289,13 +3403,16 @@ function showModal(id){
     var panel=modalBg.querySelector('.modal');
     if(panel)panel.scrollTop=0;
   },10);
-  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);}
+  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
   if(id==='emailAuthModal'){document.getElementById('authError').style.display='none';setEmailTab('login');}
   if(id==='budgetModal')renderBudgetInputs();
   if(id==='familyModal'){renderFamilyMembersList();document.getElementById('newMemberInput').value='';document.getElementById('familyModalError').style.display='none';}
+  if(id==='customCatsModal'){renderCustomCatsList();document.getElementById('newCatInput').value='';var p1=document.getElementById('newCatEmojiPreview');if(p1)p1.textContent='✨';document.getElementById('customCatError').style.display='none';}
+  if(id==='customPlatformsModal'){renderCustomPlatformsList();document.getElementById('newPlatName').value='';document.getElementById('newPlatEmoji').value='';var p2=document.getElementById('newPlatEmojiPreview');if(p2)p2.textContent='✨';document.getElementById('customPlatError').style.display='none';}
+  if(id==='customPayModal'){renderCustomPayList();document.getElementById('newPayInput').value='';var p3=document.getElementById('newPayEmojiPreview');if(p3)p3.textContent='✨';document.getElementById('customPayError').style.display='none';}
   if(id==='billModal')renderBillCatChips();
   if(id==='recurModal'){renderRecurCatChips();initRecurModal();}
 }
@@ -3310,6 +3427,19 @@ document.querySelectorAll('.modal-bg').forEach(function(o){
 });
 
 // ======== TRANSACTIONS ========
+var _pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛','Other':'🌀'};
+function _pmOptHtml(m){return'<option value="'+m+'">'+((_pmIcons[m]||'💳')+' '+m)+'</option>';}
+function populatePayMethodSelects(){
+  var methods=getPaymentMethods();
+  var opts='<option value="">-- Select Method --</option>'+methods.map(_pmOptHtml).join('');
+  ['txPayMethod','editTxPayMethod','recurPayMethod'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    var cur=el.value;
+    el.innerHTML=(id==='recurPayMethod'?'<option value="">-- None --</option>':'')+methods.map(_pmOptHtml).join('');
+    if(cur) el.value=cur;
+  });
+}
 function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';var pmf=document.getElementById('txPayMethodField');if(pmf)pmf.style.display=(t==='expense')?'block':'none';}
 function renderCatChips(){
   // Populate the category select dropdown
@@ -3334,14 +3464,14 @@ function renderCatChips(){
     if(platField)platField.style.display='block';
     if(platSel){
       platSel.innerHTML='<option value="">-- Select Platform --</option>';
-      PLATFORMS.forEach(function(p){
+      getPlatforms().forEach(function(p){
         var opt=document.createElement('option');
         opt.value=p.name;
         opt.textContent=p.emoji+' '+p.name;
         platSel.appendChild(opt);
       });
     }
-    Object.entries(EXPENSE_CATS_GROUPED).forEach(function([group,cats]){
+    Object.entries(getExpenseCatsGrouped()).forEach(function([group,cats]){
       var grpOpt=document.createElement('option');
       grpOpt.disabled=true;
       grpOpt.textContent='── '+group+' ──';
@@ -3874,7 +4004,7 @@ function txHTML(tx){
   if(acct) badges.push(`<span class="tx-badge" style="background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44">${acct.name}</span>`);
   const member=tx.member&&tx.member!=='Self'?tx.member:null;
   if(member) badges.push(`<span class="tx-badge" style="background:rgba(29,233,182,0.12);color:var(--teal);border:1px solid rgba(29,233,182,0.3)">👤 ${member}</span>`);
-  const platInfo=tx.platform?PLATFORMS.find(function(p){return p.name===tx.platform;}):null;
+  const platInfo=tx.platform?getPlatforms().find(function(p){return p.name===tx.platform;}):null;
   if(platInfo) badges.push(`<span class="tx-badge" style="background:rgba(255,215,64,0.1);color:var(--yellow);border:1px solid rgba(255,215,64,0.25)">${platInfo.emoji} ${platInfo.name}</span>`);
   const pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛'};
   if(tx.payMethod) badges.push(`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${pmIcons[tx.payMethod]||'💳'} ${tx.payMethod}</span>`);
@@ -3922,6 +4052,7 @@ function editTx(id){
   },0);
   // Member chips
   renderEditMemberChips(tx.member||'Self');
+  populatePayMethodSelects();
   showModal('editTxModal');
 }
 var editTxType='expense';
@@ -3952,13 +4083,13 @@ function setEditTxType(t){
     if(platField)platField.style.display='block';
     if(platSel){
       platSel.innerHTML='<option value="">-- Select Platform --</option>';
-      PLATFORMS.forEach(function(p){
+      getPlatforms().forEach(function(p){
         var opt=document.createElement('option');
         opt.value=p.name;opt.textContent=p.emoji+' '+p.name;
         platSel.appendChild(opt);
       });
     }
-    Object.entries(EXPENSE_CATS_GROUPED).forEach(function([group,cats]){
+    Object.entries(getExpenseCatsGrouped()).forEach(function([group,cats]){
       var grpOpt=document.createElement('option');
       grpOpt.disabled=true;grpOpt.textContent='── '+group+' ──';
       sel.appendChild(grpOpt);
@@ -3992,7 +4123,7 @@ function setEditTxType(t){
 function onEditCatSelectChange(sel){
   // Update description to match category if description is empty or was same as old cat
   var descEl=document.getElementById('editTxDesc');
-  if(descEl&&(!descEl.value||EXPENSE_CATS.includes(descEl.value)||INCOME_CATS.includes(descEl.value))){
+  if(descEl&&(!descEl.value||getExpenseCats().includes(descEl.value)||INCOME_CATS.includes(descEl.value))){
     descEl.value=sel.value||'';
   }
 }
@@ -4724,6 +4855,327 @@ function removeFamilyMember(idx){
   saveState();
   renderFamilyMembersList();
   renderMemberFilterChips();
+}
+
+// ── CUSTOM CATEGORIES ──────────────────────────────────────────────────────
+// ── AUTO EMOJI ENGINE ──────────────────────────────────────────────────────
+const _EMOJI_KEYWORD_MAP=[
+  // Food & Drink
+  {k:['food','meal','eat','dining','tiffin','lunch','dinner','breakfast','snack'],e:'🍽️'},
+  {k:['grocery','groceries','supermarket','kirana','vegetables','veggies'],e:'🧺'},
+  {k:['fruit','fruits','mango','banana','apple'],e:'🍎'},
+  {k:['restaurant','hotel','dine','biryani','dhaba'],e:'🍴'},
+  {k:['delivery','swiggy','zomato','order'],e:'🛵'},
+  {k:['bakery','cake','bread','pastry','biscuit'],e:'🥐'},
+  {k:['coffee','tea','chai','cafe'],e:'☕'},
+  {k:['milk','dairy','curd','paneer'],e:'🥛'},
+  {k:['sweet','candy','chocolate','dessert','mithai'],e:'🍬'},
+  {k:['juice','drink','beverage','soda','water'],e:'🥤'},
+  {k:['ice cream','gelato'],e:'🍦'},
+  {k:['pizza','burger','fast food'],e:'🍕'},
+  // Transport
+  {k:['fuel','petrol','diesel','gas station'],e:'⛽'},
+  {k:['cab','taxi','uber','ola','rapido'],e:'🚕'},
+  {k:['train','irctc','railway'],e:'🚆'},
+  {k:['bus','transport','commute'],e:'🚌'},
+  {k:['flight','air','airline','airport','travel'],e:'✈️'},
+  {k:['metro','subway'],e:'🚇'},
+  {k:['parking','park'],e:'🅿️'},
+  {k:['bike','cycle','scooter','motorcycle'],e:'🏍️'},
+  {k:['auto','rickshaw','autorickshaw'],e:'🛺'},
+  {k:['toll','highway'],e:'🛣️'},
+  // Home & Utilities
+  {k:['rent','house','flat','apartment','pg'],e:'🏠'},
+  {k:['electricity','power','bill','light'],e:'⚡'},
+  {k:['water','pipe'],e:'💧'},
+  {k:['lpg','gas','cylinder','cooking gas'],e:'🛢️'},
+  {k:['internet','wifi','broadband','fiber'],e:'🌐'},
+  {k:['mobile','phone','recharge','sim','airtel','jio','vi'],e:'📱'},
+  {k:['maintenance','society','repair','plumber','electrician'],e:'🔧'},
+  {k:['cleaning','maid','domestic','servant'],e:'🧹'},
+  {k:['furniture','sofa','bed','table','chair'],e:'🛋️'},
+  {k:['appliance','washing machine','fridge','ac','air conditioner'],e:'🏠'},
+  // Health
+  {k:['doctor','hospital','clinic','medical'],e:'🏥'},
+  {k:['medicine','pharmacy','drug','tablet','capsule'],e:'💊'},
+  {k:['insurance','health policy','mediclaim'],e:'🛡️'},
+  {k:['checkup','test','lab','blood','scan'],e:'🩺'},
+  {k:['gym','fitness','workout','yoga','exercise'],e:'💪'},
+  {k:['dental','dentist','teeth'],e:'🦷'},
+  {k:['eye','optical','specs','glasses'],e:'👓'},
+  {k:['mental','therapy','counselling','psychiatrist'],e:'🧠'},
+  {k:['vitamin','supplement','protein'],e:'💊'},
+  // Education
+  {k:['school','fees','tuition','coaching'],e:'🏫'},
+  {k:['college','university','campus'],e:'🎓'},
+  {k:['book','textbook','stationery','notebook'],e:'📖'},
+  {k:['online course','udemy','coursera','skill'],e:'🎧'},
+  {k:['exam','test','study'],e:'📝'},
+  {k:['kids','children','child','baby'],e:'👶'},
+  // Finance
+  {k:['emi','loan','mortgage','home loan'],e:'🏦'},
+  {k:['credit card','cc','amex','visa','mastercard'],e:'💳'},
+  {k:['tax','gst','income tax','tds'],e:'🧾'},
+  {k:['mutual fund','mf','sip','fund'],e:'📈'},
+  {k:['stocks','equity','shares','nse','bse'],e:'📊'},
+  {k:['crypto','bitcoin','btc','eth'],e:'₿'},
+  {k:['gold','silver','precious'],e:'🥇'},
+  {k:['fd','fixed deposit','recurring deposit','rd'],e:'🏦'},
+  {k:['ppf','nps','epf','pension','retirement'],e:'🏛️'},
+  {k:['etf','index fund'],e:'📉'},
+  {k:['dividend','interest','returns'],e:'💹'},
+  {k:['salary','payroll','ctc','wage'],e:'💼'},
+  {k:['freelance','gig','project income','consulting'],e:'💻'},
+  {k:['business','revenue','sales'],e:'🏢'},
+  {k:['rent income','rental','property income'],e:'🏘️'},
+  {k:['bonus','reward','incentive'],e:'🎉'},
+  {k:['commission','referral'],e:'🤝'},
+  // Shopping
+  {k:['shopping','purchase','buy'],e:'🛍️'},
+  {k:['clothing','clothes','shirt','dress','fashion','apparel'],e:'👗'},
+  {k:['electronics','gadget','laptop','computer','device'],e:'🔌'},
+  {k:['amazon','flipkart','ecommerce'],e:'📦'},
+  {k:['shoes','footwear','sandal'],e:'👟'},
+  {k:['watch','jewellery','jewelry','accessory'],e:'⌚'},
+  {k:['gift','present','surprise'],e:'🎁'},
+  {k:['cosmetics','makeup','beauty','skincare','nykaa'],e:'💄'},
+  {k:['pet','dog','cat','animal','vet','veterinary'],e:'🐾'},
+  {k:['toy','game','gaming','xbox','playstation'],e:'🎮'},
+  {k:['sports','cricket','football','badminton','tennis'],e:'⚽'},
+  {k:['baby','infant','diaper','formula'],e:'🍼'},
+  // Entertainment
+  {k:['ott','netflix','amazon prime','hotstar','streaming'],e:'📺'},
+  {k:['movie','cinema','film','theatre'],e:'🎬'},
+  {k:['music','spotify','songs','concert'],e:'🎵'},
+  {k:['gaming','steam','game'],e:'🎮'},
+  {k:['events','party','celebration','outing'],e:'🎪'},
+  {k:['travel','trip','holiday','vacation','tour','hotel','resort'],e:'🗺️'},
+  {k:['subscription','membership','annual'],e:'🔁'},
+  // Personal Care
+  {k:['haircut','salon','barber','parlour','spa'],e:'💇'},
+  {k:['grooming','shaving','beard','razor'],e:'🪥'},
+  {k:['laundry','dry clean','ironing'],e:'👕'},
+  // Charity & Social
+  {k:['donation','charity','ngo','temple','church','mosque'],e:'🙏'},
+  {k:['wedding','marriage'],e:'💍'},
+  {k:['festival','diwali','puja','occasion'],e:'🪔'},
+  // Payment methods
+  {k:['upi','gpay','phonepe','paytm','bharatpe'],e:'📱'},
+  {k:['neft','rtgs','imps','net banking','netbanking'],e:'🏦'},
+  {k:['cash','atm','note'],e:'💵'},
+  {k:['wallet','e-wallet','prepaid'],e:'👛'},
+  {k:['cheque','check','demand draft'],e:'📄'},
+  {k:['bnpl','simpl','lazypay','postpay'],e:'⏳'},
+  {k:['card','swipe','pos'],e:'💳'},
+  // Platforms
+  {k:['zerodha','groww','angel one','upstox','mstock'],e:'📊'},
+  {k:['irctc'],e:'🚆'},
+  {k:['makemytrip','goibibo','yatra','booking'],e:'✈️'},
+  {k:['bookmyshow','pvr','inox'],e:'🎬'},
+  {k:['pharmeasy','1mg','medkart','apollo pharmacy'],e:'💊'},
+  {k:['bigbasket','dunzo'],e:'🥦'},
+  {k:['blinkit','zepto'],e:'⚡'},
+  {k:['decathlon','sports store'],e:'⚽'},
+  {k:['lenskart','eyeglass'],e:'👓'},
+  {k:['ikea','home store'],e:'🛋️'},
+  {k:['dmart','more','big bazaar'],e:'🛒'},
+  {k:['reliance','jiomart'],e:'🏬'},
+  {k:['meesho','shop101'],e:'🛍️'},
+  {k:['myntra','ajio'],e:'👗'},
+  // Misc fallbacks
+  {k:['tax','gst','duties','import'],e:'🧾'},
+  {k:['miscellaneous','misc','other'],e:'🌀'},
+  {k:['subscription','plan','renewal'],e:'🔁'},
+  {k:['savings','save','emergency fund'],e:'🏦'},
+  {k:['investment','invest','asset'],e:'💹'},
+];
+
+// All existing emojis in use so autoPickEmoji avoids repeating them
+function _usedEmojis(){
+  var used=new Set(Object.values(CAT_EMOJI));
+  (state.customPlatforms||[]).forEach(function(p){if(p.emoji)used.add(p.emoji);});
+  Object.values(_pmIcons||{}).forEach(function(e){used.add(e);});
+  return used;
+}
+
+// Pool of distinct emojis to draw from for completely novel names
+const _FALLBACK_EMOJI_POOL=[
+  '🌟','🔖','🎯','🧩','🗝️','🔮','🪄','🎀','🎲','🎳','🎻','🎺','🥁','🪘',
+  '🧸','🪆','🛝','🏺','🪑','🧲','🔬','🔭','🧭','⚗️','🧪','🧬','💡','🔋',
+  '🪛','🔩','⚙️','🗜️','🪝','🧰','🪣','🪤','🎒','🧳','🪜','🪞','🖼️','🎨',
+  '🖌️','✒️','🗒️','📌','📍','🗺️','🧿','🔔','🔕','🎐','🎑','🎆','🎇','🪅',
+  '🏵️','🎋','🎍','🎎','🎏','🎠','🎡','🎢','💈','🎪','🤹','🎭','🎬','🎤',
+  '🎧','📻','📷','📸','📹','📼','🔍','🔎','🕯️','🪔','🧱','🏗️','🛖','🏕️',
+];
+
+function autoPickEmoji(name){
+  if(!name) return '🌀';
+  var lower=name.toLowerCase();
+  // 1. exact / keyword match
+  for(var i=0;i<_EMOJI_KEYWORD_MAP.length;i++){
+    var entry=_EMOJI_KEYWORD_MAP[i];
+    for(var j=0;j<entry.k.length;j++){
+      if(lower.includes(entry.k[j])) return entry.e;
+    }
+  }
+  // 2. pick first from fallback pool not already in use
+  var used=_usedEmojis();
+  for(var fi=0;fi<_FALLBACK_EMOJI_POOL.length;fi++){
+    if(!used.has(_FALLBACK_EMOJI_POOL[fi])) return _FALLBACK_EMOJI_POOL[fi];
+  }
+  return '🌀';
+}
+// ── END AUTO EMOJI ENGINE ──────────────────────────────────────────────────
+
+function renderCustomCatsList(){
+  var wrap=document.getElementById('customCatsList');
+  if(!wrap) return;
+  var grouped=getExpenseCatsGrouped();
+  var builtIn=EXPENSE_CATS_GROUPED;
+  var rows='';
+  Object.entries(grouped).forEach(function([grp,cats]){
+    rows+='<div style="margin-bottom:12px">'
+      +'<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">'+grp+'</div>';
+    cats.forEach(function(cat){
+      var isBuiltIn=(builtIn[grp]||[]).includes(cat);
+      rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:18px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'
+          +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
+          +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+        +'</div>'
+        +(!isBuiltIn?'<span onclick="deleteCustomCat(\''+grp+'\',\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+      +'</div>';
+    });
+    rows+='</div>';
+  });
+  wrap.innerHTML=rows||'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">No categories yet</div>';
+  var preview=document.getElementById('customCatsPreview');
+  var customCount=Object.values(state.customExpCats||{}).reduce(function(s,a){return s+a.length;},0);
+  if(preview) preview.textContent=customCount>0?customCount+' custom added':'Add or remove categories';
+}
+function addCustomCat(){
+  var inp=document.getElementById('newCatInput');
+  var grpSel=document.getElementById('newCatGroup');
+  var err=document.getElementById('customCatError');
+  var name=(inp.value||'').trim();
+  var grp=grpSel.value||'Other';
+  if(!name){err.textContent='Enter a category name';err.style.display='block';return;}
+  var allCats=getExpenseCats();
+  if(allCats.map(function(c){return c.toLowerCase();}).includes(name.toLowerCase())){err.textContent='"'+name+'" already exists';err.style.display='block';return;}
+  err.style.display='none';
+  var emoji=autoPickEmoji(name);
+  CAT_EMOJI[name]=emoji;
+  if(!state.customExpCats) state.customExpCats={};
+  if(!state.customExpCats[grp]) state.customExpCats[grp]=[];
+  state.customExpCats[grp].push(name);
+  if(!state.customCatEmojis) state.customCatEmojis={};
+  state.customCatEmojis[name]=emoji;
+  inp.value='';
+  saveState();
+  renderCustomCatsList();
+  showToast(emoji+' '+name+' added to '+grp,'green');
+}
+function deleteCustomCat(grp,cat){
+  if(!state.customExpCats||!state.customExpCats[grp]) return;
+  state.customExpCats[grp]=state.customExpCats[grp].filter(function(c){return c!==cat;});
+  if(!state.customExpCats[grp].length) delete state.customExpCats[grp];
+  saveState();
+  renderCustomCatsList();
+  showToast(cat+' removed','red');
+}
+
+// ── CUSTOM PLATFORMS ──────────────────────────────────────────────────────
+var _builtInPlatNames=['Offline / Store','Amazon','Flipkart','Meesho','Myntra','Nykaa','Reliance / JioMart','DMart','BigBasket','Zepto','Blinkit','Swiggy','Zomato','Swiggy Instamart','PharmEasy','1mg','BookMyShow','MakeMyTrip','Ola / Uber','Rapido','IRCTC','Paytm','mStock','Zerodha','Groww','Angel One','Other'];
+function renderCustomPlatformsList(){
+  var wrap=document.getElementById('customPlatformsList');
+  if(!wrap) return;
+  var all=getPlatforms();
+  wrap.innerHTML=all.map(function(p){
+    var isBuiltIn=_builtInPlatNames.includes(p.name);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:20px">'+p.emoji+'</span>'
+        +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+p.name+'</span>'
+        +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+      +'</div>'
+      +(!isBuiltIn?'<span onclick="deleteCustomPlatform(\''+p.name+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+    +'</div>';
+  }).join('');
+  var preview=document.getElementById('customPlatformsPreview');
+  if(preview) preview.textContent=(state.customPlatforms||[]).length>0?(state.customPlatforms.length)+' custom added':'Add or remove platforms';
+}
+function addCustomPlatform(){
+  var nameEl=document.getElementById('newPlatName');
+  var emojiEl=document.getElementById('newPlatEmoji');
+  var err=document.getElementById('customPlatError');
+  var name=(nameEl.value||'').trim();
+  var emoji=(emojiEl.value||'').trim()||autoPickEmoji(name);
+  if(!name){err.textContent='Enter a platform name';err.style.display='block';return;}
+  var allNames=getPlatforms().map(function(p){return p.name.toLowerCase();});
+  if(allNames.includes(name.toLowerCase())){err.textContent='"'+name+'" already exists';err.style.display='block';return;}
+  err.style.display='none';
+  if(!state.customPlatforms) state.customPlatforms=[];
+  state.customPlatforms.push({name:name,emoji:emoji});
+  nameEl.value='';emojiEl.value='';
+  if(emojiEl) emojiEl.placeholder='✨';
+  saveState();
+  renderCustomPlatformsList();
+  showToast(emoji+' '+name+' added','green');
+}
+function deleteCustomPlatform(name){
+  if(!state.customPlatforms) return;
+  state.customPlatforms=state.customPlatforms.filter(function(p){return p.name!==name;});
+  saveState();
+  renderCustomPlatformsList();
+  showToast(name+' removed','red');
+}
+
+// ── CUSTOM PAYMENT METHODS ─────────────────────────────────────────────────
+var _builtInPayMethods=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
+function renderCustomPayList(){
+  var wrap=document.getElementById('customPayList');
+  if(!wrap) return;
+  var all=getPaymentMethods();
+  wrap.innerHTML=all.map(function(m){
+    var isBuiltIn=_builtInPayMethods.includes(m);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:18px">'+(_pmIcons[m]||'💳')+'</span>'
+        +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+m+'</span>'
+        +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+      +'</div>'
+      +(!isBuiltIn?'<span onclick="deleteCustomPayMethod(\''+m+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+    +'</div>';
+  }).join('');
+  var preview=document.getElementById('customPayPreview');
+  if(preview) preview.textContent=(state.customPaymentMethods||[]).length>0?(state.customPaymentMethods.length)+' custom added':'Add or remove payment methods';
+}
+function addCustomPayMethod(){
+  var inp=document.getElementById('newPayInput');
+  var err=document.getElementById('customPayError');
+  var name=(inp.value||'').trim();
+  if(!name){err.textContent='Enter a method name';err.style.display='block';return;}
+  var existing=getPaymentMethods().map(function(m){return m.toLowerCase();});
+  if(existing.includes(name.toLowerCase())){err.textContent='"'+name+'" already exists';err.style.display='block';return;}
+  err.style.display='none';
+  var emoji=autoPickEmoji(name);
+  _pmIcons[name]=emoji;
+  if(!state.customPaymentMethods) state.customPaymentMethods=[];
+  state.customPaymentMethods.push(name);
+  if(!state.customPayIcons) state.customPayIcons={};
+  state.customPayIcons[name]=emoji;
+  inp.value='';
+  saveState();
+  renderCustomPayList();
+  showToast(emoji+' '+name+' added','green');
+}
+function deleteCustomPayMethod(name){
+  if(!state.customPaymentMethods) return;
+  state.customPaymentMethods=state.customPaymentMethods.filter(function(m){return m!==name;});
+  saveState();
+  renderCustomPayList();
+  showToast(name+' removed','red');
 }
 
 function resetAllocTargets(){
@@ -6186,13 +6638,13 @@ function toggleBudgetEdit(){
 function renderInlineBudgetInputs(){
   var c=document.getElementById('inlineBudgetInputs');
   if(!c)return;
-  c.innerHTML=EXPENSE_CATS.map(function(cat){
+  c.innerHTML=getExpenseCats().map(function(cat){
     return '<div class="field"><div class="field-label">'+CAT_EMOJI[cat]+' '+cat+'</div>'
       +'<input type="number" class="field-input" id="ibudget_'+cat+'" placeholder="0 = no limit" value="'+(state.budgets[cat]?parseFloat((state.budgets[cat]*(state.currencyRate||1)).toFixed(2)):'')+'" inputmode="numeric"></div>';
   }).join('');
 }
 function saveInlineBudgets(){
-  EXPENSE_CATS.forEach(function(cat){
+  getExpenseCats().forEach(function(cat){
     var el=document.getElementById('ibudget_'+cat);
     var v=el?parseFloat(el.value||'0'):0;
     if(v>0)state.budgets[cat]=v/(state.currencyRate||1);
@@ -6208,8 +6660,8 @@ function saveInlineBudgets(){
   updateBudget();updateBudgetAlertBar();
   showToast('Budgets saved!','green');
 }
-function renderBudgetInputs(){const c=document.getElementById('budgetInputs');c.innerHTML=EXPENSE_CATS.map(cat=>`<div class="field"><div class="field-label">${CAT_EMOJI[cat]} ${cat}</div><input type="number" class="field-input" id="budget_${cat}" placeholder="0 = no limit" value="${state.budgets[cat]?parseFloat((state.budgets[cat]*(state.currencyRate||1)).toFixed(2)):''}"></div>`).join('');}
-function saveBudgets(){const r3=state.currencyRate||1;EXPENSE_CATS.forEach(cat=>{const v=parseFloat(document.getElementById('budget_'+cat)?.value||'0');if(v>0)state.budgets[cat]=v/r3;else delete state.budgets[cat];});saveState();closeModal('budgetModal');updateBudget();updateBudgetAlertBar();}
+function renderBudgetInputs(){const c=document.getElementById('budgetInputs');c.innerHTML=getExpenseCats().map(cat=>`<div class="field"><div class="field-label">${CAT_EMOJI[cat]||'🌀'} ${cat}</div><input type="number" class="field-input" id="budget_${cat}" placeholder="0 = no limit" value="${state.budgets[cat]?parseFloat((state.budgets[cat]*(state.currencyRate||1)).toFixed(2)):''}"></div>`).join('');}
+function saveBudgets(){const r3=state.currencyRate||1;getExpenseCats().forEach(cat=>{const v=parseFloat(document.getElementById('budget_'+cat)?.value||'0');if(v>0)state.budgets[cat]=v/r3;else delete state.budgets[cat];});saveState();closeModal('budgetModal');updateBudget();updateBudgetAlertBar();}
 function updateBudget(){
   const txs=getMonthTxs().filter(t=>t.type==='expense');
   const spent={};txs.forEach(t=>{spent[t.category]=(spent[t.category]||0)+t.amount;});
@@ -6224,7 +6676,7 @@ function updateBudgetAlertBar(){const txs=getMonthTxs().filter(t=>t.type==='expe
   if(barHome)barHome.innerHTML=bar.innerHTML;}else{bar.innerHTML='';if(barHome)barHome.innerHTML='';}}
 
 // ======== BILL REMINDERS ========
-function renderBillCatChips(){const c=document.getElementById('billCatChips');c.innerHTML='';EXPENSE_CATS.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===4?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');selectedBillCat=cat;};c.appendChild(ch);});selectedBillCat='Bills';}
+function renderBillCatChips(){const c=document.getElementById('billCatChips');c.innerHTML='';getExpenseCats().forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===4?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');selectedBillCat=cat;};c.appendChild(ch);});selectedBillCat='Bills';}
 function saveBill(){const name=document.getElementById('billName').value.trim();const amt=parseFloat(document.getElementById('billAmt').value||'0');const dueDay=parseInt(document.getElementById('billDueDay').value||'1');const freq=document.getElementById('billFreq').value;if(!name){showToast('Enter bill name','yellow');return;}const cat=document.querySelector('#billCatChips .chip.on')?.dataset.cat||'Bills';const amtBillINR=amt/(state.currencyRate||1);state.bills.push({id:Date.now(),name,amt:amtBillINR,dueDay,freq,category:cat,emoji:CAT_EMOJI[cat]||'💡',paid:false});saveState();closeModal('billModal');renderBills();updateBillsBadge();['billName','billAmt','billDueDay'].forEach(id=>document.getElementById(id).value='');}
 function renderBills(){
   const c=document.getElementById('billList');
@@ -6311,7 +6763,7 @@ function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be un
 var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Fixed Deposit','PPF Account','Investment / Demat','Wallet','UPI / GPay','Credit Card','Debit Card','Loan Account'];
 var EXPENSE_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Wallet'];
 // Payment methods — metadata label for expenses only (no balance tracking)
-var PAYMENT_METHODS=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
+// PAYMENT_METHODS is now dynamic — see getPaymentMethods()
 
 function updateTxAccountSelect(){
   var sel=document.getElementById('txAccount');
@@ -6508,7 +6960,7 @@ function generateLocalInsights(savRate,topCats,overBudget,totalDebt,income,expen
 
 // ======== RECURRING TRANSACTIONS ========
 function setRecurType(t){recurType=t;document.getElementById('recurTypeInc').classList.toggle('on',t==='income');document.getElementById('recurTypeExp').classList.toggle('on',t==='expense');renderRecurCatChips();updateRecurAccountSelect();}
-function renderRecurCatChips(){const cats=recurType==='income'?INCOME_CATS:EXPENSE_CATS;const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
+function renderRecurCatChips(){const cats=recurType==='income'?INCOME_CATS:getExpenseCats();const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
 function initRecurModal(){
   // Reset edit state
   var modal=document.getElementById('recurModal');
@@ -6519,7 +6971,8 @@ function initRecurModal(){
   setRecurType('expense');
   // Populate platform dropdown
   var platSel=document.getElementById('recurPlatform');
-  platSel.innerHTML='<option value="">-- None --</option>'+PLATFORMS.map(function(p){return'<option value="'+p.name+'">'+p.emoji+' '+p.name+'</option>';}).join('');
+  platSel.innerHTML='<option value="">-- None --</option>'+getPlatforms().map(function(p){return'<option value="'+p.name+'">'+p.emoji+' '+p.name+'</option>';}).join('');
+  populatePayMethodSelects();
   // Render member chips
   var wrap=document.getElementById('recurMemberChips');
   var members=state.familyMembers&&state.familyMembers.length?state.familyMembers:['Self'];
@@ -9786,6 +10239,23 @@ initGoogleDrive();
             🧾 <b style="color:var(--text)">EPFO passbook PDF import</b> — EE/ER/EPS/interest parsed automatically<br>
             💼 <b style="color:var(--text)">Wealth statement fix</b> — no longer shows incorrect positive-only balances<br>
             🏷️ <b style="color:var(--text)">P&amp;L &amp; interest badges</b> added to all asset types
+          </div>
+        </div>
+      </div>
+
+      <!-- v15 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--blue));border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">15</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v15 — 1 May 2026</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            ✨ <b style="color:var(--text)">Smart auto-emoji for custom lists</b> — Categories, Platforms &amp; Payment Methods now auto-suggest an icon from a 100+ keyword map as you type<br>
+            🔍 <b style="color:var(--text)">Live emoji preview</b> — See the suggested icon update in real-time before adding<br>
+            🏪 <b style="color:var(--text)">Platform emoji override</b> — Optional manual override field; leave blank for smart auto-pick<br>
+            🔁 <b style="color:var(--text)">Emoji persistence</b> — Custom icons saved and restored across sessions
           </div>
         </div>
       </div>
