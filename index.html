@@ -1641,6 +1641,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="set-row-left"><span class="set-row-icon">🗂️</span><div><div class="set-row-label">Expense Categories</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="customCatsPreview">Add or remove categories</div></div></div>
           <div class="set-row-right">Edit ▶</div>
         </div>
+        <div class="set-row" onclick="showModal('customIncomeCatsModal')">
+          <div class="set-row-left"><span class="set-row-icon">💰</span><div><div class="set-row-label">Income Sources</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="customIncomeCatsPreview">Add or remove income sources</div></div></div>
+          <div class="set-row-right">Edit ▶</div>
+        </div>
+        <div class="set-row" onclick="showModal('iconManagerModal')">
+          <div class="set-row-left"><span class="set-row-icon">🎨</span><div><div class="set-row-label">Category Icons</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Change icons for any category</div></div></div>
+          <div class="set-row-right">Edit ▶</div>
+        </div>
         <div class="set-row" onclick="showModal('customPlatformsModal')">
           <div class="set-row-left"><span class="set-row-icon">🏪</span><div><div class="set-row-label">Platforms / Where Bought</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="customPlatformsPreview">Add or remove platforms</div></div></div>
           <div class="set-row-right">Edit ▶</div>
@@ -2128,7 +2136,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">🗂️ Expense Categories</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom categories to any group. Built-in categories cannot be deleted.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom categories to any group. Tap any icon to change it. Built-in categories cannot be deleted.</div>
     <div id="customCatsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
     <div class="field" style="margin-bottom:8px">
       <div class="field-label">➕ Add New Category</div>
@@ -2154,6 +2162,86 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div id="customCatError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
     <button class="btn-go" onclick="addCustomCat()" style="margin-bottom:8px">➕ Add Category</button>
     <button class="btn-cancel" onclick="closeModal('customCatsModal')">✅ Done</button>
+  </div>
+</div>
+
+<!-- INCOME SOURCES MODAL -->
+<div class="modal-bg" id="customIncomeCatsModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Income Sources</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom income sources. Built-in sources cannot be deleted.</div>
+    <div id="customIncomeCatsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
+    <div class="field" style="margin-bottom:8px">
+      <div class="field-label">➕ Add New Income Source</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="newIncCatEmojiPreview" style="font-size:22px;min-width:28px;text-align:center;line-height:1;cursor:pointer" onclick="openIconPickerFor('incomeNew',null,null)">✨</span>
+        <input type="text" class="field-input" id="newIncCatInput" placeholder="e.g. Rental Income, Cashback…"
+          oninput="document.getElementById('newIncCatEmojiPreview').textContent=autoPickEmoji(this.value)||'✨'"
+          onkeydown="if(event.key==='Enter')addCustomIncomeCat()">
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">Tap the icon to pick a custom one</div>
+    </div>
+    <div id="customIncCatError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
+    <button class="btn-go" onclick="addCustomIncomeCat()" style="margin-bottom:8px">➕ Add Source</button>
+    <button class="btn-cancel" onclick="closeModal('customIncomeCatsModal')">✅ Done</button>
+  </div>
+</div>
+
+<!-- ICON MANAGER MODAL -->
+<div class="modal-bg" id="iconManagerModal">
+  <div class="modal" style="max-height:92vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎨 Category Icons</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.6">Tap any category to change its icon. Choose from 200+ finance icons or upload your own.</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input type="text" class="field-input" id="iconMgrSearch" placeholder="🔍 Search category…" oninput="renderIconManagerList()" style="flex:1">
+      <select class="field-input" id="iconMgrFilter" onchange="renderIconManagerList()" style="flex:0 0 110px;font-size:12px">
+        <option value="all">All</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+    </div>
+    <div id="iconManagerList" style="overflow-y:auto;max-height:340px"></div>
+    <button class="btn-cancel" onclick="closeModal('iconManagerModal')" style="margin-top:10px">✅ Done</button>
+  </div>
+</div>
+
+<!-- ICON PICKER MODAL -->
+<div class="modal-bg" id="iconPickerModal">
+  <div class="modal" style="max-height:92vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="iconPickerTitle">🎨 Pick Icon</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:10px">Tap an icon to select, or upload a JPG/PNG image.</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="text" class="field-input" id="iconPickerSearch" placeholder="🔍 Search icons…" oninput="renderIconPickerGrid()" style="flex:1">
+      <select class="field-input" id="iconPickerGroup" onchange="renderIconPickerGrid()" style="flex:0 0 110px;font-size:12px">
+        <option value="all">All Groups</option>
+        <option value="Finance">💹 Finance</option>
+        <option value="Income">💰 Income</option>
+        <option value="Home">🏠 Home</option>
+        <option value="Food">🍔 Food</option>
+        <option value="Transport">🚗 Transport</option>
+        <option value="Shopping">🛍️ Shopping</option>
+        <option value="Health">❤️ Health</option>
+        <option value="Education">📚 Education</option>
+        <option value="Entertainment">🎬 Entertainment</option>
+        <option value="Symbols">✨ Symbols</option>
+      </select>
+    </div>
+    <div id="iconPickerGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;overflow-y:auto;max-height:300px;padding:4px 0"></div>
+    <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:12px;border:1px dashed var(--border2)">
+      <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📎 Upload Your Own (JPG/PNG)</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="flex:1;background:var(--accent);color:#fff;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;text-align:center;cursor:pointer">
+          📁 Choose Image
+          <input type="file" accept="image/*" id="iconPickerFileInput" style="display:none" onchange="handleIconImageUpload(this)">
+        </label>
+        <div id="iconPickerUploadPreview" style="font-size:28px;min-width:40px;text-align:center">📷</div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Stored as a tiny 32×32 thumbnail</div>
+    </div>
+    <button class="btn-cancel" onclick="closeModal('iconPickerModal')" style="margin-top:10px">✕ Cancel</button>
   </div>
 </div>
 
@@ -2386,7 +2474,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 // ======== CONSTANTS ========
 const CAT_EMOJI={
   // Income
-  Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Bonus:'🎉',Dividend:'💹',Commission:'🤝',Pension:'👴',
+  Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Bonus:'🎉',Dividend:'💹',Commission:'🤝',Pension:'👴',Cashback:'🏷️','Interest Income':'💰','Side Hustle':'🔥','Refund':'↩️','Scholarship':'🎓',Award:'🏆',Lottery:'🎰',Allowance:'🪙',
   // Home & Utilities
   Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🛢️',Internet:'🌐',Mobile:'📱',
   // Food
@@ -2443,7 +2531,10 @@ const CAT_COLOR={
   'Mutual Fund Buy':'#a78bfa','SIP':'#7c3aed','Stocks Buy':'#3b82f6','ETF Buy':'#22d3ee',
   'Crypto Buy':'#f97316','Gold Buy':'#eab308','NPS/PPF':'#22c55e','Bonds Buy':'#6366f1','FD Deposit':'#06b6d4',
   'Personal Care':'#e879f9',Flowers:'#f9a8d4',Bonus:'#fde68a',
-  Dividend:'#34d399',Commission:'#60a5fa',Pension:'#a78bfa'
+  Dividend:'#34d399',Commission:'#60a5fa',Pension:'#a78bfa',
+  Cashback:'#f59e0b','Interest Income':'#22d3ee','Side Hustle':'#f97316','Refund':'#86efac',Award:'#fbbf24',Scholarship:'#c084fc',Lottery:'#fb923c',Allowance:'#fde68a',
+  Cashback:'#f59e0b','Interest Income':'#22c55e','Side Hustle':'#f97316',
+  Refund:'#38bdf8',Scholarship:'#a855f7',Award:'#eab308',Lottery:'#f43f5e',Allowance:'#84cc16'
 };
 const RISK_BG={'Very Low':'rgba(34,197,94,.15)','Low':'rgba(34,197,94,.1)','Medium':'rgba(234,179,8,.15)','High':'rgba(249,115,22,.15)','Very High':'rgba(239,68,68,.15)','None':'rgba(148,163,184,.1)','Varies':'rgba(148,163,184,.1)'};
 const RISK_COLOR={'Very Low':'#22c55e','Low':'#86efac','Medium':'#eab308','High':'#f97316','Very High':'#ef4444','None':'#94a3b8','Varies':'#94a3b8'};
@@ -2451,7 +2542,14 @@ const ASSET_COLORS=['#6366f1','#22d3ee','#34d399','#f472b6','#fb923c','#a78bfa',
 const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium',returns:'10-15%',emoji:'📈'},'Stocks':{desc:'Direct equity investments',risk:'High',returns:'12-20%',emoji:'📊'},'Cryptocurrency':{desc:'Digital assets & DeFi',risk:'Very High',returns:'Variable',emoji:'₿'},'Gold':{desc:'Gold & precious metals',risk:'Low',returns:'6-10%',emoji:'🥇'},'Real Estate':{desc:'Property & REITs',risk:'Medium',returns:'8-14%',emoji:'🏠'},'ETF':{desc:'Exchange traded funds',risk:'Medium',returns:'10-14%',emoji:'📉'},'PPF':{desc:'Public Provident Fund',risk:'Very Low',returns:'7.1%',emoji:'🏛️'},'EPFO':{desc:'Employee Provident Fund',risk:'Very Low',returns:'8.1%',emoji:'🏢'},'NPS':{desc:'National Pension System',risk:'Low',returns:'8-10%',emoji:'👴'},'Fixed Deposit':{desc:'Bank fixed deposits',risk:'Very Low',returns:'6-7.5%',emoji:'🏦'},'Bonds':{desc:'Govt & corporate bonds',risk:'Low',returns:'6-8%',emoji:'📜'},'Cash':{desc:'Liquid savings',risk:'None',returns:'3-4%',emoji:'💵'},'Other':{desc:'Other investments',risk:'Varies',returns:'Varies',emoji:'💼'}};
 const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'EPFO':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
 const THRESHOLD=2;
-const INCOME_CATS=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Gift','Other'];
+const INCOME_CATS=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Cashback','Interest Income','Side Hustle','Refund','Gift','Other'];
+function getIncomeCats(){
+  var base=INCOME_CATS.slice();
+  if(state&&Array.isArray(state.customIncomeCats)){
+    state.customIncomeCats.forEach(function(c){ if(!base.includes(c)) base.splice(base.length-1,0,c); });
+  }
+  return base;
+}
 
 // PLATFORMS is now dynamic — see getPlatforms()
 const EXPENSE_CATS_GROUPED={
@@ -2914,6 +3012,7 @@ let state={
   driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',
   trackerOpeningBalance:null,
   customExpCats:{},
+  customIncomeCats:[],
   customPlatforms:[],
   customPaymentMethods:[]
 };
@@ -2954,9 +3053,10 @@ function loadState(){
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
   if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
   if(!state.customCatEmojis) state.customCatEmojis={};
+  if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
   if(!state.customPayIcons) state.customPayIcons={};
-  // Re-hydrate CAT_EMOJI with any saved custom category emojis
-  Object.entries(state.customCatEmojis).forEach(function(e){if(!CAT_EMOJI[e[0]])CAT_EMOJI[e[0]]=e[1];});
+  // Re-hydrate CAT_EMOJI with any saved custom category emojis (always override to pick up image icons)
+  Object.entries(state.customCatEmojis).forEach(function(e){CAT_EMOJI[e[0]]=e[1];});
   // Re-hydrate _pmIcons with saved custom payment method icons
   Object.entries(state.customPayIcons).forEach(function(e){if(!_pmIcons[e[0]])_pmIcons[e[0]]=e[1];});
   if(!Array.isArray(state.customPlatforms)) state.customPlatforms=[];
@@ -3391,6 +3491,8 @@ function showPage(id){
     if(pp) pp.textContent=(state.customPlatforms||[]).length>0?(state.customPlatforms.length)+' custom added':'Add or remove platforms';
     var pyp=document.getElementById('customPayPreview');
     if(pyp) pyp.textContent=(state.customPaymentMethods||[]).length>0?(state.customPaymentMethods.length)+' custom added':'Add or remove payment methods';
+    var icp=document.getElementById('customIncomeCatsPreview');
+    if(icp) icp.textContent=(state.customIncomeCats||[]).length>0?(state.customIncomeCats.length)+' custom added':'Add or remove income sources';
   }
 }
 function showModal(id){
@@ -3411,6 +3513,9 @@ function showModal(id){
   if(id==='budgetModal')renderBudgetInputs();
   if(id==='familyModal'){renderFamilyMembersList();document.getElementById('newMemberInput').value='';document.getElementById('familyModalError').style.display='none';}
   if(id==='customCatsModal'){renderCustomCatsList();document.getElementById('newCatInput').value='';var p1=document.getElementById('newCatEmojiPreview');if(p1)p1.textContent='✨';document.getElementById('customCatError').style.display='none';}
+  if(id==='customIncomeCatsModal'){renderCustomIncomeCatsList();document.getElementById('newIncCatInput').value='';document.getElementById('newIncCatEmojiPreview').textContent='✨';document.getElementById('customIncCatError').style.display='none';}
+  if(id==='iconManagerModal'){renderIconManagerList();}
+  if(id==='iconPickerModal'){renderIconPickerGrid();}
   if(id==='customPlatformsModal'){renderCustomPlatformsList();document.getElementById('newPlatName').value='';document.getElementById('newPlatEmoji').value='';var p2=document.getElementById('newPlatEmojiPreview');if(p2)p2.textContent='✨';document.getElementById('customPlatError').style.display='none';}
   if(id==='customPayModal'){renderCustomPayList();document.getElementById('newPayInput').value='';var p3=document.getElementById('newPayEmojiPreview');if(p3)p3.textContent='✨';document.getElementById('customPayError').style.display='none';}
   if(id==='billModal')renderBillCatChips();
@@ -3452,7 +3557,7 @@ function renderCatChips(){
   if(txType==='income'){
     if(lbl)lbl.textContent='💰 Income Source';
     if(platField)platField.style.display='none';
-    INCOME_CATS.forEach(function(cat){
+    getIncomeCats().forEach(function(cat){
       var opt=document.createElement('option');
       opt.value=cat;
       opt.textContent=(CAT_EMOJI[cat]||'🌀')+' '+cat;
@@ -4009,7 +4114,8 @@ function txHTML(tx){
   const pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛'};
   if(tx.payMethod) badges.push(`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${pmIcons[tx.payMethod]||'💳'} ${tx.payMethod}</span>`);
   const badgeRow=badges.length?`<div class="tx-badges">${badges.join('')}</div>`:'';
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${tx.emoji}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div>`;
+  const emojiHtml=tx.emoji&&tx.emoji.startsWith('data:')?`<img src="${tx.emoji}" style="width:26px;height:26px;border-radius:6px;object-fit:cover">`:(tx.emoji||'🌀');
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div>`;
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
 function customConfirm(icon, title, msg, onOk){
@@ -4073,7 +4179,7 @@ function setEditTxType(t){
   if(t==='income'){
     if(lbl)lbl.textContent='💰 Income Source';
     if(platField)platField.style.display='none';
-    INCOME_CATS.forEach(function(cat){
+    getIncomeCats().forEach(function(cat){
       var opt=document.createElement('option');
       opt.value=cat;opt.textContent=(CAT_EMOJI[cat]||'🌀')+' '+cat;
       sel.appendChild(opt);
@@ -4123,7 +4229,7 @@ function setEditTxType(t){
 function onEditCatSelectChange(sel){
   // Update description to match category if description is empty or was same as old cat
   var descEl=document.getElementById('editTxDesc');
-  if(descEl&&(!descEl.value||getExpenseCats().includes(descEl.value)||INCOME_CATS.includes(descEl.value))){
+  if(descEl&&(!descEl.value||getExpenseCats().includes(descEl.value)||getIncomeCats().includes(descEl.value))){
     descEl.value=sel.value||'';
   }
 }
@@ -4930,6 +5036,22 @@ const _EMOJI_KEYWORD_MAP=[
   {k:['rent income','rental','property income'],e:'🏘️'},
   {k:['bonus','reward','incentive'],e:'🎉'},
   {k:['commission','referral'],e:'🤝'},
+  {k:['cashback','cash back','reward points','points','rebate'],e:'🏷️'},
+  {k:['interest income','interest earned','fd interest','savings interest'],e:'💰'},
+  {k:['side hustle','side income','extra income'],e:'🔥'},
+  {k:['refund','money back','reimbursement'],e:'↩️'},
+  {k:['scholarship','stipend','fellowship','grant'],e:'🎓'},
+  {k:['award','prize','winning'],e:'🏆'},
+  {k:['lottery','lucky draw'],e:'🎰'},
+  {k:['allowance','pocket money'],e:'🪙'},
+  {k:['cashback','cash back','rebate','reward points'],e:'🏷️'},
+  {k:['interest income','bank interest','savings interest'],e:'💰'},
+  {k:['side hustle','gig income','extra income','part time'],e:'🔥'},
+  {k:['refund','return','reimbursement'],e:'↩️'},
+  {k:['scholarship','stipend','fellowship'],e:'🎓'},
+  {k:['award','prize','winnings'],e:'🏆'},
+  {k:['lottery','lucky draw','jackpot'],e:'🎰'},
+  {k:['allowance','pocket money','per diem'],e:'🪙'},
   // Shopping
   {k:['shopping','purchase','buy'],e:'🛍️'},
   {k:['clothing','clothes','shirt','dress','fashion','apparel'],e:'👗'},
@@ -5038,9 +5160,11 @@ function renderCustomCatsList(){
       +'<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">'+grp+'</div>';
     cats.forEach(function(cat){
       var isBuiltIn=(builtIn[grp]||[]).includes(cat);
+      var icon=CAT_EMOJI[cat]||'🌀';
+      var iconHtml=icon.startsWith('data:')?'<img src="'+icon+'" style="width:24px;height:24px;border-radius:5px;object-fit:cover">':'<span style="font-size:18px">'+icon+'</span>';
       rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
-        +'<div style="display:flex;align-items:center;gap:8px">'
-          +'<span style="font-size:18px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'
+        +'<div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="openIconPickerFor(\'expCat\',\''+cat+'\',null)">'
+          +iconHtml
           +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
           +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
         +'</div>'
@@ -5083,6 +5207,214 @@ function deleteCustomCat(grp,cat){
   saveState();
   renderCustomCatsList();
   showToast(cat+' removed','red');
+}
+
+// ── CUSTOM INCOME SOURCES ──────────────────────────────────────────────────
+var _builtInIncomeCats=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Cashback','Interest Income','Side Hustle','Refund','Gift','Other'];
+function renderCustomIncomeCatsList(){
+  var wrap=document.getElementById('customIncomeCatsList');
+  if(!wrap) return;
+  var all=getIncomeCats();
+  var rows='';
+  all.forEach(function(cat){
+    var isBuiltIn=_builtInIncomeCats.includes(cat);
+    rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="font-size:18px;cursor:pointer" onclick="openIconPickerFor(\'incomeCat\',\''+cat+'\',null)">'+(CAT_EMOJI[cat]||'🌀')+'</span>'
+        +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
+        +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+      +'</div>'
+      +(!isBuiltIn?'<span onclick="deleteCustomIncomeCat(\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+    +'</div>';
+  });
+  wrap.innerHTML=rows||'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">No sources yet</div>';
+  var preview=document.getElementById('customIncomeCatsPreview');
+  var customCount=(state.customIncomeCats||[]).length;
+  if(preview) preview.textContent=customCount>0?customCount+' custom added':'Add or remove income sources';
+}
+function addCustomIncomeCat(){
+  var inp=document.getElementById('newIncCatInput');
+  var err=document.getElementById('customIncCatError');
+  var name=(inp.value||'').trim();
+  if(!name){err.textContent='Enter a source name';err.style.display='block';return;}
+  var all=getIncomeCats();
+  if(all.map(function(c){return c.toLowerCase();}).includes(name.toLowerCase())){err.textContent='"'+name+'" already exists';err.style.display='block';return;}
+  err.style.display='none';
+  var emojiEl=document.getElementById('newIncCatEmojiPreview');
+  var emoji=(emojiEl&&emojiEl.dataset.customImg)||emojiEl.textContent||autoPickEmoji(name);
+  if(emoji==='✨') emoji=autoPickEmoji(name)||'💰';
+  CAT_EMOJI[name]=emoji;
+  if(!state.customIncomeCats) state.customIncomeCats=[];
+  state.customIncomeCats.push(name);
+  if(!state.customCatEmojis) state.customCatEmojis={};
+  state.customCatEmojis[name]=emoji;
+  inp.value='';
+  emojiEl.textContent='✨';
+  saveState();
+  renderCustomIncomeCatsList();
+  showToast(emoji+' '+name+' added','green');
+}
+function deleteCustomIncomeCat(cat){
+  if(!state.customIncomeCats) return;
+  state.customIncomeCats=state.customIncomeCats.filter(function(c){return c!==cat;});
+  saveState();
+  renderCustomIncomeCatsList();
+  showToast(cat+' removed','red');
+}
+
+// ── ICON MANAGER ──────────────────────────────────────────────────────────
+// Rich icon library: 200+ finance-relevant emoji
+const ICON_LIBRARY={
+  'Finance':['💰','💵','💴','💶','💷','💸','💳','🏦','🏧','💹','📈','📉','📊','🧾','💎','🪙','💱','🏷️','🔖','📑','🗒️','📜','📋','📌','📍','🔐','🔒','🔑','🗝️','⚖️','🏛️','🤑'],
+  'Income':['💼','💻','🏢','🏘️','🎁','🎉','🤝','👴','🏷️','💰','🔥','↩️','🎓','🏆','🎰','🪙','🌟','💡','📲','🛎️','🧧','💝','🎊','🥇','🥈','🥉','🏅','🎖️','⭐','🌈'],
+  'Home':['🏠','🏡','🏗️','⚡','💧','🛢️','🌐','📱','🔧','🧹','🛋️','🛏️','🪑','🚿','🛁','🪞','🧺','🧲','🔌','💡','🕯️','🪔','🏚️','🏰','🏯','🏟️','🏬','🏪','🏩','🏨'],
+  'Food':['🍽️','🧺','🍎','🍴','🛵','🥐','☕','🥛','🍬','🥤','🍦','🍕','🍔','🌮','🍜','🍱','🥗','🍛','🍣','🥘','🫕','🧆','🧇','🥞','🍳','🥚','🧀','🥩','🍗','🍖','🌯','🥙'],
+  'Transport':['⛽','🚕','🚆','🚌','✈️','🚇','🅿️','🏍️','🛺','🛣️','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚖','🚗','🚘','🚙','🚚','🚛','🚜','🏎️','🛻','🛵','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','⛽','🚨','🚥','🚦','🛑'],
+  'Shopping':['🛍️','👗','🔌','📦','👟','⌚','💄','🪮','🎽','👔','👕','👖','🩱','🩲','🩳','👙','👗','👘','🥻','🩴','👠','👡','👢','👞','🥾','🧢','👒','🪖','⛑️','👑','💍','💎','👓','🕶️','🥽','🌂','☂️'],
+  'Health':['🏥','💊','🛡️','🩺','💪','🦷','👓','🧠','🩹','🩼','🦽','🦾','🫀','🫁','🧬','🔬','🩻','🧪','⚕️','🏋️','🧘','🤸','🏊','🚴','🧗','🤾','⛹️','🤼'],
+  'Education':['🏫','🎓','📖','🎧','📝','👶','📚','✏️','🖊️','🖋️','📐','📏','🗓️','📆','📅','🗃️','📁','📂','🗂️','📓','📔','📒','📕','📗','📘','📙','📃','📄'],
+  'Entertainment':['📺','🎬','🎵','🎮','🎪','🎭','🎨','🎤','🎧','📻','🎸','🎹','🥁','🎷','🎺','🎻','🪕','🎲','🎯','🎳','🎰','🃏','🀄','🎠','🎡','🎢','🎈','🎆','🎇','🧨','🎉','🎊','🎋','🎍','🎎','🎐','🎑'],
+  'Symbols':['✨','🌀','🌟','⭐','💫','🔥','⚡','🌈','🌊','🌿','🍀','🌸','🌺','🌻','🌹','🌷','🌵','🌴','🍁','🍂','🍃','🎯','🧩','🔮','🪄','🎀','💥','🌙','☀️','🌤️','⛅','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️']
+};
+
+var _iconPickerTarget=null; // {type:'cat'|'incomeCat'|'expCat'|'incomeNew', name:str, callback:fn}
+
+function openIconPickerFor(type,name,callback){
+  _iconPickerTarget={type:type,name:name,callback:callback};
+  var title=document.getElementById('iconPickerTitle');
+  if(title) title.textContent='🎨 Pick Icon'+(name?' for '+name:'');
+  document.getElementById('iconPickerSearch').value='';
+  document.getElementById('iconPickerGroup').value='all';
+  document.getElementById('iconPickerUploadPreview').innerHTML='📷';
+  document.getElementById('iconPickerUploadPreview').dataset.dataUrl='';
+  renderIconPickerGrid();
+  closeModal('iconManagerModal');
+  closeModal('customIncomeCatsModal');
+  closeModal('customCatsModal');
+  showModal('iconPickerModal');
+}
+
+function renderIconPickerGrid(){
+  var grid=document.getElementById('iconPickerGrid');
+  if(!grid) return;
+  var search=(document.getElementById('iconPickerSearch').value||'').toLowerCase();
+  var group=document.getElementById('iconPickerGroup').value;
+  var icons=[];
+  if(group==='all'){
+    Object.values(ICON_LIBRARY).forEach(function(arr){icons=icons.concat(arr);});
+  } else {
+    icons=(ICON_LIBRARY[group]||[]).slice();
+  }
+  // deduplicate
+  icons=[...new Set(icons)];
+  // filter by search (crude substring on unicode name isn't great so just show all if no search)
+  if(search){
+    // try to filter by group label or just return all
+    var matchedGroups=Object.entries(ICON_LIBRARY).filter(function([g]){return g.toLowerCase().includes(search);});
+    if(matchedGroups.length){icons=[];matchedGroups.forEach(function([,arr]){icons=icons.concat(arr);});icons=[...new Set(icons)];}
+  }
+  grid.innerHTML=icons.map(function(ic){
+    return '<div onclick="selectIcon(\''+ic+'\')" style="display:flex;align-items:center;justify-content:center;font-size:28px;padding:8px;border-radius:10px;cursor:pointer;background:var(--bg3);border:2px solid var(--border);transition:all .15s" onmouseenter="this.style.borderColor=\'var(--accent)\';this.style.background=\'rgba(124,92,252,0.12)\'" onmouseleave="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--bg3)\'" ontouchstart="this.style.borderColor=\'var(--accent)\'" ontouchend="this.style.borderColor=\'var(--border)\'">'+ic+'</div>';
+  }).join('');
+}
+
+function selectIcon(emoji){
+  var t=_iconPickerTarget;
+  if(!t) return;
+  if(t.type==='cat'||t.type==='expCat'){
+    CAT_EMOJI[t.name]=emoji;
+    if(!state.customCatEmojis) state.customCatEmojis={};
+    state.customCatEmojis[t.name]=emoji;
+    saveState();
+    renderIconManagerList();
+    renderCustomCatsList();
+    showToast('Icon updated for '+t.name,'green');
+  } else if(t.type==='incomeCat'){
+    CAT_EMOJI[t.name]=emoji;
+    if(!state.customCatEmojis) state.customCatEmojis={};
+    state.customCatEmojis[t.name]=emoji;
+    saveState();
+    renderIconManagerList();
+    renderCustomIncomeCatsList();
+    showToast('Icon updated for '+t.name,'green');
+  } else if(t.type==='incomeNew'){
+    var el=document.getElementById('newIncCatEmojiPreview');
+    if(el){el.textContent=emoji;el.dataset.customImg='';}
+  }
+  if(t.callback) t.callback(emoji);
+  closeModal('iconPickerModal');
+  // re-open parent
+  if(t.type==='cat'||t.type==='expCat') setTimeout(function(){showModal('iconManagerModal');},80);
+  else if(t.type==='incomeCat') setTimeout(function(){showModal('iconManagerModal');},80);
+  else if(t.type==='incomeNew') setTimeout(function(){showModal('customIncomeCatsModal');},80);
+}
+
+function handleIconImageUpload(input){
+  var file=input.files&&input.files[0];
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    // Resize to 32x32 via canvas
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      canvas.width=32;canvas.height=32;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,32,32);
+      var small=canvas.toDataURL('image/png',0.8);
+      // Show preview
+      var prev=document.getElementById('iconPickerUploadPreview');
+      prev.innerHTML='<img src="'+small+'" style="width:32px;height:32px;border-radius:6px;object-fit:cover">';
+      prev.dataset.dataUrl=small;
+      // Apply
+      var t=_iconPickerTarget;
+      if(t&&t.name){
+        CAT_EMOJI[t.name]=small;
+        if(!state.customCatEmojis) state.customCatEmojis={};
+        state.customCatEmojis[t.name]=small;
+        saveState();
+        showToast('Custom image set for '+t.name,'green');
+        closeModal('iconPickerModal');
+        if(t.type==='cat'||t.type==='expCat') setTimeout(function(){renderIconManagerList();showModal('iconManagerModal');},80);
+        else if(t.type==='incomeCat') setTimeout(function(){renderCustomIncomeCatsList();showModal('iconManagerModal');},80);
+      } else if(t&&t.type==='incomeNew'){
+        var el=document.getElementById('newIncCatEmojiPreview');
+        if(el){el.dataset.customImg=small;el.innerHTML='<img src="'+small+'" style="width:28px;height:28px;border-radius:6px;object-fit:cover">';}
+        closeModal('iconPickerModal');
+        setTimeout(function(){showModal('customIncomeCatsModal');},80);
+      }
+    };
+    img.src=dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderIconManagerList(){
+  var wrap=document.getElementById('iconManagerList');
+  if(!wrap) return;
+  var search=(document.getElementById('iconMgrSearch')&&document.getElementById('iconMgrSearch').value||'').toLowerCase();
+  var filter=document.getElementById('iconMgrFilter')&&document.getElementById('iconMgrFilter').value||'all';
+  var rows='';
+  function makeRow(cat,type){
+    var icon=CAT_EMOJI[cat]||'🌀';
+    var iconHtml=icon.startsWith('data:')?'<img src="'+icon+'" style="width:24px;height:24px;border-radius:5px;object-fit:cover">':'<span style="font-size:22px">'+icon+'</span>';
+    rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +iconHtml
+        +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
+        +'<span style="font-size:9px;background:rgba(124,92,252,0.12);color:var(--accent2);border-radius:5px;padding:1px 5px;font-weight:900">'+type+'</span>'
+      +'</div>'
+      +'<span onclick="openIconPickerFor(\'cat\',\''+cat+'\',null)" style="background:var(--accent);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:900;cursor:pointer">Change</span>'
+    +'</div>';
+  }
+  if(filter==='all'||filter==='income'){
+    getIncomeCats().forEach(function(cat){if(!search||cat.toLowerCase().includes(search)) makeRow(cat,'Income');});
+  }
+  if(filter==='all'||filter==='expense'){
+    getExpenseCats().forEach(function(cat){if(!search||cat.toLowerCase().includes(search)) makeRow(cat,'Expense');});
+  }
+  wrap.innerHTML=rows||'<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">No categories found</div>';
 }
 
 // ── CUSTOM PLATFORMS ──────────────────────────────────────────────────────
@@ -6960,7 +7292,7 @@ function generateLocalInsights(savRate,topCats,overBudget,totalDebt,income,expen
 
 // ======== RECURRING TRANSACTIONS ========
 function setRecurType(t){recurType=t;document.getElementById('recurTypeInc').classList.toggle('on',t==='income');document.getElementById('recurTypeExp').classList.toggle('on',t==='expense');renderRecurCatChips();updateRecurAccountSelect();}
-function renderRecurCatChips(){const cats=recurType==='income'?INCOME_CATS:getExpenseCats();const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
+function renderRecurCatChips(){const cats=recurType==='income'?getIncomeCats():getExpenseCats();const c=document.getElementById('recurCatChips');c.innerHTML='';cats.forEach((cat,i)=>{const ch=document.createElement('div');ch.className='chip'+(i===0?' on':'');ch.innerHTML=`${CAT_EMOJI[cat]||'🌀'} ${cat}`;ch.dataset.cat=cat;ch.onclick=()=>{c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');};c.appendChild(ch);});}
 function initRecurModal(){
   // Reset edit state
   var modal=document.getElementById('recurModal');
