@@ -380,7 +380,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 .hero-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .hero-amount{font-family:var(--font);font-size:clamp(28px,7vw,42px);font-weight:700;color:var(--text);line-height:1;margin-bottom:14px;letter-spacing:-1px}
 .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.3px}
-.carry-badge{display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:800;letter-spacing:.3px;margin:0 0 10px;width:100%;box-sizing:border-box}
+.carry-badge{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 12px;border-radius:10px;margin:0 0 10px;width:100%;box-sizing:border-box;cursor:pointer}
+.carry-lbl{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9}
+.carry-hint{font-size:9px;font-weight:600;opacity:.5;display:block;margin-top:1px;white-space:nowrap}
+.carry-amt{font-size:13px;font-weight:900;letter-spacing:-.3px;white-space:nowrap;flex-shrink:0}
 .carry-pos{background:rgba(34,197,94,0.12);border:1.5px solid rgba(34,197,94,0.3);color:var(--green)}
 .carry-neg{background:rgba(239,68,68,0.12);border:1.5px solid rgba(239,68,68,0.3);color:var(--red)}
 .badge-up{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
@@ -880,14 +883,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="hero">
         <span class="hero-emoji">🏦</span>
         <div class="hero-label">Total Net Worth</div>
-        <div class="hero-amount"><span class="curr">₹</span><span id="netWorthAmt">0</span></div>
+        <div class="hero-amount" id="heroAmtWrap"><span class="curr" id="netWorthCurr">₹</span><span id="netWorthAmt">0</span></div>
         <span class="hero-badge badge-up" id="netBadge">📈 Surplus ₹0</span>
+        <button id="carryInfoBtn" onclick="showCarryBreakdown()" style="display:none;position:absolute;top:12px;right:14px;align-items:center;gap:5px;padding:4px 9px 4px 7px;border-radius:20px;background:rgba(124,92,252,0.13);border:1.5px solid rgba(124,92,252,0.3);color:var(--accent);font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.2px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" title="Carry-forward breakdown"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0"><circle cx="6.5" cy="6.5" r="6" stroke="currentColor" stroke-width="1.5"/><rect x="6" y="5.5" width="1" height="4" rx=".5" fill="currentColor"/><rect x="6" y="3.5" width="1" height="1.2" rx=".5" fill="currentColor"/></svg>↩ carry</button>
       </div>
       <div class="stat-grid">
         <div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Money In</div><div class="stat-val"><span class="curr">₹</span><span id="incAmt">0</span></div></div>
         <div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Money Out</div><div class="stat-val"><span class="curr">₹</span><span id="expAmt">0</span></div></div>
       </div>
-      <div id="carryForwardBadge" class="carry-badge carry-pos" style="display:none"></div>
       <div class="save-bar-wrap">
         <div class="save-bar-top"><div class="save-bar-label">🐷 Savings Rate</div><div class="save-bar-pct" id="saveRate">0%</div></div>
         <div class="save-bar-track"><div class="save-bar-fill" id="saveBarFill" style="width:0%"></div></div>
@@ -2320,6 +2323,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="exportKeyModalTitle">🔐 Set Backup Password</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:10px;padding:9px 13px;margin-bottom:12px">
+      <span style="font-size:11px;font-weight:700;color:var(--text3)">📦 Estimated backup size</span>
+      <span id="exportFileSizeChip" style="font-size:11px;font-weight:900;color:var(--accent);background:rgba(124,92,252,0.12);border:1px solid rgba(124,92,252,0.25);border-radius:20px;padding:3px 10px">calculating…</span>
+    </div>
     <div style="background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.2);border-radius:12px;padding:12px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:6px">🔒 Password Rules</div>
       <div style="font-size:11px;color:var(--text3);font-weight:700;line-height:1.8">
@@ -2461,6 +2468,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div style="font-size:13px;font-weight:900;color:var(--green)">Drive Connected</div>
           <div style="font-size:11px;color:var(--text3);font-weight:700" id="driveEmailDisplay"></div>
         </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:10px;padding:9px 13px;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:700;color:var(--text3)">📦 Backup file size</span>
+        <span id="driveFileSizeChip" style="font-size:11px;font-weight:900;color:var(--accent);background:rgba(124,92,252,0.12);border:1px solid rgba(124,92,252,0.25);border-radius:20px;padding:3px 10px">calculating…</span>
       </div>
       <button class="btn-go" onclick="backupToDrive()">☁️ Backup to Drive Now</button>
       <button class="btn-go" style="background:var(--bg3);color:var(--text);margin-top:8px" onclick="restoreFromDrive()">📥 Restore from Drive</button>
@@ -3787,16 +3798,16 @@ function showCarryBreakdown(){
 
   // Section A: prior months (carry into current month)
   html+='<div style="font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;padding:0 2px">Account Balances — End of Last Month (Carry-In)</div>';
-  var tblStyle='width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"';
-  var thStyle='font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:6px 6px 6px 0;text-align:right;border-bottom:1px solid var(--border)';
-  var thL='font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border);text-align:left';
-  var tdN='font-size:10px;font-weight:700;text-align:right;white-space:nowrap;padding:7px 6px 7px 0;border-bottom:1px solid var(--border)';
+  var scrollWrap='overflow-x:auto;-webkit-overflow-scrolling:touch';
+  var tblStyle='width:100%;min-width:380px;border-collapse:collapse;table-layout:auto;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"';
+  var thStyle='font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:6px 8px 6px 4px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap';
+  var thL='font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);padding:6px 8px 6px 0;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap';
+  var tdN='font-size:10px;font-weight:700;text-align:right;white-space:nowrap;padding:7px 8px 7px 4px;border-bottom:1px solid var(--border)';
   var numCell=tdN; // alias kept for per-account section below
 
-  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px;padding:0 12px">';
+  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px"><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 12px">';
   html+='<table style="'+tblStyle+'">'
-    +'<colgroup><col style="width:32%"><col style="width:14%"><col style="width:16%"><col style="width:16%"><col style="width:11%"><col style="width:11%"></colgroup>'
-    +'<thead><tr>'
+        +'<thead><tr>'
       +'<th style="'+thL+'">Account</th>'
       +'<th style="'+thStyle+'">Open</th>'
       +'<th style="'+thStyle+'">Income</th>'
@@ -3851,14 +3862,13 @@ function showCarryBreakdown(){
     +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--text3)">—</td>'
     +'<td style="'+tdN+';font-weight:900;border-bottom:none;font-size:11px;color:'+(totalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(totalClose))+'</td>'
   +'</tr></tfoot></table>';
-  html+='</div>';
+  html+='</div></div>';
 
   // Section B: current month
   html+='<div style="font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;padding:0 2px">'+mNames[month]+' '+year+' — Current Month</div>';
-  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px;padding:0 12px">';
+  html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:12px"><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 12px">';
   html+='<table style="'+tblStyle+'">'
-    +'<colgroup><col style="width:32%"><col style="width:14%"><col style="width:16%"><col style="width:16%"><col style="width:11%"><col style="width:11%"></colgroup>'
-    +'<thead><tr>'
+        +'<thead><tr>'
       +'<th style="'+thL+'">Account</th>'
       +'<th style="'+thStyle+'">Open</th>'
       +'<th style="'+thStyle+'">Income</th>'
@@ -3918,7 +3928,7 @@ function showCarryBreakdown(){
     +'<td style="'+tdN+';font-weight:900;border-bottom:none;color:var(--text3)">—</td>'
     +'<td style="'+tdN+';font-weight:900;border-bottom:none;font-size:11px;color:'+(curTotalClose>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(curTotalClose))+'</td>'
   +'</tr></tfoot></table>';
-  html+='</div>';
+  html+='</div></div>';
 
   if(base!==0){
     html+='<div style="background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
@@ -3977,14 +3987,13 @@ function showCarryBreakdown(){
           +'<button onclick="cfEditAccountOpening(\''+acct.id+'\')" style="background:'+ac+'22;color:'+ac+';border:1px solid '+ac+'44;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:900;cursor:pointer">✏️</button>'
         +'</div>'
       +'</div>';
-      var tblB='width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"';
-      var thB='font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:5px 5px 5px 0;text-align:right;border-bottom:1px solid var(--border)';
-      var thBL='font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:5px 0;border-bottom:1px solid var(--border);text-align:left';
-      var tdB='font-size:10px;font-weight:700;text-align:right;white-space:nowrap;padding:6px 5px 6px 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums';
-      html+='<div style="padding:0 12px">';
+      var tblB='width:100%;min-width:340px;border-collapse:collapse;table-layout:auto;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"';
+      var thB='font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:5px 8px 5px 4px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap';
+      var thBL='font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:5px 8px 5px 0;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap';
+      var tdB='font-size:10px;font-weight:700;text-align:right;white-space:nowrap;padding:6px 8px 6px 4px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums';
+      html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 12px">';
       html+='<table style="'+tblB+'">'
-        +'<colgroup><col style="width:22%"><col style="width:16%"><col style="width:16%"><col style="width:16%"><col style="width:14%"><col style="width:16%"></colgroup>'
-        +'<thead><tr>'
+                +'<thead><tr>'
           +'<th style="'+thBL+'">Month</th>'
           +'<th style="'+thB+'">Open</th>'
           +'<th style="'+thB+'">In</th>'
@@ -4115,7 +4124,25 @@ function txHTML(tx){
   if(tx.payMethod) badges.push(`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${pmIcons[tx.payMethod]||'💳'} ${tx.payMethod}</span>`);
   const badgeRow=badges.length?`<div class="tx-badges">${badges.join('')}</div>`:'';
   const emojiHtml=tx.emoji&&tx.emoji.startsWith('data:')?`<img src="${tx.emoji}" style="width:26px;height:26px;border-radius:6px;object-fit:cover">`:(tx.emoji||'🌀');
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${tx.notes?' · '+tx.notes:''}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div>`;
+  const _safeD=(tx.desc||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const _safeN=(tx.notes||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const _iBtn=tx.desc?` <span onclick="event.stopPropagation();showTxDescInfo('${_safeD}','${tx.category}','${formatDate(tx.date)}','${_safeN}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:9px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle">ℹ</span>`:'';
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div>`;
+}
+function showTxDescInfo(desc,cat,date,notes){
+  var m=document.getElementById('txDescInfoModal');
+  if(!m){
+    var el=document.createElement('div');
+    el.className='modal-bg';el.id='txDescInfoModal';el.style.zIndex='9000';
+    el.innerHTML='<div class="modal" style="max-width:340px"><div class="modal-handle"></div><div class="modal-title" style="font-size:15px;margin-bottom:10px">📝 Description</div><div id="txDescInfoText" style="font-size:15px;font-weight:700;color:var(--text);line-height:1.6;word-break:break-word;padding-bottom:8px"></div><div id="txDescInfoNotes" style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;word-break:break-word;display:none"></div><div id="txDescInfoMeta" style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:16px"></div><button class="btn-cancel" onclick="closeModal(\'txDescInfoModal\')" style="width:100%">✕ Close</button></div></div>';
+    el.addEventListener('click',function(e){if(e.target===el)closeModal('txDescInfoModal');});
+    document.body.appendChild(el);m=el;
+  }
+  document.getElementById('txDescInfoText').textContent=desc;
+  var ne=document.getElementById('txDescInfoNotes');
+  if(notes){ne.textContent='📎 '+notes;ne.style.display='block';}else{ne.style.display='none';}
+  document.getElementById('txDescInfoMeta').textContent=cat+' · '+date;
+  showModal('txDescInfoModal');
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
 function customConfirm(icon, title, msg, onOk){
@@ -4330,34 +4357,20 @@ function updateDashboard(){
   const netWorth=totalAssets+totalAcctsBal-totalLiab;
   const savRate=effectiveIncome>0?Math.round((effectiveIncome-expense)/effectiveIncome*100):0;
   document.getElementById('netWorthAmt').textContent=fmt(cv(Math.abs(netWorth)));
+  var _nwWrap=document.getElementById('heroAmtWrap');
+  var _nwCurr=document.getElementById('netWorthCurr');
+  if(_nwWrap){_nwWrap.style.color=netWorth<0?'var(--red)':netWorth>0?'var(--green)':'var(--text3)';}
+  if(_nwCurr){_nwCurr.textContent=(netWorth<0?'－':'＋')+(state.currSymbol||'₹');}
   // Money In = this month's income transactions + any account opening balances added this month
   document.getElementById('incAmt').textContent=fmt(cv(totalIncome));
   document.getElementById('expAmt').textContent=fmt(cv(expense));
   document.getElementById('saveRate').textContent=Math.max(0,savRate)+'%';
   document.getElementById('saveBarFill').style.width=Math.max(0,Math.min(100,savRate))+'%';
-  // Carry forward badge — informational, explains why surplus/deficit includes prior months
-  const cfBadge=document.getElementById('carryForwardBadge');
-  if(cfBadge){
-    if(carry!==0){
-      cfBadge.style.display='flex';
-      var carryLabel=carry>0
-        ?'↩️ Carried forward: +'+state.currSymbol+fmt(cv(carry))+' &nbsp;<span style="font-size:10px;opacity:0.7">ℹ️ Tap to see breakdown</span>'
-        :'↩️ Deficit carried: −'+state.currSymbol+fmt(cv(Math.abs(carry)))+' &nbsp;<span style="font-size:10px;opacity:0.7">ℹ️ Tap to see breakdown</span>';
-      cfBadge.className='carry-badge '+(carry>0?'carry-pos':'carry-neg');
-      cfBadge.innerHTML=carryLabel;
-      cfBadge.style.cursor='pointer';
-      cfBadge.onclick=showCarryBreakdown;
-    }else{
-      // Show a neutral "set opening balance" nudge even when carry=0
-      cfBadge.style.display='flex';
-      cfBadge.className='carry-badge';
-      cfBadge.style.background='rgba(124,92,252,0.08)';
-      cfBadge.style.border='1px solid rgba(124,92,252,0.2)';
-      cfBadge.style.color='var(--accent)';
-      cfBadge.innerHTML='↩️ Carry forward: ₹0 &nbsp;<span style="font-size:10px;opacity:0.7">✏️ Set opening balance</span>';
-      cfBadge.style.cursor='pointer';
-      cfBadge.onclick=showCarryBreakdown;
-    }
+  // Carry forward — show small ℹ button next to net worth if carry exists
+  const cfInfoBtn=document.getElementById('carryInfoBtn');
+  if(cfInfoBtn){
+    cfInfoBtn.style.display=(carry!==0)?'flex':'none';
+    cfInfoBtn.title=(carry>0?'↩️ Carried Forward: ':'⚠️ Deficit Carried: ')+state.currSymbol+fmt(cv(Math.abs(carry)));
   }
   const badge=document.getElementById('netBadge');
   if(net>=0){badge.className='hero-badge badge-up';badge.textContent=tr('surplus')+' '+state.currSymbol+fmt(cv(net));}
@@ -8511,6 +8524,15 @@ function xorDecrypt(enc, key){
   return new TextDecoder().decode(out);
 }
 
+function getBackupSizeStr(){
+  try{
+    const raw=buildBackupPayload();
+    const bytes=new TextEncoder().encode(raw).length;
+    if(bytes<1024) return bytes+' B';
+    if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+    return (bytes/(1024*1024)).toFixed(2)+' MB';
+  }catch(e){return '—';}
+}
 function buildBackupPayload(){
   const payload={
     version:'ft-v5',
@@ -8537,6 +8559,10 @@ function triggerDownload(blob, filename){
 }
 function exportData(){
   showModal('exportKeyModal');
+  setTimeout(function(){
+    var chip=document.getElementById('exportFileSizeChip');
+    if(chip) chip.textContent=getBackupSizeStr();
+  },50);
 }
 function handleExportKeySubmit(){
   const modal=document.getElementById('exportKeyModal');
@@ -8794,6 +8820,8 @@ function updateDriveUI(){
   const emailDisp=document.getElementById('driveEmailDisplay');
   if(conn&&unconn){conn.style.display=connected?'block':'none';unconn.style.display=connected?'none':'block';}
   if(emailDisp)emailDisp.textContent=state.driveEmail||'';
+  var driveSizeChip=document.getElementById('driveFileSizeChip');
+  if(driveSizeChip&&connected) driveSizeChip.textContent=getBackupSizeStr();
 }
 
 // ======== INSTALL APP (PWA) ========
