@@ -1707,8 +1707,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260503-v18 · <span style="color:var(--accent)">Latest</span></span>
-        <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
+        <span id="buildBadge" style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7"></span>
+        <button onclick="showModal('buildHistoryModal')" id="historyBtn" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
 
@@ -3555,8 +3555,11 @@ function closeModal(id){document.getElementById(id).classList.remove('on');if(id
 document.querySelectorAll('.modal-bg').forEach(function(o){
   o.addEventListener('click',function(e){
     // Close if tap was not inside the .modal panel
+    // Use composedPath so detached nodes (after innerHTML re-render) still work correctly
     var panel=o.querySelector('.modal');
-    if(!panel||!panel.contains(e.target)) closeModal(o.id);
+    var path=e.composedPath?e.composedPath():[];
+    var insidePanel=path.indexOf(panel)!==-1||(panel&&panel.contains(e.target));
+    if(!panel||!insidePanel) closeModal(o.id);
   });
 });
 
@@ -5183,27 +5186,56 @@ function autoPickEmoji(name){
 function renderCustomCatsList(){
   var wrap=document.getElementById('customCatsList');
   if(!wrap) return;
-  var grouped=getExpenseCatsGrouped();
+  // Use full unfiltered data so hidden items still appear with Show button
+  var base=JSON.parse(JSON.stringify(EXPENSE_CATS_GROUPED));
+  if(state&&state.customExpCats){
+    Object.entries(state.customExpCats).forEach(function([grp,cats]){
+      if(!base[grp]) base[grp]=[];
+      cats.forEach(function(c){ if(!base[grp].includes(c)) base[grp].push(c); });
+    });
+  }
+  var grouped=base;
   var builtIn=EXPENSE_CATS_GROUPED;
   var rows='';
   Object.entries(grouped).forEach(function([grp,cats]){
+    // Count hidden built-ins in this group
+    var builtInCats=cats.filter(function(c){return (builtIn[grp]||[]).includes(c);});
+    var hiddenInGrp=builtInCats.filter(function(c){return state.hiddenExpCats&&state.hiddenExpCats[grp]&&state.hiddenExpCats[grp].includes(c);});
+    var allHidden=builtInCats.length>0&&hiddenInGrp.length===builtInCats.length;
+    var anyHidden=hiddenInGrp.length>0;
+    var bulkBtn='';
+    if(builtInCats.length>1){
+      if(anyHidden&&!allHidden){
+        // Mixed state — show both
+        bulkBtn='<span onclick="hideAllExpGroup(\''+grp+'\')" style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:2px 7px;margin-left:4px">Hide All</span>'
+               +'<span onclick="showAllExpGroup(\''+grp+'\')" style="font-size:10px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 7px;margin-left:4px">Show All</span>';
+      } else if(allHidden){
+        bulkBtn='<span onclick="showAllExpGroup(\''+grp+'\')" style="font-size:10px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 7px;margin-left:4px">Show All</span>';
+      } else {
+        bulkBtn='<span onclick="hideAllExpGroup(\''+grp+'\')" style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:2px 7px;margin-left:4px">Hide All</span>';
+      }
+    }
     rows+='<div style="margin-bottom:12px">'
-      +'<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">'+grp+'</div>';
+      +'<div style="display:flex;align-items:center;margin-bottom:6px">'
+        +'<span style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1px;text-transform:uppercase;flex:1">'+grp+'</span>'
+        +bulkBtn
+      +'</div>';
     cats.forEach(function(cat){
       var isBuiltIn=(builtIn[grp]||[]).includes(cat);
       var icon=CAT_EMOJI[cat]||'🌀';
       var iconHtml=icon.startsWith('data:')?'<img src="'+icon+'" style="width:24px;height:24px;border-radius:5px;object-fit:cover">':'<span style="font-size:18px">'+icon+'</span>';
-      rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+      var _isExpHidden=state.hiddenExpCats&&state.hiddenExpCats[grp]&&state.hiddenExpCats[grp].includes(cat);
+      rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px;opacity:'+(_isExpHidden?'0.45':'1')+'">'
         +'<div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="openIconPickerFor(\'expCat\',\''+cat+'\',null)">'
           +iconHtml
           +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
           +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
-        +((state.hiddenExpCats&&state.hiddenExpCats[grp]&&state.hiddenExpCats[grp].includes(cat))?'<span style="font-size:9px;background:rgba(239,68,68,0.12);color:var(--red);border-radius:5px;padding:1px 6px;font-weight:900">HIDDEN</span>':'')
+        +(_isExpHidden?'<span style="font-size:9px;background:rgba(239,68,68,0.12);color:var(--red);border-radius:5px;padding:1px 6px;font-weight:900">HIDDEN</span>':'')
         +'</div>'
         +(isBuiltIn
-          ?((state.hiddenExpCats&&state.hiddenExpCats[grp]&&state.hiddenExpCats[grp].includes(cat))
-            ?'<span onclick="unhideBuiltInExpCat(\''+grp+'\',\''+cat+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
-            :'<span onclick="hideBuiltInExpCat(\''+grp+'\',\''+cat+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+          ?(_isExpHidden
+            ?'<span onclick="event.stopPropagation();unhideBuiltInExpCat(\''+grp+'\',\''+cat+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="event.stopPropagation();hideBuiltInExpCat(\''+grp+'\',\''+cat+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
           )
           :'<span onclick="deleteCustomCat(\''+grp+'\',\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
         )
@@ -5215,6 +5247,21 @@ function renderCustomCatsList(){
   var preview=document.getElementById('customCatsPreview');
   var customCount=Object.values(state.customExpCats||{}).reduce(function(s,a){return s+a.length;},0);
   if(preview) preview.textContent=customCount>0?customCount+' custom added':'Add or remove categories';
+}
+function hideAllExpGroup(grp){
+  var base=JSON.parse(JSON.stringify(EXPENSE_CATS_GROUPED));
+  var builtInCats=base[grp]||[];
+  if(!state.hiddenExpCats) state.hiddenExpCats={};
+  if(!state.hiddenExpCats[grp]) state.hiddenExpCats[grp]=[];
+  builtInCats.forEach(function(c){ if(!state.hiddenExpCats[grp].includes(c)) state.hiddenExpCats[grp].push(c); });
+  saveState(); renderCustomCatsList();
+  showToast('All '+grp+' categories hidden','yellow');
+}
+function showAllExpGroup(grp){
+  if(!state.hiddenExpCats||!state.hiddenExpCats[grp]) return;
+  delete state.hiddenExpCats[grp];
+  saveState(); renderCustomCatsList();
+  showToast('All '+grp+' categories shown','green');
 }
 function addCustomCat(){
   var inp=document.getElementById('newCatInput');
@@ -5242,13 +5289,13 @@ function hideBuiltInExpCat(grp,cat){
   if(!state.hiddenExpCats) state.hiddenExpCats={};
   if(!state.hiddenExpCats[grp]) state.hiddenExpCats[grp]=[];
   if(!state.hiddenExpCats[grp].includes(cat)) state.hiddenExpCats[grp].push(cat);
-  saveState(); renderCustomCatsList(); showToast(cat+' hidden','yellow');
+  saveState(); renderCustomCatsList();
 }
 function unhideBuiltInExpCat(grp,cat){
   if(!state.hiddenExpCats||!state.hiddenExpCats[grp]) return;
   state.hiddenExpCats[grp]=state.hiddenExpCats[grp].filter(function(c){return c!==cat;});
   if(!state.hiddenExpCats[grp].length) delete state.hiddenExpCats[grp];
-  saveState(); renderCustomCatsList(); showToast(cat+' restored','green');
+  saveState(); renderCustomCatsList();
 }
 function deleteCustomCat(grp,cat){
   if(!state.customExpCats||!state.customExpCats[grp]) return;
@@ -5266,7 +5313,15 @@ function renderCustomIncomeCatsList(){
   if(!wrap) return;
   var all=_builtInIncomeCats.concat((state.customIncomeCats||[]));
   var hidden=state.hiddenIncomeCats||[];
-  var rows='';
+  var hiddenBuiltIn=_builtInIncomeCats.filter(function(c){return hidden.includes(c);});
+  var allHidden=hiddenBuiltIn.length===_builtInIncomeCats.length;
+  var anyHidden=hiddenBuiltIn.length>0;
+  var hideAllBtn='<span onclick="hideAllIncomeCats()" style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:2px 8px">Hide All</span>';
+  var showAllBtn='<span onclick="showAllIncomeCats()" style="font-size:10px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px">Show All</span>';
+  var rows='<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px">'
+    +(anyHidden?showAllBtn:'')
+    +(!allHidden?hideAllBtn:'')
+  +'</div>';
   all.forEach(function(cat){
     var isBuiltIn=_builtInIncomeCats.includes(cat);
     var isHidden=hidden.includes(cat);
@@ -5280,8 +5335,8 @@ function renderCustomIncomeCatsList(){
       +'<div style="display:flex;align-items:center;gap:6px">'
         +(isBuiltIn
           ?(isHidden
-            ?'<span onclick="unhideBuiltInIncomeCat(\''+cat+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
-            :'<span onclick="hideBuiltInIncomeCat(\''+cat+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+            ?'<span onclick="event.stopPropagation();unhideBuiltInIncomeCat(\''+cat+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="event.stopPropagation();hideBuiltInIncomeCat(\''+cat+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
           )
           :'<span onclick="deleteCustomIncomeCat(\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
         )
@@ -5297,12 +5352,12 @@ function renderCustomIncomeCatsList(){
 function hideBuiltInIncomeCat(cat){
   if(!state.hiddenIncomeCats) state.hiddenIncomeCats=[];
   if(!state.hiddenIncomeCats.includes(cat)) state.hiddenIncomeCats.push(cat);
-  saveState(); renderCustomIncomeCatsList(); showToast(cat+' hidden','yellow');
+  saveState(); renderCustomIncomeCatsList();
 }
 function unhideBuiltInIncomeCat(cat){
   if(!state.hiddenIncomeCats) return;
   state.hiddenIncomeCats=state.hiddenIncomeCats.filter(function(c){return c!==cat;});
-  saveState(); renderCustomIncomeCatsList(); showToast(cat+' restored','green');
+  saveState(); renderCustomIncomeCatsList();
 }
 function addCustomIncomeCat(){
   var inp=document.getElementById('newIncCatInput');
@@ -5332,6 +5387,17 @@ function deleteCustomIncomeCat(cat){
   saveState();
   renderCustomIncomeCatsList();
   showToast(cat+' removed','red');
+}
+function hideAllIncomeCats(){
+  if(!state.hiddenIncomeCats) state.hiddenIncomeCats=[];
+  _builtInIncomeCats.forEach(function(c){ if(!state.hiddenIncomeCats.includes(c)) state.hiddenIncomeCats.push(c); });
+  saveState(); renderCustomIncomeCatsList();
+  showToast('All income sources hidden','yellow');
+}
+function showAllIncomeCats(){
+  state.hiddenIncomeCats=[];
+  saveState(); renderCustomIncomeCatsList();
+  showToast('All income sources shown','green');
 }
 
 // ── ICON MANAGER ──────────────────────────────────────────────────────────
@@ -5494,19 +5560,42 @@ var _builtInPlatNames=['Offline / Store','Amazon','Flipkart','Meesho','Myntra','
 function renderCustomPlatformsList(){
   var wrap=document.getElementById('customPlatformsList');
   if(!wrap) return;
-  var all=getPlatforms();
-  wrap.innerHTML=all.map(function(p){
+  // Build full unfiltered list so hidden items still appear with Show button
+  var _builtInPlats=[
+    {name:'Offline / Store',emoji:'🏪'},{name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
+    {name:'Meesho',emoji:'🛍️'},{name:'Myntra',emoji:'👗'},{name:'Nykaa',emoji:'💄'},
+    {name:'Reliance / JioMart',emoji:'🏬'},{name:'DMart',emoji:'🛒'},{name:'BigBasket',emoji:'🥦'},
+    {name:'Swiggy',emoji:'🛵'},{name:'Zomato',emoji:'🍽️'},{name:'Dunzo',emoji:'🚴'},
+    {name:'Blinkit',emoji:'⚡'},{name:'Zepto',emoji:'🏃'},{name:'Ola',emoji:'🚕'},
+    {name:'Uber',emoji:'🚗'},{name:'Rapido',emoji:'🏍️'},{name:'PhonePe',emoji:'📱'},
+    {name:'Paytm',emoji:'💙'},{name:'IRCTC',emoji:'🚆'},{name:'MakeMyTrip',emoji:'✈️'},
+    {name:'BookMyShow',emoji:'🎬'},{name:'Other',emoji:'🏪'}
+  ];
+  var all=_builtInPlats.slice();
+  if(state&&Array.isArray(state.customPlatforms)){
+    state.customPlatforms.forEach(function(p){ if(!all.find(function(b){return b.name===p.name;})) all.push(p); });
+  }
+  var hiddenPlats=(state.hiddenPlatforms||[]).filter(function(n){return _builtInPlatNames.includes(n);});
+  var anyPlatHidden=hiddenPlats.length>0;
+  var allPlatHidden=hiddenPlats.length===_builtInPlatNames.length;
+  var platBulkBar='<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px">'
+    +(anyPlatHidden?'<span onclick="showAllPlatforms()" style="font-size:10px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px">Show All</span>':'')
+    +(!allPlatHidden?'<span onclick="hideAllPlatforms()" style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:2px 8px">Hide All</span>':'')
+  +'</div>';
+  wrap.innerHTML=platBulkBar+all.map(function(p){
     var isBuiltIn=_builtInPlatNames.includes(p.name);
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+    var isPlatHidden=state.hiddenPlatforms&&state.hiddenPlatforms.includes(p.name);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px;opacity:'+(isPlatHidden?'0.45':'1')+'">'
       +'<div style="display:flex;align-items:center;gap:10px">'
         +'<span style="font-size:20px">'+p.emoji+'</span>'
         +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+p.name+'</span>'
         +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+        +(isPlatHidden?'<span style="font-size:9px;background:rgba(239,68,68,0.12);color:var(--red);border-radius:5px;padding:1px 6px;font-weight:900">HIDDEN</span>':'')
       +'</div>'
       +(isBuiltIn
           ?((state.hiddenPlatforms&&state.hiddenPlatforms.includes(p.name))
-            ?'<span onclick="unhideBuiltInPlatform(\''+p.name+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
-            :'<span onclick="hideBuiltInPlatform(\''+p.name+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+            ?'<span onclick="event.stopPropagation();unhideBuiltInPlatform(\''+p.name+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="event.stopPropagation();hideBuiltInPlatform(\''+p.name+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
           )
           :'<span onclick="deleteCustomPlatform(\''+p.name+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
         )
@@ -5536,12 +5625,12 @@ function addCustomPlatform(){
 function hideBuiltInPlatform(name){
   if(!state.hiddenPlatforms) state.hiddenPlatforms=[];
   if(!state.hiddenPlatforms.includes(name)) state.hiddenPlatforms.push(name);
-  saveState(); renderCustomPlatformsList(); showToast(name+' hidden','yellow');
+  saveState(); renderCustomPlatformsList();
 }
 function unhideBuiltInPlatform(name){
   if(!state.hiddenPlatforms) return;
   state.hiddenPlatforms=state.hiddenPlatforms.filter(function(n){return n!==name;});
-  saveState(); renderCustomPlatformsList(); showToast(name+' restored','green');
+  saveState(); renderCustomPlatformsList();
 }
 function deleteCustomPlatform(name){
   if(!state.customPlatforms) return;
@@ -5550,25 +5639,49 @@ function deleteCustomPlatform(name){
   renderCustomPlatformsList();
   showToast(name+' removed','red');
 }
+function hideAllPlatforms(){
+  if(!state.hiddenPlatforms) state.hiddenPlatforms=[];
+  _builtInPlatNames.forEach(function(n){ if(!state.hiddenPlatforms.includes(n)) state.hiddenPlatforms.push(n); });
+  saveState(); renderCustomPlatformsList();
+  showToast('All platforms hidden','yellow');
+}
+function showAllPlatforms(){
+  state.hiddenPlatforms=[];
+  saveState(); renderCustomPlatformsList();
+  showToast('All platforms shown','green');
+}
 
 // ── CUSTOM PAYMENT METHODS ─────────────────────────────────────────────────
 var _builtInPayMethods=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
 function renderCustomPayList(){
   var wrap=document.getElementById('customPayList');
   if(!wrap) return;
-  var all=getPaymentMethods();
-  wrap.innerHTML=all.map(function(m){
+  // Build full unfiltered list so hidden items still appear with Show button
+  var all=_builtInPayMethods.slice();
+  if(state&&Array.isArray(state.customPaymentMethods)){
+    state.customPaymentMethods.forEach(function(m){ if(!all.includes(m)) all.push(m); });
+  }
+  var hiddenPay=(state.hiddenPayMethods||[]).filter(function(n){return _builtInPayMethods.includes(n);});
+  var anyPayHidden=hiddenPay.length>0;
+  var allPayHidden=hiddenPay.length===_builtInPayMethods.length;
+  var payBulkBar='<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px">'
+    +(anyPayHidden?'<span onclick="showAllPayMethods()" style="font-size:10px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px">Show All</span>':'')
+    +(!allPayHidden?'<span onclick="hideAllPayMethods()" style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:2px 8px">Hide All</span>':'')
+  +'</div>';
+  wrap.innerHTML=payBulkBar+all.map(function(m){
     var isBuiltIn=_builtInPayMethods.includes(m);
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
+    var isPayHidden=state.hiddenPayMethods&&state.hiddenPayMethods.includes(m);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px;opacity:'+(isPayHidden?'0.45':'1')+'">'
       +'<div style="display:flex;align-items:center;gap:10px">'
         +'<span style="font-size:18px">'+(_pmIcons[m]||'💳')+'</span>'
         +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+m+'</span>'
         +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+        +(isPayHidden?'<span style="font-size:9px;background:rgba(239,68,68,0.12);color:var(--red);border-radius:5px;padding:1px 6px;font-weight:900">HIDDEN</span>':'')
       +'</div>'
       +(isBuiltIn
           ?((state.hiddenPayMethods&&state.hiddenPayMethods.includes(m))
-            ?'<span onclick="unhideBuiltInPayMethod(\''+m+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
-            :'<span onclick="hideBuiltInPayMethod(\''+m+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+            ?'<span onclick="event.stopPropagation();unhideBuiltInPayMethod(\''+m+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="event.stopPropagation();hideBuiltInPayMethod(\''+m+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
           )
           :'<span onclick="deleteCustomPayMethod(\''+m+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
         )
@@ -5599,12 +5712,12 @@ function addCustomPayMethod(){
 function hideBuiltInPayMethod(name){
   if(!state.hiddenPayMethods) state.hiddenPayMethods=[];
   if(!state.hiddenPayMethods.includes(name)) state.hiddenPayMethods.push(name);
-  saveState(); renderCustomPayList(); showToast(name+' hidden','yellow');
+  saveState(); renderCustomPayList();
 }
 function unhideBuiltInPayMethod(name){
   if(!state.hiddenPayMethods) return;
   state.hiddenPayMethods=state.hiddenPayMethods.filter(function(n){return n!==name;});
-  saveState(); renderCustomPayList(); showToast(name+' restored','green');
+  saveState(); renderCustomPayList();
 }
 function deleteCustomPayMethod(name){
   if(!state.customPaymentMethods) return;
@@ -5612,6 +5725,17 @@ function deleteCustomPayMethod(name){
   saveState();
   renderCustomPayList();
   showToast(name+' removed','red');
+}
+function hideAllPayMethods(){
+  if(!state.hiddenPayMethods) state.hiddenPayMethods=[];
+  _builtInPayMethods.forEach(function(n){ if(!state.hiddenPayMethods.includes(n)) state.hiddenPayMethods.push(n); });
+  saveState(); renderCustomPayList();
+  showToast('All payment methods hidden','yellow');
+}
+function showAllPayMethods(){
+  state.hiddenPayMethods=[];
+  saveState(); renderCustomPayList();
+  showToast('All payment methods shown','green');
 }
 
 function resetAllocTargets(){
@@ -9633,14 +9757,13 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
 })();
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
+// ── Version stamp: change this string on every release to force SW update ──
+var BUILD = 'ft-build-20260503-v19';
+
 (function(){
   if(!('serviceWorker' in navigator)) return;
 
-  // ── Version stamp: change this string on every release to force SW update ──
-  var BUILD = 'ft-build-20260503-v18';
-
   var swCode = [
-    "var CACHE_NAME = '" + BUILD + "';",
     "var SKIP_URLS = ['firestore','googleapis','firebase','anthropic','api.anthropic'];",
 
     // Install: skip waiting immediately so new SW activates without delay
@@ -9747,6 +9870,22 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   }).catch(function(e){
     console.log('[SW] Not available:', e.message);
   });
+})();
+
+// Populate build badge dynamically from BUILD so it never goes stale
+(function(){
+  var verMatch=BUILD.match(/-(v\d+)$/);
+  var ver=verMatch?verMatch[1]:'';
+  var dateMatch=BUILD.match(/ft-build-(\d+)-/);
+  var dateStr=dateMatch?dateMatch[1]:'';
+  var badge=document.getElementById('buildBadge');
+  if(badge) badge.innerHTML='Build '+dateStr+'-'+ver+' · <span style="color:var(--accent)">Latest</span>';
+  var modalLabel=document.getElementById('modalBuildLabel');
+  if(modalLabel){
+    var y=dateStr.slice(0,4),mo=dateStr.slice(4,6),d=dateStr.slice(6,8);
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    modalLabel.textContent=ver+' \u2014 '+d+' '+months[parseInt(mo,10)-1]+' '+y;
+  }
 })();
 
 // ── Force-clear SW cache helper (called from Settings) ──────────────────────
@@ -10627,17 +10766,31 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v18 LATEST -->
+      <!-- v19 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">18</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">19</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v18 — 03 May 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v19 — 03 May 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            ⚡ <b style="color:var(--text)">Bulk Hide / Show All</b> — one-tap Hide All / Show All per group in Expense, Income, Platforms &amp; Pay Methods customise lists
+          </div>
+        </div>
+      </div>
+
+      <!-- v18 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">18</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v18 — 03 May 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             🏷️ <b style="color:var(--text)">Cashback icon fixed</b> — Cashback now correctly shows 🏷️ tag icon; stale saved icons auto-cleared on load<br>
             🗑️ <b style="color:var(--text)">Delete built-in items</b> — Built-in income sources, categories, platforms &amp; pay methods can now be hidden<br>
@@ -10840,7 +10993,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v18 — 03 May 2026</span>
+      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v19 — 03 May 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
