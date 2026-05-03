@@ -1707,7 +1707,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div style="text-align:center;color:var(--text3);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:4px 0 4px">💰 Finance Tracker · Made with ❤️</div>
       <div style="text-align:center;padding-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260404-v17 · <span style="color:var(--accent)">Latest</span></span>
+        <span style="color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.7">Build 20260503-v18 · <span style="color:var(--accent)">Latest</span></span>
         <button onclick="showModal('buildHistoryModal')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;letter-spacing:0.5px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">📋 History</button>
       </div>
     </div>
@@ -2139,7 +2139,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">🗂️ Expense Categories</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom categories to any group. Tap any icon to change it. Built-in categories cannot be deleted.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Manage categories. Tap any icon to change it. Built-in categories can be hidden, custom ones deleted.</div>
     <div id="customCatsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
     <div class="field" style="margin-bottom:8px">
       <div class="field-label">➕ Add New Category</div>
@@ -2173,7 +2173,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">💰 Income Sources</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom income sources. Built-in sources cannot be deleted.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Manage income sources. Built-in sources can be hidden. Custom sources can be deleted.</div>
     <div id="customIncomeCatsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
     <div class="field" style="margin-bottom:8px">
       <div class="field-label">➕ Add New Income Source</div>
@@ -2253,7 +2253,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">🏪 Platforms / Where Bought</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom platforms or shops. Built-in platforms cannot be deleted.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Manage platforms or shops. Built-in platforms can be hidden. Custom ones can be deleted.</div>
     <div id="customPlatformsList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
     <div class="field" style="margin-bottom:8px">
       <div class="field-label">➕ Add New Platform</div>
@@ -2279,7 +2279,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">💳 Payment Methods</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Add custom payment methods. Built-in methods cannot be deleted.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:14px;line-height:1.6">Manage payment methods. Built-in methods can be hidden. Custom ones can be deleted.</div>
     <div id="customPayList" style="margin-bottom:16px;max-height:320px;overflow-y:auto"></div>
     <div class="field" style="margin-bottom:8px">
       <div class="field-label">➕ Add New Method</div>
@@ -2559,6 +2559,8 @@ function getIncomeCats(){
   if(state&&Array.isArray(state.customIncomeCats)){
     state.customIncomeCats.forEach(function(c){ if(!base.includes(c)) base.splice(base.length-1,0,c); });
   }
+  var hidden=state&&state.hiddenIncomeCats||[];
+  if(hidden.length) base=base.filter(function(c){return!hidden.includes(c);});
   return base;
 }
 
@@ -2583,6 +2585,10 @@ function getExpenseCatsGrouped(){
       cats.forEach(function(c){ if(!base[grp].includes(c)) base[grp].push(c); });
     });
   }
+  var hidden=state&&state.hiddenExpCats||{};
+  Object.keys(hidden).forEach(function(grp){
+    if(base[grp]) base[grp]=base[grp].filter(function(c){return!hidden[grp].includes(c);});
+  });
   return base;
 }
 function getExpenseCats(){ return Object.values(getExpenseCatsGrouped()).flat(); }
@@ -2603,6 +2609,8 @@ function getPlatforms(){
       if(!base.find(function(b){ return b.name===p.name; })) base.splice(base.length-1,0,p);
     });
   }
+  var hidden=state&&state.hiddenPlatforms||[];
+  if(hidden.length) base=base.filter(function(p){return!hidden.includes(p.name);});
   return base;
 }
 function getPaymentMethods(){
@@ -2610,6 +2618,8 @@ function getPaymentMethods(){
   if(state&&Array.isArray(state.customPaymentMethods)){
     state.customPaymentMethods.forEach(function(m){ if(!base.includes(m)) base.splice(base.length-1,0,m); });
   }
+  var hidden=state&&state.hiddenPayMethods||[];
+  if(hidden.length) base=base.filter(function(m){return!hidden.includes(m);});
   return base;
 }
 const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat(); // base list — use getExpenseCats() for dynamic (custom) list
@@ -3067,6 +3077,14 @@ function loadState(){
   if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
   if(!state.customPayIcons) state.customPayIcons={};
   // Re-hydrate CAT_EMOJI with any saved custom category emojis (always override to pick up image icons)
+  // First delete any stale built-in icon entries so the hardcoded defaults always win
+  var _builtInDefaultEmojis={'Cashback':'🏷️'};
+  Object.keys(_builtInDefaultEmojis).forEach(function(k){
+    if(state.customCatEmojis[k]===_builtInDefaultEmojis[k]||!state.customCatEmojis[k]) delete state.customCatEmojis[k];
+    // If stored value differs from current default AND matches old wrong values, reset it
+    var _oldIcons=['🏠','💳'];
+    if(_oldIcons.includes(state.customCatEmojis[k])) delete state.customCatEmojis[k];
+  });
   Object.entries(state.customCatEmojis).forEach(function(e){CAT_EMOJI[e[0]]=e[1];});
   // Re-hydrate _pmIcons with saved custom payment method icons
   Object.entries(state.customPayIcons).forEach(function(e){if(!_pmIcons[e[0]])_pmIcons[e[0]]=e[1];});
@@ -5180,8 +5198,15 @@ function renderCustomCatsList(){
           +iconHtml
           +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
           +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+        +((state.hiddenExpCats&&state.hiddenExpCats[grp]&&state.hiddenExpCats[grp].includes(cat))?'<span style="font-size:9px;background:rgba(239,68,68,0.12);color:var(--red);border-radius:5px;padding:1px 6px;font-weight:900">HIDDEN</span>':'')
         +'</div>'
-        +(!isBuiltIn?'<span onclick="deleteCustomCat(\''+grp+'\',\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+        +(isBuiltIn
+          ?((state.hiddenExpCats&&state.hiddenExpCats[grp]&&state.hiddenExpCats[grp].includes(cat))
+            ?'<span onclick="unhideBuiltInExpCat(\''+grp+'\',\''+cat+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="hideBuiltInExpCat(\''+grp+'\',\''+cat+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+          )
+          :'<span onclick="deleteCustomCat(\''+grp+'\',\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
+        )
       +'</div>';
     });
     rows+='</div>';
@@ -5213,6 +5238,18 @@ function addCustomCat(){
   renderCustomCatsList();
   showToast(emoji+' '+name+' added to '+grp,'green');
 }
+function hideBuiltInExpCat(grp,cat){
+  if(!state.hiddenExpCats) state.hiddenExpCats={};
+  if(!state.hiddenExpCats[grp]) state.hiddenExpCats[grp]=[];
+  if(!state.hiddenExpCats[grp].includes(cat)) state.hiddenExpCats[grp].push(cat);
+  saveState(); renderCustomCatsList(); showToast(cat+' hidden','yellow');
+}
+function unhideBuiltInExpCat(grp,cat){
+  if(!state.hiddenExpCats||!state.hiddenExpCats[grp]) return;
+  state.hiddenExpCats[grp]=state.hiddenExpCats[grp].filter(function(c){return c!==cat;});
+  if(!state.hiddenExpCats[grp].length) delete state.hiddenExpCats[grp];
+  saveState(); renderCustomCatsList(); showToast(cat+' restored','green');
+}
 function deleteCustomCat(grp,cat){
   if(!state.customExpCats||!state.customExpCats[grp]) return;
   state.customExpCats[grp]=state.customExpCats[grp].filter(function(c){return c!==cat;});
@@ -5227,23 +5264,45 @@ var _builtInIncomeCats=['Salary','Freelance','Business','Rental','Investment','B
 function renderCustomIncomeCatsList(){
   var wrap=document.getElementById('customIncomeCatsList');
   if(!wrap) return;
-  var all=getIncomeCats();
+  var all=_builtInIncomeCats.concat((state.customIncomeCats||[]));
+  var hidden=state.hiddenIncomeCats||[];
   var rows='';
   all.forEach(function(cat){
     var isBuiltIn=_builtInIncomeCats.includes(cat);
-    rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px">'
-      +'<div style="display:flex;align-items:center;gap:8px">'
+    var isHidden=hidden.includes(cat);
+    rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;background:var(--bg3);border-radius:10px;margin-bottom:5px;opacity:'+(isHidden?'0.45':'1')+'">'
+      +'<div style="display:flex;align-items:center;gap:8px;flex:1">'
         +'<span style="font-size:18px;cursor:pointer" onclick="openIconPickerFor(\'incomeCat\',\''+cat+'\',null)">'+(CAT_EMOJI[cat]||'🌀')+'</span>'
         +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+cat+'</span>'
         +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
+        +(isHidden?'<span style="font-size:9px;background:rgba(239,68,68,0.12);color:var(--red);border-radius:5px;padding:1px 6px;font-weight:900">HIDDEN</span>':'')
       +'</div>'
-      +(!isBuiltIn?'<span onclick="deleteCustomIncomeCat(\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+      +'<div style="display:flex;align-items:center;gap:6px">'
+        +(isBuiltIn
+          ?(isHidden
+            ?'<span onclick="unhideBuiltInIncomeCat(\''+cat+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="hideBuiltInIncomeCat(\''+cat+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+          )
+          :'<span onclick="deleteCustomIncomeCat(\''+cat+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
+        )
+      +'</div>'
     +'</div>';
   });
   wrap.innerHTML=rows||'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">No sources yet</div>';
   var preview=document.getElementById('customIncomeCatsPreview');
   var customCount=(state.customIncomeCats||[]).length;
-  if(preview) preview.textContent=customCount>0?customCount+' custom added':'Add or remove income sources';
+  var hiddenCount=hidden.length;
+  if(preview) preview.textContent=customCount>0||hiddenCount>0?(customCount+' custom, '+hiddenCount+' hidden'):'Add or remove income sources';
+}
+function hideBuiltInIncomeCat(cat){
+  if(!state.hiddenIncomeCats) state.hiddenIncomeCats=[];
+  if(!state.hiddenIncomeCats.includes(cat)) state.hiddenIncomeCats.push(cat);
+  saveState(); renderCustomIncomeCatsList(); showToast(cat+' hidden','yellow');
+}
+function unhideBuiltInIncomeCat(cat){
+  if(!state.hiddenIncomeCats) return;
+  state.hiddenIncomeCats=state.hiddenIncomeCats.filter(function(c){return c!==cat;});
+  saveState(); renderCustomIncomeCatsList(); showToast(cat+' restored','green');
 }
 function addCustomIncomeCat(){
   var inp=document.getElementById('newIncCatInput');
@@ -5358,7 +5417,7 @@ function selectIcon(emoji){
   closeModal('iconPickerModal');
   // re-open parent
   if(t.type==='cat'||t.type==='expCat') setTimeout(function(){showModal('iconManagerModal');},80);
-  else if(t.type==='incomeCat') setTimeout(function(){showModal('iconManagerModal');},80);
+  else if(t.type==='incomeCat') setTimeout(function(){showModal('customIncomeCatsModal');},80);
   else if(t.type==='incomeNew') setTimeout(function(){showModal('customIncomeCatsModal');},80);
 }
 
@@ -5390,7 +5449,7 @@ function handleIconImageUpload(input){
         showToast('Custom image set for '+t.name,'green');
         closeModal('iconPickerModal');
         if(t.type==='cat'||t.type==='expCat') setTimeout(function(){renderIconManagerList();showModal('iconManagerModal');},80);
-        else if(t.type==='incomeCat') setTimeout(function(){renderCustomIncomeCatsList();showModal('iconManagerModal');},80);
+        else if(t.type==='incomeCat') setTimeout(function(){renderCustomIncomeCatsList();showModal('customIncomeCatsModal');},80);
       } else if(t&&t.type==='incomeNew'){
         var el=document.getElementById('newIncCatEmojiPreview');
         if(el){el.dataset.customImg=small;el.innerHTML='<img src="'+small+'" style="width:28px;height:28px;border-radius:6px;object-fit:cover">';}
@@ -5444,7 +5503,13 @@ function renderCustomPlatformsList(){
         +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+p.name+'</span>'
         +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
       +'</div>'
-      +(!isBuiltIn?'<span onclick="deleteCustomPlatform(\''+p.name+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+      +(isBuiltIn
+          ?((state.hiddenPlatforms&&state.hiddenPlatforms.includes(p.name))
+            ?'<span onclick="unhideBuiltInPlatform(\''+p.name+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="hideBuiltInPlatform(\''+p.name+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+          )
+          :'<span onclick="deleteCustomPlatform(\''+p.name+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
+        )
     +'</div>';
   }).join('');
   var preview=document.getElementById('customPlatformsPreview');
@@ -5468,6 +5533,16 @@ function addCustomPlatform(){
   renderCustomPlatformsList();
   showToast(emoji+' '+name+' added','green');
 }
+function hideBuiltInPlatform(name){
+  if(!state.hiddenPlatforms) state.hiddenPlatforms=[];
+  if(!state.hiddenPlatforms.includes(name)) state.hiddenPlatforms.push(name);
+  saveState(); renderCustomPlatformsList(); showToast(name+' hidden','yellow');
+}
+function unhideBuiltInPlatform(name){
+  if(!state.hiddenPlatforms) return;
+  state.hiddenPlatforms=state.hiddenPlatforms.filter(function(n){return n!==name;});
+  saveState(); renderCustomPlatformsList(); showToast(name+' restored','green');
+}
 function deleteCustomPlatform(name){
   if(!state.customPlatforms) return;
   state.customPlatforms=state.customPlatforms.filter(function(p){return p.name!==name;});
@@ -5490,7 +5565,13 @@ function renderCustomPayList(){
         +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+m+'</span>'
         +(isBuiltIn?'<span style="font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:900">BUILT-IN</span>':'')
       +'</div>'
-      +(!isBuiltIn?'<span onclick="deleteCustomPayMethod(\''+m+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>':'')
+      +(isBuiltIn
+          ?((state.hiddenPayMethods&&state.hiddenPayMethods.includes(m))
+            ?'<span onclick="unhideBuiltInPayMethod(\''+m+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:3px 8px">Show</span>'
+            :'<span onclick="hideBuiltInPayMethod(\''+m+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.25);border-radius:6px;padding:3px 8px">Hide</span>'
+          )
+          :'<span onclick="deleteCustomPayMethod(\''+m+'\')" style="color:var(--red);cursor:pointer;font-size:18px;padding:4px;line-height:1">✕</span>'
+        )
     +'</div>';
   }).join('');
   var preview=document.getElementById('customPayPreview');
@@ -5514,6 +5595,16 @@ function addCustomPayMethod(){
   saveState();
   renderCustomPayList();
   showToast(emoji+' '+name+' added','green');
+}
+function hideBuiltInPayMethod(name){
+  if(!state.hiddenPayMethods) state.hiddenPayMethods=[];
+  if(!state.hiddenPayMethods.includes(name)) state.hiddenPayMethods.push(name);
+  saveState(); renderCustomPayList(); showToast(name+' hidden','yellow');
+}
+function unhideBuiltInPayMethod(name){
+  if(!state.hiddenPayMethods) return;
+  state.hiddenPayMethods=state.hiddenPayMethods.filter(function(n){return n!==name;});
+  saveState(); renderCustomPayList(); showToast(name+' restored','green');
 }
 function deleteCustomPayMethod(name){
   if(!state.customPaymentMethods) return;
@@ -9546,7 +9637,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
   if(!('serviceWorker' in navigator)) return;
 
   // ── Version stamp: change this string on every release to force SW update ──
-  var BUILD = 'ft-build-20260404-v17';
+  var BUILD = 'ft-build-20260503-v18';
 
   var swCode = [
     "var CACHE_NAME = '" + BUILD + "';",
@@ -10536,17 +10627,33 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v17 LATEST -->
+      <!-- v18 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">17</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">18</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v17 — 05 Apr 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v18 — 03 May 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🏷️ <b style="color:var(--text)">Cashback icon fixed</b> — Cashback now correctly shows 🏷️ tag icon; stale saved icons auto-cleared on load<br>
+            🗑️ <b style="color:var(--text)">Delete built-in items</b> — Built-in income sources, categories, platforms &amp; pay methods can now be hidden<br>
+            📋 <b style="color:var(--text)">Build history corrected</b> — Duplicate v15 removed, dates &amp; version numbers fixed
+          </div>
+        </div>
+      </div>
+
+      <!-- v17 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">17</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v17 — 05 Apr 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             💰 <b style="color:var(--text)">Opening balance → Money In</b> — Cash/Savings added in Accounts now shows in Money In<br>
             ↩️ <b style="color:var(--text)">Carry forward fixed</b> — opening balances flow into next month automatically<br>
@@ -10599,23 +10706,6 @@ initGoogleDrive();
             🧾 <b style="color:var(--text)">EPFO passbook PDF import</b> — EE/ER/EPS/interest parsed automatically<br>
             💼 <b style="color:var(--text)">Wealth statement fix</b> — no longer shows incorrect positive-only balances<br>
             🏷️ <b style="color:var(--text)">P&amp;L &amp; interest badges</b> added to all asset types
-          </div>
-        </div>
-      </div>
-
-      <!-- v15 -->
-      <div style="display:flex;gap:14px;padding-bottom:20px">
-        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--blue));border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">15</div>
-          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
-        </div>
-        <div style="flex:1;padding-top:6px">
-          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v15 — 1 May 2026</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.8">
-            ✨ <b style="color:var(--text)">Smart auto-emoji for custom lists</b> — Categories, Platforms &amp; Payment Methods now auto-suggest an icon from a 100+ keyword map as you type<br>
-            🔍 <b style="color:var(--text)">Live emoji preview</b> — See the suggested icon update in real-time before adding<br>
-            🏪 <b style="color:var(--text)">Platform emoji override</b> — Optional manual override field; leave blank for smart auto-pick<br>
-            🔁 <b style="color:var(--text)">Emoji persistence</b> — Custom icons saved and restored across sessions
           </div>
         </div>
       </div>
@@ -10750,7 +10840,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span style="color:var(--accent)">v17 — 05 Apr 2026</span>
+      Current build: <span style="color:var(--accent)">v18 — 03 May 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
