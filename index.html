@@ -2155,12 +2155,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <option value="Entertainment">🎬 Entertainment</option>
           <option value="Other" selected>🌀 Other</option>
         </select>
-        <span id="newCatEmojiPreview" style="font-size:22px;min-width:28px;text-align:center;line-height:1">✨</span>
+        <span id="newCatEmojiPreview" onclick="openIconPickerFor('expNew',null,null)" data-manual="" style="font-size:22px;min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;transition:all .15s" title="Tap to pick icon">✨</span>
         <input type="text" class="field-input" id="newCatInput" placeholder="e.g. Pet Care…" style="flex:2;min-width:0"
-          oninput="document.getElementById('newCatEmojiPreview').textContent=autoPickEmoji(this.value)||'✨'"
+          oninput="var p=document.getElementById('newCatEmojiPreview');if(!p.dataset.manual){p.textContent=autoPickEmoji(this.value)||'✨';}"
           onkeydown="if(event.key==='Enter')addCustomCat()">
       </div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">✨ Icon auto-suggested from name</div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">✨ Icon auto-suggested · tap icon to change</div>
     </div>
     <div id="customCatError" style="display:none;color:var(--red);font-size:12px;font-weight:700;margin-bottom:8px;padding:8px 12px;background:rgba(255,69,105,0.08);border-radius:8px"></div>
     <button class="btn-go" onclick="addCustomCat()" style="margin-bottom:8px">➕ Add Category</button>
@@ -2178,9 +2178,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="field" style="margin-bottom:8px">
       <div class="field-label">➕ Add New Income Source</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <span id="newIncCatEmojiPreview" style="font-size:22px;min-width:28px;text-align:center;line-height:1;cursor:pointer" onclick="openIconPickerFor('incomeNew',null,null)">✨</span>
+        <span id="newIncCatEmojiPreview" onclick="openIconPickerFor('incomeNew',null,null)" data-manual="" style="font-size:22px;min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;transition:all .15s" title="Tap to pick icon">✨</span>
         <input type="text" class="field-input" id="newIncCatInput" placeholder="e.g. Rental Income, Cashback…"
-          oninput="document.getElementById('newIncCatEmojiPreview').textContent=autoPickEmoji(this.value)||'✨'"
+          oninput="var p=document.getElementById('newIncCatEmojiPreview');if(!p.dataset.manual){p.textContent=autoPickEmoji(this.value)||'✨';}"
           onkeydown="if(event.key==='Enter')addCustomIncomeCat()">
       </div>
       <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">Tap the icon to pick a custom one</div>
@@ -2196,7 +2196,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal" style="max-height:92vh">
     <div class="modal-handle"></div>
     <div class="modal-title">🎨 Category Icons</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.6">Tap any category to change its icon. Choose from 200+ finance icons or upload your own.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.6">Tap any category icon to change it. Choose from the full icon library.</div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input type="text" class="field-input" id="iconMgrSearch" placeholder="🔍 Search category…" oninput="renderIconManagerList()" style="flex:1">
       <select class="field-input" id="iconMgrFilter" onchange="renderIconManagerList()" style="flex:0 0 110px;font-size:12px">
@@ -2215,16 +2215,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
   <div class="modal" style="max-height:92vh">
     <div class="modal-handle"></div>
     <div class="modal-title" id="iconPickerTitle">🎨 Pick Icon</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:10px">Tap an icon to select, or upload a JPG/PNG image.</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:10px">Tap any icon below to apply it instantly.</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <input type="text" class="field-input" id="iconPickerSearch" placeholder="🔍 Search icons…" oninput="renderIconPickerGrid()" style="flex:1">
-      <select class="field-input" id="iconPickerGroup" onchange="renderIconPickerGrid()" style="flex:0 0 110px;font-size:12px">
+      <select class="field-input" id="iconPickerGroup" onchange="renderIconPickerGrid()" style="flex:0 0 130px;font-size:12px">
         <option value="all">All Groups</option>
         <option value="Finance">💹 Finance</option>
         <option value="Income">💰 Income</option>
         <option value="Home">🏠 Home</option>
-        <option value="Food">🍔 Food</option>
+        <option value="Food & Drink">🍔 Food & Drink</option>
+        <option value="Animals & Nature">🐶 Animals & Nature</option>
         <option value="Transport">🚗 Transport</option>
+        <option value="Travel & Places">🗺️ Travel & Places</option>
+        <option value="Activity">⚽ Activity</option>
         <option value="Shopping">🛍️ Shopping</option>
         <option value="Health">❤️ Health</option>
         <option value="Education">📚 Education</option>
@@ -2232,18 +2235,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <option value="Symbols">✨ Symbols</option>
       </select>
     </div>
-    <div id="iconPickerGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;overflow-y:auto;max-height:300px;padding:4px 0"></div>
-    <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:12px;border:1px dashed var(--border2)">
-      <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📎 Upload Your Own (JPG/PNG)</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="flex:1;background:var(--accent);color:#fff;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;text-align:center;cursor:pointer">
-          📁 Choose Image
-          <input type="file" accept="image/*" id="iconPickerFileInput" style="display:none" onchange="handleIconImageUpload(this)">
-        </label>
-        <div id="iconPickerUploadPreview" style="font-size:28px;min-width:40px;text-align:center">📷</div>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px">Stored as a tiny 32×32 thumbnail</div>
-    </div>
+    <div id="iconPickerGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;overflow-y:auto;max-height:420px;padding:4px 0"></div>
     <button class="btn-cancel" onclick="closeModal('iconPickerModal')" style="margin-top:10px">✕ Cancel</button>
   </div>
 </div>
@@ -2490,10 +2482,14 @@ const CAT_EMOJI={
   Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🛢️',Internet:'🌐',Mobile:'📱',
   // Food
   Grocery:'🧺',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',Bakery:'🥐',
+  Coffee:'☕',Tea:'🫖',Milk:'🥛',Sweet:'🍬',Juice:'🥤','Ice Cream':'🍦',
+  Pizza:'🍕',Burger:'🍔',Biryani:'🍛',Cake:'🎂',Chocolate:'🍫',
+  Honey:'🍯',Eggs:'🥚',Cheese:'🧀',Snacks:'🍿',Candy:'🍭',
   // Transport
   Fuel:'⛽',Train:'🚆',Bus:'🚌',Flight:'✈️',Cab:'🚕',Metro:'🚇',Parking:'🅿️',
   // Health
   'Doctor/Hospital':'🏥',Medicine:'💊',Insurance:'🛡️','Health Checkup':'🩺',
+  Gym:'🏋️',Yoga:'🧘',Dental:'🦷',
   // Education
   'School Fees':'🏫','College Fees':'🎓',Books:'📖',Tuition:'✏️','Online Course':'🎧',
   // Finance
@@ -2502,11 +2498,14 @@ const CAT_EMOJI={
   Shopping:'🛍️',Clothing:'👗',Electronics:'🔌',Furniture:'🛋️',
   // Entertainment
   OTT:'📺',Movies:'🎬',Games:'🎮',Sports:'⚽',Events:'🎪',
+  Cricket:'🏏',Football:'⚽',Swimming:'🏊',Cycling:'🚴',
   // Investment Expenses
   'Mutual Fund Buy':'📈','SIP':'🔁','Stocks Buy':'📊','ETF Buy':'📉',
   'Crypto Buy':'₿','Gold Buy':'🥇','NPS/PPF':'🏛️','Bonds Buy':'📜','FD Deposit':'🏦',
   // Other
-  'Personal Care':'🪥',Travel:'🗺️',Flowers:'🌸',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚍',Health:'🩹',Entertainment:'🎭',Other:'🌀'
+  'Personal Care':'🪥',Travel:'🗺️',Flowers:'🌸',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚍',Health:'🩹',Entertainment:'🎭',
+  Pet:'🐶',Garden:'🌱',Donation:'🙏',Subscription:'🔄',Stationery:'✏️',
+  'Toys & Kids':'🧸',Baby:'👶',Wedding:'💒',Party:'🎊',Holiday:'🏖️',Other:'🌀'
 };
 const CAT_COLOR={
   // Top-level groups (used as fallback)
@@ -3541,8 +3540,9 @@ function showModal(id){
   if(id==='emailAuthModal'){document.getElementById('authError').style.display='none';setEmailTab('login');}
   if(id==='budgetModal')renderBudgetInputs();
   if(id==='familyModal'){renderFamilyMembersList();document.getElementById('newMemberInput').value='';document.getElementById('familyModalError').style.display='none';}
-  if(id==='customCatsModal'){renderCustomCatsList();document.getElementById('newCatInput').value='';var p1=document.getElementById('newCatEmojiPreview');if(p1)p1.textContent='✨';document.getElementById('customCatError').style.display='none';}
-  if(id==='customIncomeCatsModal'){renderCustomIncomeCatsList();document.getElementById('newIncCatInput').value='';document.getElementById('newIncCatEmojiPreview').textContent='✨';document.getElementById('customIncCatError').style.display='none';}
+  if(id==='customCatsModal'){renderCustomCatsList();if(!_iconPickerReturning){document.getElementById('newCatInput').value='';var p1=document.getElementById('newCatEmojiPreview');if(p1){p1.textContent='✨';p1.dataset.manual='';}}document.getElementById('customCatError').style.display='none';}
+  if(id==='customIncomeCatsModal'){renderCustomIncomeCatsList();if(!_iconPickerReturning){document.getElementById('newIncCatInput').value='';var p2=document.getElementById('newIncCatEmojiPreview');if(p2){p2.textContent='✨';p2.dataset.manual='';}}document.getElementById('customIncCatError').style.display='none';}
+  _iconPickerReturning=false;
   if(id==='iconManagerModal'){renderIconManagerList();}
   if(id==='iconPickerModal'){renderIconPickerGrid();}
   if(id==='customPlatformsModal'){renderCustomPlatformsList();document.getElementById('newPlatName').value='';document.getElementById('newPlatEmoji').value='';var p2=document.getElementById('newPlatEmojiPreview');if(p2)p2.textContent='✨';document.getElementById('customPlatError').style.display='none';}
@@ -5273,7 +5273,8 @@ function addCustomCat(){
   var allCats=getExpenseCats();
   if(allCats.map(function(c){return c.toLowerCase();}).includes(name.toLowerCase())){err.textContent='"'+name+'" already exists';err.style.display='block';return;}
   err.style.display='none';
-  var emoji=autoPickEmoji(name);
+  var previewEl=document.getElementById('newCatEmojiPreview');
+  var emoji=(previewEl&&previewEl.textContent&&previewEl.textContent!=='✨')?previewEl.textContent:autoPickEmoji(name)||'🌀';
   CAT_EMOJI[name]=emoji;
   if(!state.customExpCats) state.customExpCats={};
   if(!state.customExpCats[grp]) state.customExpCats[grp]=[];
@@ -5281,6 +5282,7 @@ function addCustomCat(){
   if(!state.customCatEmojis) state.customCatEmojis={};
   state.customCatEmojis[name]=emoji;
   inp.value='';
+  if(previewEl){previewEl.textContent='✨';previewEl.dataset.manual='';}
   saveState();
   renderCustomCatsList();
   showToast(emoji+' '+name+' added to '+grp,'green');
@@ -5368,15 +5370,14 @@ function addCustomIncomeCat(){
   if(all.map(function(c){return c.toLowerCase();}).includes(name.toLowerCase())){err.textContent='"'+name+'" already exists';err.style.display='block';return;}
   err.style.display='none';
   var emojiEl=document.getElementById('newIncCatEmojiPreview');
-  var emoji=(emojiEl&&emojiEl.dataset.customImg)||emojiEl.textContent||autoPickEmoji(name);
-  if(emoji==='✨') emoji=autoPickEmoji(name)||'💰';
+  var emoji=(emojiEl&&emojiEl.textContent&&emojiEl.textContent!=='✨')?emojiEl.textContent:autoPickEmoji(name)||'💰';
   CAT_EMOJI[name]=emoji;
   if(!state.customIncomeCats) state.customIncomeCats=[];
   state.customIncomeCats.push(name);
   if(!state.customCatEmojis) state.customCatEmojis={};
   state.customCatEmojis[name]=emoji;
   inp.value='';
-  emojiEl.textContent='✨';
+  emojiEl.textContent='✨';emojiEl.dataset.manual='';
   saveState();
   renderCustomIncomeCatsList();
   showToast(emoji+' '+name+' added','green');
@@ -5406,16 +5407,20 @@ const ICON_LIBRARY={
   'Finance':['💰','💵','💴','💶','💷','💸','💳','🏦','🏧','💹','📈','📉','📊','🧾','💎','🪙','💱','🏷️','🔖','📑','🗒️','📜','📋','📌','📍','🔐','🔒','🔑','🗝️','⚖️','🏛️','🤑'],
   'Income':['💼','💻','🏢','🏘️','🎁','🎉','🤝','👴','🏷️','💰','🔥','↩️','🎓','🏆','🎰','🪙','🌟','💡','📲','🛎️','🧧','💝','🎊','🥇','🥈','🥉','🏅','🎖️','⭐','🌈'],
   'Home':['🏠','🏡','🏗️','⚡','💧','🛢️','🌐','📱','🔧','🧹','🛋️','🛏️','🪑','🚿','🛁','🪞','🧺','🧲','🔌','💡','🕯️','🪔','🏚️','🏰','🏯','🏟️','🏬','🏪','🏩','🏨'],
-  'Food':['🍽️','🧺','🍎','🍴','🛵','🥐','☕','🥛','🍬','🥤','🍦','🍕','🍔','🌮','🍜','🍱','🥗','🍛','🍣','🥘','🫕','🧆','🧇','🥞','🍳','🥚','🧀','🥩','🍗','🍖','🌯','🥙'],
-  'Transport':['⛽','🚕','🚆','🚌','✈️','🚇','🅿️','🏍️','🛺','🛣️','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚖','🚗','🚘','🚙','🚚','🚛','🚜','🏎️','🛻','🛵','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','⛽','🚨','🚥','🚦','🛑'],
-  'Shopping':['🛍️','👗','🔌','📦','👟','⌚','💄','🪮','🎽','👔','👕','👖','🩱','🩲','🩳','👙','👗','👘','🥻','🩴','👠','👡','👢','👞','🥾','🧢','👒','🪖','⛑️','👑','💍','💎','👓','🕶️','🥽','🌂','☂️'],
+  'Food & Drink':['🍽️','🍴','🥄','🍳','🥘','🫕','🥗','🫙','🧂','🫒','🥚','🧀','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🌮','🌯','🫔','🧆','🧇','🥞','🧈','🥓','🥙','🧄','🧅','🥔','🍠','🫛','🥦','🥬','🥒','🌽','🥕','🧇','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍞','🥖','🥨','🥐','🫓','🥯','🍤','🦐','🦑','🦞','🦀','🦪','🍣','🍤','🍙','🍚','🍜','🍝','🫕','🍛','🍲','🥣','🥗','🍿','🧂','🥫','🍱','🥡','🍡','🍧','🍨','🍦','🥧','🍰','🎂','🍮','🍭','🍬','🍫','🍩','🍪','🌰','🍯','🧃','🥤','🧋','☕','🫖','🍵','🧉','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🍾','🫗','🧊','🥛','🍼','🫙'],
+  'Animals & Nature':['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪲','🦟','🦗','🪳','🕷️','🦂','🐢','🐍','🦎','🐊','🦕','🦖','🐳','🐋','🐬','🦭','🐟','🐠','🐡','🦈','🐙','🦑','🦐','🦞','🦀','🪸','🐚','🪨','🌊','🐾','🐉','🌿','🍀','☘️','🌱','🌲','🌳','🌴','🌵','🎋','🎍','🍁','🍂','🍃','🪺','🪹','🍄','🌾','💐','🌷','🌹','🥀','🌺','🌸','🌼','🌻','🌞','🌝','🌛','🌜','🌚','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','🌙','🌟','⭐','🌠','☁️','⛅','🌤️','🌥️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','🌀','🌈','🌂','☂️','🌊','🌬️','🔥','💧','🌊'],
+  'Transport':['⛽','🚕','🚆','🚌','✈️','🚇','🅿️','🏍️','🛺','🛣️','🚂','🚃','🚄','🚅','🚈','🚉','🚊','🚝','🚞','🚋','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚖','🚗','🚘','🚙','🚚','🚛','🚜','🏎️','🛻','🛵','🛺','🚲','🛴','🛹','🛼','🚏','🛤️','🚨','🚥','🚦','🛑','⚓','🛟','⛵','🚤','🛥️','🛳️','🚢','🛶','🪂','✈️','🛩️','🚀','🛸','🚁','🛻','🚠','🚡','🚟','🚃','🚋'],
+  'Travel & Places':['🌍','🌎','🌏','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','♾️','🎠','🎡','🎢','💈','🎪','🛎️','🗿','🗺️','🧳','🪬','🎫','🎟️','🏷️','🔭','🔍','🗓️'],
+  'Activity':['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🏓','🏸','🏒','🥍','🏑','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🎗️','🎫','🎟️','🎪','🎭','🎨','🎬','🎤','🎧','🎼','🎵','🎶','🎹','🥁','🎷','🎺','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩','🎁','🎀','🎊','🎉','🧨','🎆','🎇','🎈'],
+  'Shopping':['🛍️','👗','🔌','📦','👟','⌚','💄','🪮','🎽','👔','👕','👖','🩱','🩲','🩳','👙','👘','🥻','🩴','👠','👡','👢','👞','🥾','🧢','👒','🪖','⛑️','👑','💍','💎','👓','🕶️','🥽','🌂','☂️','👜','👝','🎒','🧳','💼','🪭','🪬','🪄'],
   'Health':['🏥','💊','🛡️','🩺','💪','🦷','👓','🧠','🩹','🩼','🦽','🦾','🫀','🫁','🧬','🔬','🩻','🧪','⚕️','🏋️','🧘','🤸','🏊','🚴','🧗','🤾','⛹️','🤼'],
   'Education':['🏫','🎓','📖','🎧','📝','👶','📚','✏️','🖊️','🖋️','📐','📏','🗓️','📆','📅','🗃️','📁','📂','🗂️','📓','📔','📒','📕','📗','📘','📙','📃','📄'],
   'Entertainment':['📺','🎬','🎵','🎮','🎪','🎭','🎨','🎤','🎧','📻','🎸','🎹','🥁','🎷','🎺','🎻','🪕','🎲','🎯','🎳','🎰','🃏','🀄','🎠','🎡','🎢','🎈','🎆','🎇','🧨','🎉','🎊','🎋','🎍','🎎','🎐','🎑'],
   'Symbols':['✨','🌀','🌟','⭐','💫','🔥','⚡','🌈','🌊','🌿','🍀','🌸','🌺','🌻','🌹','🌷','🌵','🌴','🍁','🍂','🍃','🎯','🧩','🔮','🪄','🎀','💥','🌙','☀️','🌤️','⛅','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️']
 };
 
-var _iconPickerTarget=null; // {type:'cat'|'incomeCat'|'expCat'|'incomeNew', name:str, callback:fn}
+var _iconPickerTarget=null; // {type:'cat'|'incomeCat'|'expCat'|'incomeNew'|'expNew', name:str, callback:fn}
+var _iconPickerReturning=false; // true when returning to parent modal after icon pick — prevents emoji preview reset
 
 function openIconPickerFor(type,name,callback){
   _iconPickerTarget={type:type,name:name,callback:callback};
@@ -5423,8 +5428,6 @@ function openIconPickerFor(type,name,callback){
   if(title) title.textContent='🎨 Pick Icon'+(name?' for '+name:'');
   document.getElementById('iconPickerSearch').value='';
   document.getElementById('iconPickerGroup').value='all';
-  document.getElementById('iconPickerUploadPreview').innerHTML='📷';
-  document.getElementById('iconPickerUploadPreview').dataset.dataUrl='';
   renderIconPickerGrid();
   closeModal('iconManagerModal');
   closeModal('customIncomeCatsModal');
@@ -5477,55 +5480,20 @@ function selectIcon(emoji){
     showToast('Icon updated for '+t.name,'green');
   } else if(t.type==='incomeNew'){
     var el=document.getElementById('newIncCatEmojiPreview');
-    if(el){el.textContent=emoji;el.dataset.customImg='';}
+    if(el){el.textContent=emoji;el.dataset.manual='1';}
+  } else if(t.type==='expNew'){
+    var el2=document.getElementById('newCatEmojiPreview');
+    if(el2){el2.textContent=emoji;el2.dataset.manual='1';}
   }
   if(t.callback) t.callback(emoji);
   closeModal('iconPickerModal');
-  // re-open parent
+  // re-open parent modal — flag prevents emoji preview from being reset
+  _iconPickerReturning=true;
   if(t.type==='cat'||t.type==='expCat') setTimeout(function(){showModal('iconManagerModal');},80);
   else if(t.type==='incomeCat') setTimeout(function(){showModal('customIncomeCatsModal');},80);
   else if(t.type==='incomeNew') setTimeout(function(){showModal('customIncomeCatsModal');},80);
-}
-
-function handleIconImageUpload(input){
-  var file=input.files&&input.files[0];
-  if(!file) return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var dataUrl=e.target.result;
-    // Resize to 32x32 via canvas
-    var img=new Image();
-    img.onload=function(){
-      var canvas=document.createElement('canvas');
-      canvas.width=32;canvas.height=32;
-      var ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,32,32);
-      var small=canvas.toDataURL('image/png',0.8);
-      // Show preview
-      var prev=document.getElementById('iconPickerUploadPreview');
-      prev.innerHTML='<img src="'+small+'" style="width:32px;height:32px;border-radius:6px;object-fit:cover">';
-      prev.dataset.dataUrl=small;
-      // Apply
-      var t=_iconPickerTarget;
-      if(t&&t.name){
-        CAT_EMOJI[t.name]=small;
-        if(!state.customCatEmojis) state.customCatEmojis={};
-        state.customCatEmojis[t.name]=small;
-        saveState();
-        showToast('Custom image set for '+t.name,'green');
-        closeModal('iconPickerModal');
-        if(t.type==='cat'||t.type==='expCat') setTimeout(function(){renderIconManagerList();showModal('iconManagerModal');},80);
-        else if(t.type==='incomeCat') setTimeout(function(){renderCustomIncomeCatsList();showModal('customIncomeCatsModal');},80);
-      } else if(t&&t.type==='incomeNew'){
-        var el=document.getElementById('newIncCatEmojiPreview');
-        if(el){el.dataset.customImg=small;el.innerHTML='<img src="'+small+'" style="width:28px;height:28px;border-radius:6px;object-fit:cover">';}
-        closeModal('iconPickerModal');
-        setTimeout(function(){showModal('customIncomeCatsModal');},80);
-      }
-    };
-    img.src=dataUrl;
-  };
-  reader.readAsDataURL(file);
+  else if(t.type==='expNew') setTimeout(function(){showModal('customCatsModal');},80);
+  else _iconPickerReturning=false;
 }
 
 function renderIconManagerList(){
