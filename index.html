@@ -941,6 +941,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📅 Income vs Expense · 6 Months</div>
         <div style="height:200px"><canvas id="incExpChart"></canvas></div>
       </div>
+      <!-- Expense Trend: Day / Week / Month -->
+      <div class="box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div>
+            <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">🔥 Expense Trend</div>
+            <div id="expTrendSubtitle" style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px"></div>
+          </div>
+          <div style="display:flex;gap:4px;background:var(--bg3);border-radius:10px;padding:3px;border:1px solid var(--border2)">
+            <button id="etab-day"  onclick="setExpTrendTab('day')"   style="padding:4px 11px;font-size:10px;font-weight:800;border:none;border-radius:7px;cursor:pointer;transition:all .2s;background:var(--accent);color:var(--accent-text);letter-spacing:.3px">Day</button>
+            <button id="etab-week" onclick="setExpTrendTab('week')"  style="padding:4px 11px;font-size:10px;font-weight:800;border:none;border-radius:7px;cursor:pointer;transition:all .2s;background:transparent;color:var(--text2);letter-spacing:.3px">Week</button>
+            <button id="etab-month" onclick="setExpTrendTab('month')" style="padding:4px 11px;font-size:10px;font-weight:800;border:none;border-radius:7px;cursor:pointer;transition:all .2s;background:transparent;color:var(--text2);letter-spacing:.3px">Month</button>
+          </div>
+        </div>
+        <div style="height:190px"><canvas id="expTrendChart"></canvas></div>
+        <div id="expTrendSummary" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
       <!-- Yearly Summary -->
       <div class="box">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">📆 Yearly Summary</div>
@@ -1322,6 +1338,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="page" id="page-trends">
       <div class="sec-head"><div class="sec-title">📊 Spending Trends</div></div>
       <div class="trend-period" id="trendPeriodBtns">
+        <div class="trend-pill" onclick="setTrendPeriod('day',this)">Daily</div>
         <div class="trend-pill on" onclick="setTrendPeriod('week',this)">Weekly</div>
         <div class="trend-pill" onclick="setTrendPeriod('month',this)">Monthly</div>
         <div class="trend-pill" onclick="setTrendPeriod('year',this)">Yearly</div>
@@ -3040,7 +3057,7 @@ let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=9999;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
 function closeAddMenu(){addMenuOpen=false;const m=document.getElementById('addMenu');if(m)m.style.display='none';const fab=document.getElementById('fab');if(fab)fab.textContent='➕';}
 document.addEventListener('click',function(e){if(!addMenuOpen)return;const menu=document.getElementById('addMenu');const fab=document.getElementById('fab');if(menu&&!menu.contains(e.target)&&fab&&!fab.contains(e.target))closeAddMenu();});
-let txType='income',goalIcon='🏠',chartType='pie',charts={},pinBuf='',curPage='home',histFilt='all',histMemberFilt='all',txRecurring=false;
+let txType='income',goalIcon='🏠',chartType='pie',charts={},pinBuf='',curPage='home',histFilt='all',histMemberFilt='all',txRecurring=false,expTrendTab='day';
 let acctColor='#22c55e',recurType='expense',selectedBillCat='Bills',scanResult=null;
 
 // ======== PERSIST ========
@@ -4469,7 +4486,22 @@ function renderHistory(){
   let html='';
   Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(function(date){
     var rows=groups[date].sort(function(a,b){return b.sortKey.localeCompare(a.sortKey);});
-    html+=`<div style="font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px">${formatDate(date)}</div><div class="box" style="padding:8px 14px">`;
+    // compute daily totals
+    var dayInc=0,dayExp=0;
+    rows.forEach(function(item){
+      if(item.isTx){
+        if(item.data.type==='income') dayInc+=item.data.amount;
+        else if(item.data.type==='expense') dayExp+=item.data.amount;
+      }
+    });
+    var dayNet=dayInc-dayExp;
+    var summaryParts=[];
+    if(dayExp>0) summaryParts.push('<span style="color:var(--red);font-weight:900;font-size:10px">−'+state.currSymbol+fmt(cv(dayExp))+'</span>');
+    if(dayInc>0) summaryParts.push('<span style="color:var(--green);font-weight:900;font-size:10px">+'+state.currSymbol+fmt(cv(dayInc))+'</span>');
+    var netColor=dayNet>=0?'var(--green)':'var(--red)';
+    var netStr=summaryParts.length>1?'<span style="color:'+netColor+';font-size:9px;font-weight:700;opacity:.8;white-space:nowrap">net '+(dayNet>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(dayNet)))+'</span>':'';
+    var summaryHTML=summaryParts.length?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:2px 7px;margin-left:6px;flex-shrink:0;white-space:nowrap;overflow:hidden;max-width:calc(100vw - 120px)">'+summaryParts.join('<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>')+( netStr?'<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>'+netStr:'')+'</span>':'';
+    html+=`<div style="display:flex;align-items:center;gap:0;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px;overflow:hidden;white-space:nowrap">${formatDate(date)}${summaryHTML}</div><div class="box" style="padding:8px 14px">`;
     rows.forEach(function(item){html+=item.isTx?txHTML(item.data):transferHistHTML(item.data);});
     html+='</div>';
   });
@@ -7742,7 +7774,144 @@ function clearScan(){scanResult=null;document.getElementById('scanResult').style
 function initCharts(){renderMiniChart();}
 function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const rawType=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'line';const isArea=rawType==='area';const chartType=isArea?'line':rawType;const cc=chartColors();charts.mini=new Chart(ctx,{type:chartType,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:isArea?'rgba(34,197,94,.25)':'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:3,pointBackgroundColor:'#22c55e'},{label:'Expense',data:eD,backgroundColor:isArea?'rgba(239,68,68,.2)':'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:3,pointBackgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:cc.tick,font:{size:10}}},y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10}}}}}});}
 function setMini(type,el){document.querySelectorAll('#miniCtrl .cpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');el.setAttribute('data-type',type);renderMiniChart();}
-function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();renderYearlySummary();renderCatBreakdown();}
+function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();setExpTrendTab(expTrendTab);renderYearlySummary();renderCatBreakdown();}
+
+function localDateStr(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function setExpTrendTab(tab){
+  expTrendTab=tab;
+  ['day','week','month'].forEach(function(t){
+    var btn=document.getElementById('etab-'+t);
+    if(!btn)return;
+    if(t===tab){btn.style.background='var(--accent)';btn.style.color='var(--accent-text)';}
+    else{btn.style.background='transparent';btn.style.color='var(--text2)';}
+  });
+  renderExpTrendChart();
+}
+
+function renderExpTrendChart(){
+  var ctx=document.getElementById('expTrendChart');
+  if(!ctx)return;
+  if(charts.et){charts.et.destroy();charts.et=null;}
+
+  var now=new Date();
+  var todayStr=localDateStr(now);
+  var labels=[],expData=[],incData=[],subtitle='';
+
+  if(expTrendTab==='day'){
+    // TODAY only — one bar per category that has transactions today
+    var todayTxs=state.transactions.filter(function(t){return t.date===todayStr;});
+    var catMap={};
+    todayTxs.forEach(function(t){
+      if(t.type==='expense'){
+        catMap[t.category]=(catMap[t.category]||0)+t.amount;
+      }
+    });
+    var cats=Object.keys(catMap);
+    if(cats.length===0){
+      // No transactions today — show empty single bar labeled "Today"
+      labels=['Today'];expData=[0];incData=[0];
+    } else {
+      cats.forEach(function(c){
+        labels.push((CAT_EMOJI[c]||'💸')+' '+c);
+        expData.push(cv(catMap[c]));
+        incData.push(0);
+      });
+    }
+    var todayInc=cv(todayTxs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0));
+    var todayExp=cv(todayTxs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0));
+    // Format: Fri, 22 May 2026
+    var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    subtitle=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+
+  } else if(expTrendTab==='week'){
+    // THIS WEEK — Mon to Sun, 7 bars one per day
+    var dow=now.getDay(); // 0=Sun
+    var diffToMon=dow===0?-6:(1-dow);
+    var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var months2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var weekStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()+diffToMon);
+    var weekEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate()+diffToMon+6);
+    subtitle=weekStart.getDate()+' '+months2[weekStart.getMonth()]+' – '+weekEnd.getDate()+' '+months2[weekEnd.getMonth()]+' '+weekEnd.getFullYear();
+    for(var i=0;i<7;i++){
+      var d=new Date(weekStart.getFullYear(),weekStart.getMonth(),weekStart.getDate()+i);
+      var ds=localDateStr(d);
+      var isToday=ds===todayStr;
+      labels.push(isToday?'Today ★':dayNames[d.getDay()]+' '+d.getDate());
+      var dayTxs=state.transactions.filter(function(t){return t.date===ds;});
+      expData.push(cv(dayTxs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0)));
+      incData.push(cv(dayTxs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0)));
+    }
+
+  } else {
+    // THIS MONTH — one bar per day of current month
+    var yr=now.getFullYear(),mo=now.getMonth();
+    var daysInMonth=new Date(yr,mo+1,0).getDate();
+    var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mo];
+    subtitle=mName+' '+yr;
+    for(var d2=1;d2<=daysInMonth;d2++){
+      var ds2=localDateStr(new Date(yr,mo,d2));
+      var isToday2=ds2===todayStr;
+      labels.push(isToday2?'★'+d2:''+d2);
+      var dTxs=state.transactions.filter(function(t){return t.date===ds2;});
+      expData.push(cv(dTxs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0)));
+      incData.push(cv(dTxs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0)));
+    }
+  }
+
+  // Update subtitle label
+  var subEl=document.getElementById('expTrendSubtitle');
+  if(subEl) subEl.textContent=subtitle;
+
+  var cc=chartColors();
+  charts.et=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'Expense',data:expData,
+         backgroundColor:expData.map(function(v,i){
+           var isHighlight=(expTrendTab==='week'&&labels[i].indexOf('Today')===0)||(expTrendTab==='month'&&labels[i].indexOf('★')===0)||(expTrendTab==='day');
+           return isHighlight?'rgba(255,69,105,.85)':'rgba(255,69,105,.4)';
+         }),
+         borderRadius:6,borderSkipped:false,order:1},
+        {label:'Income',data:incData,
+         backgroundColor:incData.map(function(v,i){
+           var isHighlight=(expTrendTab==='week'&&labels[i].indexOf('Today')===0)||(expTrendTab==='month'&&labels[i].indexOf('★')===0)||(expTrendTab==='day');
+           return isHighlight?'rgba(34,197,94,.8)':'rgba(34,197,94,.35)';
+         }),
+         borderRadius:6,borderSkipped:false,order:2}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:cc.legend,font:{size:10,weight:'700'},boxWidth:10,boxHeight:10,usePointStyle:true,pointStyle:'circle',padding:10}},
+        tooltip:{callbacks:{label:function(c){return' '+c.dataset.label+': '+state.currSymbol+fmt(cv(c.raw));}}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:cc.tick,font:{size:expTrendTab==='month'?8:9},maxRotation:0,autoSkip:expTrendTab==='month'}},
+        y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:9},callback:function(v){var a=Math.abs(v);if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+v;}}}
+      }
+    }
+  });
+  // Summary stats
+  var totalExp=expData.reduce(function(a,b){return a+b;},0);
+  var totalInc=incData.reduce(function(a,b){return a+b;},0);
+  var periodLabel=expTrendTab==='day'?'Today':expTrendTab==='week'?'This Week':'This Month';
+  var sumEl=document.getElementById('expTrendSummary');
+  if(sumEl){
+    sumEl.innerHTML=[
+      {lbl:'Spent ('+periodLabel+')',val:state.currSymbol+fmt(cv(totalExp)),c:'var(--red)'},
+      {lbl:'Income ('+periodLabel+')',val:state.currSymbol+fmt(cv(totalInc)),c:'var(--green)'},
+      {lbl:'Net',val:(totalInc-totalExp>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(totalInc-totalExp))),c:totalInc-totalExp>=0?'var(--green)':'var(--red)'}
+    ].map(function(s){return'<div style="flex:1;min-width:80px;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:8px 10px;text-align:center"><div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:3px">'+s.lbl+'</div><div style="font-size:13px;font-weight:900;color:'+s.c+'">'+s.val+'</div></div>';}).join('');
+  }
+}
+
 function renderNetWorthTimeline(){
   var ctx=document.getElementById('netWorthChart');
   if(!ctx)return;
@@ -7754,28 +7923,21 @@ function renderNetWorthTimeline(){
   var totalLiab=state.liabilities.reduce(function(s,l){return s+l.remaining;},0);
   var totalAccts=state.accounts.reduce(function(s,a){return s+a.balance;},0);
   var baseNW=totalAssets+totalAccts-totalLiab;
-
-  // Build monthly net transaction deltas
   var monthlyNet=[];
   for(var i=11;i>=0;i--){
     var mn=(now.getMonth()-i+12)%12;
     var yr=now.getFullYear()+Math.floor((now.getMonth()-i)/12);
     if(now.getMonth()-i<0)yr=now.getFullYear()-1;
-    var txsM=state.transactions.filter(function(t){
-      var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr;
-    });
+    var txsM=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr;});
     var net=txsM.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0)
             -txsM.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
     labels.push(months[mn]);
     monthlyNet.push(net);
   }
-  // Build cumulative NW backwards from current baseNW
   var cumulative=[];var running=baseNW;
   for(var i=monthlyNet.length-1;i>=0;i--){running-=monthlyNet[i];cumulative.unshift(running);}
   cumulative[cumulative.length-1]=baseNW;
   data=cumulative.map(cv);
-
-  // Only show empty if truly nothing to display
   var hasData=data.some(function(v){return v!==0;});
   if(!hasData){
     charts.nw=null;
@@ -7783,7 +7945,8 @@ function renderNetWorthTimeline(){
     if(parent){parent.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:12px;font-weight:700;text-align:center;padding:20px">Add transactions or assets<br>to see your net worth trend</div>';}
     return;
   }
-  const cc=chartColors();charts.nw=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#22c55e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' '+state.currSymbol+fmt(cv(c.parsed.y));}}}},scales:{x:{grid:{display:false},ticks:{color:cc.tick,font:{size:10}}},y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10},callback:function(v){var a=Math.abs(v);if(a>=10000000)return state.currSymbol+(v/10000000).toFixed(1)+'Cr';if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+fmt(v);}}}}}});
+  const cc=chartColors();
+  charts.nw=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Net Worth',data:data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#22c55e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' '+state.currSymbol+fmt(cv(c.parsed.y));}}}},scales:{x:{grid:{display:false},ticks:{color:cc.tick,font:{size:10}}},y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10},callback:function(v){var a=Math.abs(v);if(a>=10000000)return state.currSymbol+(v/10000000).toFixed(1)+'Cr';if(a>=100000)return state.currSymbol+(v/100000).toFixed(1)+'L';if(a>=1000)return state.currSymbol+(v/1000).toFixed(0)+'k';return state.currSymbol+fmt(v);}}}}}});
 }
 function renderYearlySummary(){const c=document.getElementById('yearlySummary');const now=new Date();const year=now.getFullYear();const monthly=[];for(let m=0;m<12;m++){const txs=state.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===year&&d.getMonth()===m;});const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);const carry=getCarryForward(m,year);monthly.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m],inc,exp,carry,net:(inc+carry)-exp});}const totalInc=monthly.reduce((s,m)=>s+m.inc,0);const totalExp=monthly.reduce((s,m)=>s+m.exp,0);c.innerHTML=`<div class="stat-grid" style="margin-bottom:12px"><div class="stat-box sg"><span class="stat-emoji">📥</span><div class="stat-lbl">Year Income</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalInc))}</div></div><div class="stat-box sr"><span class="stat-emoji">📤</span><div class="stat-lbl">Year Spend</div><div class="stat-val" style="font-size:15px">${state.currSymbol}${fmt(cv(totalExp))}</div></div></div>${monthly.filter(m=>m.inc>0||m.exp>0).map(m=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="min-width:32px;font-size:11px;font-weight:900;color:var(--text3)">${m.month}</div><div style="flex:1"><div style="display:flex;gap:3px;height:6px"><div style="height:100%;background:var(--green);border-radius:3px;flex:${m.inc}"></div><div style="height:100%;background:var(--red);border-radius:3px;flex:${m.exp}"></div></div>${m.carry!==0?`<div style="font-size:9px;font-weight:800;color:${m.carry>0?'var(--green)':'var(--red)'};margin-top:2px">↩️ carry ${m.carry>0?'+':'−'}${state.currSymbol}${fmt(cv(Math.abs(m.carry)))}</div>`:''}</div><div style="font-family:var(--font);font-size:11px;font-weight:700;color:${m.net>=0?'var(--green)':'var(--red)'};min-width:60px;text-align:right">${m.net>=0?'+':'-'}${state.currSymbol}${fmt(cv(Math.abs(m.net)))}</div></div>`).join('')}`;}
 function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');chartType=type;renderMainChart();}
@@ -8026,7 +8189,7 @@ async function setCurr(c,sym,el){
     }
   }
 }
-function updateCurrSymbols(){document.querySelectorAll('.curr').forEach(el=>el.textContent=state.currSymbol);}
+function updateCurrSymbols(){document.querySelectorAll('.curr').forEach(el=>{if(el.id==='netWorthCurr')return;el.textContent=state.currSymbol;});}
 function setLang(lang,el){
   state.lang='en';saveState();
   document.querySelectorAll('#langGrid .font-btn').forEach(b=>b.classList.remove('on'));
@@ -10394,26 +10557,40 @@ function renderSpendingTrends(){
   if(!wrap) return;
   var periods=[];
   var now=new Date();
-  if(trendPeriod==='week'){
+  if(trendPeriod==='day'){
+    if(title) title.textContent='This Week Daily Spending';
+    var dow0=now.getDay();var diffToMon0=dow0===0?-6:(1-dow0);
+    var weekMon=new Date(now.getFullYear(),now.getMonth(),now.getDate()+diffToMon0);
+    var dayNamesT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    for(var i=0;i<7;i++){
+      var d0=new Date(weekMon.getFullYear(),weekMon.getMonth(),weekMon.getDate()+i);
+      var ds0=localDateStr(d0);
+      var isToday=ds0===localDateStr(now);
+      var txsD=state.transactions.filter(function(t){return t.date===ds0&&t.type==='expense';});
+      periods.push({label:dayNamesT[i]+(isToday?' ★':''),amount:txsD.reduce(function(s,t){return s+t.amount;},0),isCurrent:isToday});
+    }
+  } else if(trendPeriod==='week'){
     if(title) title.textContent='Last 8 Weeks Spending';
     for(var i=7;i>=0;i--){
-      var wStart=new Date(now);wStart.setDate(now.getDate()-i*7-6);
-      var wEnd=new Date(now);wEnd.setDate(now.getDate()-i*7);
-      var label='W'+(8-i);
-      var txs=state.transactions.filter(function(t){var d=new Date(t.date);return d>=wStart&&d<=wEnd&&t.type==='expense';});
+      // Weeks Mon–Sun
+      var dow=now.getDay();var diffToMon=dow===0?-6:(1-dow);
+      var thisMon=new Date(now);thisMon.setDate(now.getDate()+diffToMon);
+      var wStart=new Date(thisMon);wStart.setDate(thisMon.getDate()-i*7);
+      var wEnd=new Date(wStart);wEnd.setDate(wStart.getDate()+6);
+      var label=i===0?'This W':'W'+(8-i);
+      var txs=state.transactions.filter(function(t){var d=new Date(t.date+'T00:00:00');return d>=wStart&&d<=wEnd&&t.type==='expense';});
       periods.push({label:label,amount:txs.reduce(function(s,t){return s+t.amount;},0)});
     }
   } else if(trendPeriod==='month'){
-    if(title) title.textContent='Last 8 Months Spending';
-    for(var i=7;i>=0;i--){
-      var m=(now.getMonth()-i+120)%12;
-      var y=now.getFullYear()-Math.floor((12-(now.getMonth()-i+12)%12-1)/12);
-      if(now.getMonth()-i<0) y=now.getFullYear()-Math.ceil((i-now.getMonth())/12);
-      var mn=now.getMonth()-i;
-      while(mn<0){mn+=12;}
-      var yr=now.getFullYear()+Math.floor((now.getMonth()-i)/12);
+    if(title) title.textContent='Last 12 Months Spending';
+    var mNamesT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for(var i=11;i>=0;i--){
+      var mOffset=now.getMonth()-i;
+      var mn=(mOffset%12+12)%12;
+      var yr=now.getFullYear()+Math.floor(mOffset/12);
+      var isCurMon=(mn===now.getMonth()&&yr===now.getFullYear());
       var txs2=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===mn&&d.getFullYear()===yr&&t.type==='expense';});
-      periods.push({label:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mn],amount:txs2.reduce(function(s,t){return s+t.amount;},0)});
+      periods.push({label:mNamesT[mn]+(isCurMon?' ★':''),amount:txs2.reduce(function(s,t){return s+t.amount;},0),isCurrent:isCurMon});
     }
   } else {
     if(title) title.textContent='Last 5 Years Spending';
@@ -10425,11 +10602,14 @@ function renderSpendingTrends(){
   }
   var maxAmt=Math.max.apply(null,periods.map(function(p){return p.amount;}));
   if(!maxAmt) maxAmt=1;
-  wrap.innerHTML=periods.map(function(p){
+  wrap.innerHTML=periods.map(function(p,idx){
     var h=Math.max(4,Math.round((p.amount/maxAmt)*80));
+    var isLast=idx===periods.length-1;
     var col=p.amount>maxAmt*0.8?'var(--red)':p.amount>maxAmt*0.5?'var(--yellow)':'var(--accent)';
-    return'<div style="flex:1;display:flex;flex-direction:column;align-items:center">'
-      +'<div title="'+state.currSymbol+fmt(cv(p.amount))+'" class="trend-bar" style="width:100%;height:'+h+'px;background:'+col+'22;border:2px solid '+col+'"></div>'
+    var border=isLast?'3px solid '+col:'2px solid '+col;
+    var opacity=isLast?'1':'0.7';
+    return'<div style="flex:1;display:flex;flex-direction:column;align-items:center;opacity:'+opacity+'">'
+      +'<div title="'+state.currSymbol+fmt(cv(p.amount))+'" class="trend-bar" style="width:100%;height:'+h+'px;background:'+col+'22;border:'+border+'"></div>'
       +'</div>';
   }).join('');
   labelsEl.innerHTML='<div style="display:flex;width:100%">'+periods.map(function(p){
@@ -10467,12 +10647,12 @@ function setReportPreset(p,el){
   reportPreset=p;
   if(el){document.querySelectorAll('#page-reports .chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');}
   var now=new Date();
-  var from='',to=now.toISOString().split('T')[0];
-  if(p==='thisMonth'){from=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];}
-  else if(p==='lastMonth'){var lm=new Date(now.getFullYear(),now.getMonth()-1,1);from=lm.toISOString().split('T')[0];to=new Date(now.getFullYear(),now.getMonth(),0).toISOString().split('T')[0];}
-  else if(p==='last3'){from=new Date(now.getFullYear(),now.getMonth()-3,1).toISOString().split('T')[0];}
-  else if(p==='last6'){from=new Date(now.getFullYear(),now.getMonth()-6,1).toISOString().split('T')[0];}
-  else if(p==='thisYear'){from=new Date(now.getFullYear(),0,1).toISOString().split('T')[0];}
+  var from='',to=localDateStr(now);
+  if(p==='thisMonth'){from=localDateStr(new Date(now.getFullYear(),now.getMonth(),1));}
+  else if(p==='lastMonth'){var lm=new Date(now.getFullYear(),now.getMonth()-1,1);from=localDateStr(lm);to=localDateStr(new Date(now.getFullYear(),now.getMonth(),0));}
+  else if(p==='last3'){from=localDateStr(new Date(now.getFullYear(),now.getMonth()-3,1));}
+  else if(p==='last6'){from=localDateStr(new Date(now.getFullYear(),now.getMonth()-6,1));}
+  else if(p==='thisYear'){from=localDateStr(new Date(now.getFullYear(),0,1));}
   var f=document.getElementById('reportFrom');var t=document.getElementById('reportTo');
   if(f) f.value=from;if(t) t.value=to;
 }
