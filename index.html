@@ -3084,7 +3084,7 @@ let state={
   pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},bills:[],accounts:[],recurring:[],
-  allocTargets:{},allocTargetsEnabled:false,
+  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',
   familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
@@ -3131,6 +3131,7 @@ function loadState(){
   if(!state.budgets||typeof state.budgets!=='object') state.budgets={};
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
   if(state.allocTargetsEnabled===undefined) state.allocTargetsEnabled=false;
+  if(!state.billsResetMonth) state.billsResetMonth='';
   if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
   if(!state.customCatEmojis) state.customCatEmojis={};
   if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
@@ -7295,18 +7296,34 @@ function saveBill(){const name=document.getElementById('billName').value.trim();
 function renderBills(){
   const c=document.getElementById('billList');
   if(!state.bills.length){c.innerHTML=`<div class="empty"><div class="empty-big">🔔</div><div class="empty-title">No bills added</div><div class="empty-desc">Add recurring bills & due dates</div></div>`;document.getElementById('billAlertBox').innerHTML='';return;}
-  const today=new Date();const currentDay=today.getDate();
-  const overdue=state.bills.filter(b=>b.dueDay<currentDay&&!b.paid);
-  const upcoming=state.bills.filter(b=>b.dueDay>=currentDay&&b.dueDay<=currentDay+7&&!b.paid);
+  const today=new Date();const cy=today.getFullYear();const cm=today.getMonth();
+  // Auto-reset paid flag at the start of each new month
+  const billMonthKey=`${cy}-${cm}`;
+  if(state.billsResetMonth!==billMonthKey){state.bills.forEach(b=>b.paid=false);state.billsResetMonth=billMonthKey;saveState();}
+  const msDay=86400000;
+  function billDueDate(b){return new Date(cy,cm,b.dueDay);}
+  const overdue=state.bills.filter(b=>billDueDate(b)<today&&!b.paid);
+  const upcoming=state.bills.filter(b=>{const due=billDueDate(b);return due>=today&&(due-today)<=7*msDay&&!b.paid;});
   let alertHTML='';
   if(overdue.length)alertHTML+=`<div style="background:rgba(239,68,68,0.1);border:2px solid rgba(239,68,68,0.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-size:20px">🚨</span><div><div style="font-size:12px;font-weight:900;color:var(--red)">${overdue.length} bill${overdue.length>1?'s':''} overdue!</div><div style="font-size:11px;color:var(--text3);font-weight:700">${overdue.map(b=>b.name).join(', ')}</div></div></div>`;
   if(upcoming.length)alertHTML+=`<div style="background:rgba(234,179,8,0.1);border:2px solid rgba(234,179,8,0.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-size:20px">⚠️</span><div><div style="font-size:12px;font-weight:900;color:var(--yellow)">${upcoming.length} bill${upcoming.length>1?'s':''} due soon</div><div style="font-size:11px;color:var(--text3);font-weight:700">${upcoming.map(b=>b.name+' (day '+b.dueDay+')').join(', ')}</div></div></div>`;
   document.getElementById('billAlertBox').innerHTML=alertHTML;
-  c.innerHTML=state.bills.map(b=>{const daysLeft=b.dueDay-currentDay;const isOverdue=daysLeft<0&&!b.paid;const isUpcoming=daysLeft>=0&&daysLeft<=7&&!b.paid;const statusColor=isOverdue?'var(--red)':isUpcoming?'var(--yellow)':'var(--text3)';const statusText=b.paid?'✅ Paid':isOverdue?'🚨 Overdue':isUpcoming?`⚠️ Due in ${daysLeft}d`:`📅 Day ${b.dueDay}`;return`<div class="bill-row"><div class="bill-ico" style="background:${isOverdue?'rgba(239,68,68,0.1)':'var(--bg3)'}">${b.emoji}</div><div class="bill-info"><div class="bill-name">${b.name}</div><div class="bill-due" style="color:${statusColor}">${statusText} · ${b.freq}</div></div><div><div class="bill-amt" style="color:var(--text)">${state.currSymbol}${fmt(cv(b.amt))}</div><div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end"><span style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900" onclick="markBillPaid(${b.id})">${b.paid?'↩️':'✅'}</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteBill(${b.id})">✕</span></div></div></div>`;}).join('');
+  c.innerHTML=state.bills.map(b=>{
+    const due=billDueDate(b);const daysLeft=Math.ceil((due-today)/msDay);
+    const isOverdue=due<today&&!b.paid;const isUpcoming=!isOverdue&&daysLeft>=0&&daysLeft<=7&&!b.paid;
+    const statusColor=isOverdue?'var(--red)':isUpcoming?'var(--yellow)':'var(--text3)';
+    const statusText=b.paid?'✅ Paid':isOverdue?`🚨 Overdue by ${Math.abs(daysLeft)}d`:isUpcoming?`⚠️ Due in ${daysLeft}d`:`📅 Day ${b.dueDay}`;
+    return`<div class="bill-row"><div class="bill-ico" style="background:${isOverdue?'rgba(239,68,68,0.1)':'var(--bg3)'}">${b.emoji}</div><div class="bill-info"><div class="bill-name">${b.name}</div><div class="bill-due" style="color:${statusColor}">${statusText} · ${b.freq}</div></div><div><div class="bill-amt" style="color:var(--text)">${state.currSymbol}${fmt(cv(b.amt))}</div><div style="display:flex;gap:6px;margin-top:4px;justify-content:flex-end"><span style="font-size:11px;color:var(--green);cursor:pointer;font-weight:900" onclick="markBillPaid(${b.id})">${b.paid?'↩️':'✅'}</span><span style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900" onclick="deleteBill(${b.id})">✕</span></div></div></div>`;
+  }).join('');
 }
 function markBillPaid(id){const b=state.bills.find(b=>b.id===id);if(b){b.paid=!b.paid;}saveState();renderBills();updateBillsBadge();}
 function deleteBill(id){customConfirm('🔔','Delete Bill','This cannot be undone.',function(){state.bills=state.bills.filter(b=>b.id!==id);saveState();renderBills();updateBillsBadge();});}
-function updateBillsBadge(){const today=new Date();const overdue=state.bills.filter(b=>b.dueDay<today.getDate()&&!b.paid).length;const badge=document.getElementById('billsBadge');if(overdue>0){badge.style.display='flex';badge.textContent=overdue;}else{badge.style.display='none';}}
+function updateBillsBadge(){
+  const today=new Date();const cy=today.getFullYear();const cm=today.getMonth();
+  const overdue=state.bills.filter(b=>{const due=new Date(cy,cm,b.dueDay);return due<today&&!b.paid;}).length;
+  const badge=document.getElementById('billsBadge');
+  if(overdue>0){badge.style.display='flex';badge.textContent=overdue;}else{badge.style.display='none';}
+}
 
 // ======== MULTI-ACCOUNT ========
 function selAcctColor(el,color){acctColor=color;document.querySelectorAll('#acctModal .chips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
@@ -9019,8 +9036,6 @@ function doExportWithKey(){
   if(!hasSpecial){errEl.textContent='Must include at least one special character (!@#$% etc.)';errEl.style.display='block';return;}
   if(!hasUpper||!hasLower){errEl.textContent='Must include both UPPER and lower case letters';errEl.style.display='block';return;}
   errEl.style.display='none';
-  // Save key for import hint
-  state.lastExportKey=key;
   saveState();
   closeModal('exportKeyModal');
   try{
@@ -11507,7 +11522,8 @@ initGoogleDrive();
             🎨 <b style="color:var(--text)">Themes streamlined</b> — 4 themes in one compact row; Aurora &amp; Forest removed<br>
             🎯 <b style="color:var(--text)">Allocation Targets toggle</b> — Enable/disable switch; OFF by default; asset &amp; AI warnings suppressed when OFF<br>
             📊 <b style="color:var(--text)">Home chart simplified</b> — Bar removed; Line &amp; Area only<br>
-            🔢 <b style="color:var(--text)">Debt Payoff month fix</b> — 0% interest + 12-month tenure correctly shows 12 months; EMI auto-calc works at 0% rate
+            🔢 <b style="color:var(--text)">Debt Payoff month fix</b> — 0% interest + 12-month tenure correctly shows 12 months; EMI auto-calc works at 0% rate<br>
+            🔔 <b style="color:var(--text)">Bills overdue fix</b> — Overdue now uses real date arithmetic (not just day-of-month); paid status auto-resets each new month
           </div>
         </div>
       </div>
