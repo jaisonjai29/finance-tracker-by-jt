@@ -68,24 +68,7 @@
   --shadow-sm:0 4px 16px rgba(0,0,0,0.08);
 }
 
-/* ══ AURORA — Teal Bioluminescence ══ */
-[data-theme="aurora"]{
-  --accent:#00e5cc;--accent2:#00ffd5;--accent-text:#001a18;
-  --accent-glow:rgba(0,229,204,0.3);
-  --bg:#020c10;--bg2:#041820;--bg3:#072a38;
-  --card:#041820;--card2:#062030;
-  --border:rgba(0,229,204,0.1);--border2:rgba(0,229,204,0.2);
-  --text:#e0fdf8;--text2:#6bcfbe;--text3:#2a6b60;
-  --green:#00e5cc;--red:#ff6b9d;--blue:#40c4ff;
-  --yellow:#ffd740;--purple:#b388ff;--orange:#ff9e40;--teal:#00e5cc;
-  --glass:rgba(0,229,204,0.03);--glass-border:rgba(0,229,204,0.1);
-  --shadow:0 8px 32px rgba(0,229,204,0.15);
-}
-[data-theme="aurora"] body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 70% 50% at 15% 15%,rgba(0,229,204,0.08) 0%,transparent 60%),
-  radial-gradient(ellipse 50% 40% at 85% 75%,rgba(64,196,255,0.06) 0%,transparent 55%),
-  radial-gradient(ellipse 40% 60% at 50% 100%,rgba(179,136,255,0.04) 0%,transparent 60%);
-  pointer-events:none;z-index:0;}
+
 
 /* ══ OCEAN — Deep Navy ══ */
 [data-theme="ocean"]{
@@ -121,20 +104,7 @@
   --shadow-sm:0 4px 16px rgba(0,0,0,0.08);
 }
 
-/* ══ FOREST — Fresh Green Light ══ */
-[data-theme="forest"]{
-  --accent:#16a34a;--accent2:#22c55e;--accent-text:#fff;
-  --accent-glow:rgba(22,163,74,0.2);
-  --bg:#f0fdf4;--bg2:#ffffff;--bg3:#dcfce7;
-  --card:#ffffff;--card2:#f0fdf4;
-  --border:rgba(22,163,74,0.1);--border2:rgba(22,163,74,0.18);
-  --text:#052e16;--text2:#166534;--text3:#86efac;
-  --green:#16a34a;--red:#dc2626;--blue:#2563eb;
-  --yellow:#d97706;--purple:#9333ea;--orange:#ea580c;--teal:#0d9488;
-  --glass:rgba(22,163,74,0.03);--glass-border:rgba(22,163,74,0.1);
-  --shadow:0 8px 32px rgba(22,163,74,0.14);
-  --shadow-sm:0 4px 16px rgba(0,0,0,0.08);
-}
+
 
 
 /* ══ DEFAULT DARK AMBIENT ══ */
@@ -631,7 +601,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 /* ══ THEME GRID ══ */
 .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
 .theme-sw{
-  height:50px;border-radius:14px;cursor:pointer;
+  height:38px;border-radius:10px;cursor:pointer;
   border:2px solid transparent;transition:all .2s;
   position:relative;overflow:hidden;
   display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;
@@ -762,6 +732,45 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 .debt-countdown:last-child{border-bottom:none}
 .countdown-num{font-size:22px;font-weight:900;font-family:var(--font);color:var(--accent)}
 .countdown-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:700}
+/* Debt Payoff expanded cards */
+.dp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
+.dp-card-header{display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer}
+.dp-card-header:hover{background:var(--bg3)}
+.dp-card-body{padding:0 14px 14px;border-top:1px solid var(--border)}
+.dp-amort-row{display:grid;grid-template-columns:38px 1fr 1fr 1fr;gap:4px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.dp-amort-row:last-child{border-bottom:none}
+.dp-amort-hdr{font-weight:900;color:var(--text3);font-size:10px;letter-spacing:.5px}
+.dp-amort-wrap{max-height:220px;overflow-y:auto;scrollbar-width:thin;margin-top:6px}
+.dp-amort-wrap::-webkit-scrollbar{width:3px}
+.dp-amort-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.dp-sugg{background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(30,233,182,0.04));border:1.5px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px;margin-bottom:8px}
+.dp-sugg-title{font-size:12px;font-weight:900;color:var(--green);margin-bottom:4px}
+.dp-sugg-body{font-size:11px;font-weight:700;color:var(--text2);line-height:1.6}
+.dp-sugg-save{font-size:13px;font-weight:900;color:var(--accent);margin-top:5px}
+.dp-tab-bar{display:flex;gap:6px;margin:12px 0 10px;overflow-x:auto;scrollbar-width:none}
+.dp-tab-bar::-webkit-scrollbar{display:none}
+.dp-tab{padding:6px 14px;border-radius:100px;border:1px solid var(--border);font-size:11px;font-weight:700;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all .2s}
+.dp-tab.on{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 4px 12px var(--accent-glow)}
+/* Retirement Planner */
+.ret-plan-card{background:var(--card);border:1.5px solid var(--border2);border-radius:14px;padding:14px;margin-bottom:10px;position:relative}
+.ret-plan-card.active-plan{border-color:var(--accent);box-shadow:0 0 0 2px rgba(68,138,255,0.15)}
+.ret-plan-name{font-size:14px;font-weight:900;color:var(--text)}
+.ret-plan-badge{display:inline-block;background:var(--accent);color:#fff;font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;margin-left:6px}
+.ret-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.ret-field{background:var(--bg3);border-radius:10px;padding:8px 10px}
+.ret-field label{font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:4px}
+.ret-field input{width:100%;background:transparent;border:none;outline:none;font-family:var(--font);font-size:13px;font-weight:700;color:var(--text)}
+.ret-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.ret-result-box{background:var(--bg3);border-radius:12px;padding:10px;text-align:center}
+.ret-result-val{font-size:15px;font-weight:900;font-family:var(--font)}
+.ret-result-lbl{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-top:3px}
+.ret-sugg{background:linear-gradient(135deg,rgba(124,92,252,0.08),rgba(68,138,255,0.05));border:1.5px solid rgba(124,92,252,0.2);border-radius:12px;padding:12px;margin-bottom:8px}
+.ret-sugg-title{font-size:12px;font-weight:900;color:var(--accent);margin-bottom:4px}
+.ret-sugg-body{font-size:11px;font-weight:700;color:var(--text2);line-height:1.6}
+.ret-tab-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.ret-tab-bar::-webkit-scrollbar{display:none}
+.ret-tab{padding:7px 16px;border-radius:100px;border:1px solid var(--border);font-size:11px;font-weight:700;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all .2s}
+.ret-tab.on{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 4px 12px var(--accent-glow)}
 
 /* Spending trends bars */
 .trend-bar-wrap{display:flex;align-items:flex-end;gap:4px;height:80px;margin:8px 0}
@@ -775,29 +784,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 /* Emergency fund tracker */
 .efund-arc{width:120px;height:60px;position:relative;margin:0 auto 12px;overflow:hidden}
 .efund-arc svg{width:120px;height:60px}
-/* Enhanced Emergency Fund */
-.ef-tip{background:rgba(68,138,255,0.06);border:1px solid rgba(68,138,255,0.2);border-radius:10px;padding:10px 12px;font-size:11px;font-weight:700;color:var(--text2);line-height:1.6;margin-bottom:12px}
-.ef-select-wrap{position:relative;margin-bottom:12px}
-.ef-select-wrap select{width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;padding:12px 36px 12px 14px;color:var(--text);font-family:var(--font);font-size:13px;font-weight:700;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;box-sizing:border-box}
-.ef-select-wrap select:focus{border-color:var(--accent)}
-.ef-select-wrap::after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;font-size:14px}
-.ef-acct-card{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(68,138,255,0.08),rgba(124,92,252,0.05));border:1.5px solid rgba(68,138,255,0.3);border-radius:14px;padding:12px 14px;margin-top:10px}
-.ef-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.ef-stat{background:var(--bg3);border-radius:12px;padding:10px 8px;text-align:center}
-.ef-stat-val{font-size:14px;font-weight:900;font-family:var(--font)}
-.ef-stat-lbl{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-top:2px}
-.ef-tab-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
-.ef-tab-bar::-webkit-scrollbar{display:none}
-.ef-tab{padding:7px 16px;border-radius:100px;border:1px solid var(--border);font-size:11px;font-weight:700;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all .2s}
-.ef-tab.on{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 4px 12px var(--accent-glow)}
-.ef-transfer-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.ef-transfer-row input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;font-weight:700;outline:none}
-.ef-transfer-row input:focus{border-color:var(--accent)}
-.ef-transfer-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:var(--font);font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
-.ef-history-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:10px;margin-bottom:6px}
-.ef-history-wrap{max-height:240px;overflow-y:auto;scrollbar-width:thin}
-.ef-history-wrap::-webkit-scrollbar{width:3px}
-.ef-history-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
 /* Duplicate alert */
 .dup-alert{background:rgba(255,69,105,0.08);border:2px solid rgba(255,69,105,0.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer}
@@ -929,7 +915,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="sec-head" style="margin-top:4px"><div class="sec-title">📊 6 Months</div></div>
       <div class="box">
         <div class="cpills" id="miniCtrl">
-          <div class="cpill" onclick="setMini('bar',this)" data-type="bar">📊 Bar</div>
           <div class="cpill on" onclick="setMini('line',this)" data-type="line">📈 Line</div>
           <div class="cpill" onclick="setMini('area',this)" data-type="area">🌊 Area</div>
         </div>
@@ -1213,14 +1198,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--accent)">🎯 ALLOCATION TARGETS</div>
           <div style="display:flex;align-items:center;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <span style="font-size:10px;font-weight:700;color:var(--text3)" id="allocToggleLabel">OFF</span>
+              <div onclick="toggleAllocTargets()" id="allocToggleTrack" style="position:relative;width:36px;height:20px;border-radius:10px;background:var(--bg3);border:1.5px solid var(--border2);transition:background .2s;cursor:pointer">
+                <div id="allocToggleThumb" style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text3);transition:left .2s,background .2s"></div>
+              </div>
+            </label>
             <span id="allocTotalBadge" style="font-size:11px;font-weight:900;padding:3px 9px;border-radius:20px;background:var(--bg3)">0%</span>
             <button onclick="showModal('allocModal')" style="background:rgba(79,142,247,0.12);color:var(--accent);border:1.5px solid rgba(79,142,247,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">✏️ Edit</button>
           </div>
         </div>
-        <div id="wealthAllocBars"></div>
-        <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:10px;display:flex;align-items:center;gap:10px">
-          <span>█ Actual &nbsp;│&nbsp; <span style="color:rgba(255,255,255,0.5)">│</span> = Target</span>
+        <div id="wealthAllocContent">
+          <div id="wealthAllocBars"></div>
+          <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:10px;display:flex;align-items:center;gap:10px">
+            <span>█ Actual &nbsp;│&nbsp; <span style="color:rgba(255,255,255,0.5)">│</span> = Target</span>
+          </div>
         </div>
+        <div id="wealthAllocDisabled" style="text-align:center;padding:18px 0 6px;color:var(--text3);font-size:12px;font-weight:700">Toggle ON to enable allocation targets</div>
       </div>
     </div>
 
@@ -1306,44 +1300,90 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <!-- DEBT PAYOFF COUNTDOWN -->
     <div class="page" id="page-debtcountdown">
       <div class="sec-head"><div class="sec-title">⏱️ Debt Payoff</div></div>
-      <div id="debtCountdownList"><div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div></div>
-      <!-- Prepayment Impact Calculator -->
-      <div class="box" style="margin-top:14px">
-        <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:12px">⚡ Prepayment Impact Calculator</div>
-        <div class="field"><div class="field-label">🏧 Select Loan</div><select class="field-input" id="prepayLoanSel" onchange="calcPrepay()"><option value="">-- Select Loan --</option></select></div>
-        <div class="field"><div class="field-label">💰 Extra Payment Amount</div><input type="number" class="field-input" id="prepayAmt" placeholder="50000" oninput="calcPrepay()"></div>
-        <div id="prepayResult" style="display:none" class="prepay-result"></div>
-      </div>
+      <div id="debtCountdownList"></div>
     </div>
 
     <!-- RETIREMENT CALCULATOR -->
     <div class="page" id="page-retirement">
       <div class="sec-head"><div class="sec-title">🧓 Retirement Planner</div></div>
-      <div class="box">
-        <div class="field-row">
-          <div class="field"><div class="field-label">🎂 Current Age</div><input type="number" class="field-input" id="retCurrentAge" placeholder="30" oninput="calcRetirement()"></div>
-          <div class="field"><div class="field-label">🏖️ Retire at Age</div><input type="number" class="field-input" id="retRetireAge" placeholder="60" oninput="calcRetirement()"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><div class="field-label">💰 Current Savings</div><input type="number" class="field-input" id="retCurrentSavings" placeholder="500000" oninput="calcRetirement()"></div>
-          <div class="field"><div class="field-label">📅 Monthly Investment</div><input type="number" class="field-input" id="retMonthly" placeholder="10000" oninput="calcRetirement()"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><div class="field-label">📈 Expected Return %</div><input type="number" class="field-input" id="retReturn" placeholder="12" step="0.1" oninput="calcRetirement()"></div>
-          <div class="field"><div class="field-label">💸 Monthly Expense at Retire</div><input type="number" class="field-input" id="retMonthlyExp" placeholder="50000" oninput="calcRetirement()"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><div class="field-label">🎂 Life Expectancy</div><input type="number" class="field-input" id="retLifeExp" placeholder="80" oninput="calcRetirement()"></div>
-          <div class="field"><div class="field-label">📉 Inflation %</div><input type="number" class="field-input" id="retInflation" placeholder="6" step="0.1" oninput="calcRetirement()"></div>
-        </div>
-        <div id="retirementResult" class="retire-result" style="display:none"></div>
-      </div>
+      <div id="retPageContent"></div>
     </div>
 
     <!-- EMERGENCY FUND TRACKER -->
     <div class="page" id="page-emergency">
       <div class="sec-head"><div class="sec-title">🆘 Emergency Fund</div></div>
-      <div id="efPageContent"></div>
+
+      <!-- Tip Card -->
+      <div style="background:linear-gradient(135deg,rgba(124,92,252,0.12),rgba(124,92,252,0.05));border:1.5px solid rgba(124,92,252,0.2);border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0;margin-top:1px">💡</span>
+        <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.6">Choose a dedicated account as your emergency fund — separate from your daily spending so you always know your exact safety net balance.</div>
+      </div>
+
+      <!-- Account Dropdown -->
+      <div style="position:relative;margin-bottom:10px">
+        <select class="field-input" id="efundAcctSelect" onchange="onEfundAcctChange()" style="width:100%;padding:14px 40px 14px 14px;font-size:14px;font-weight:700;border-radius:14px;appearance:none;-webkit-appearance:none;cursor:pointer">
+          <option value="">🏦 Select an account…</option>
+        </select>
+        <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text3);font-size:12px">▼</div>
+      </div>
+
+      <!-- Selected Account Card -->
+      <div id="efundAcctCard" style="display:none;background:var(--glass);border:1.5px solid var(--accent);border-radius:14px;padding:14px;margin-bottom:12px;display:none;align-items:center;gap:12px">
+        <div id="efundAcctIcon" style="width:52px;height:52px;border-radius:14px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div id="efundAcctName" style="font-size:16px;font-weight:800;color:var(--text)"></div>
+          <div id="efundAcctType" style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px"></div>
+          <div id="efundAcctBal" style="font-size:15px;font-weight:900;color:var(--green);margin-top:4px"></div>
+        </div>
+        <div style="width:34px;height:34px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✔️</div>
+      </div>
+
+      <!-- Target Coverage -->
+      <div class="box" style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">🎯 TARGET COVERAGE</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="efundMonthBtns">
+          <div class="chip on" onclick="setEfundMonths(3,this)">3 Months</div>
+          <div class="chip" onclick="setEfundMonths(6,this)">6 Months</div>
+          <div class="chip" onclick="setEfundMonths(9,this)">9 Months</div>
+          <div class="chip" onclick="setEfundMonths(12,this)">12 Months</div>
+        </div>
+        <div id="efundAvgLabel" style="font-size:12px;font-weight:700;color:var(--text2);margin-top:10px"></div>
+      </div>
+
+      <!-- Overview / Transfer / History tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div id="efundTabOv" onclick="switchEfundTab('overview')" style="flex:1;padding:10px;border-radius:30px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;text-align:center;cursor:pointer;transition:all .2s">📊 Overview</div>
+        <div id="efundTabTr" onclick="switchEfundTab('transfer')" style="flex:1;padding:10px;border-radius:30px;background:var(--glass);border:1.5px solid var(--border2);color:var(--text2);font-size:12px;font-weight:800;text-align:center;cursor:pointer;transition:all .2s">↔️ Transfer</div>
+        <div id="efundTabHi" onclick="switchEfundTab('history')" style="flex:1;padding:10px;border-radius:30px;background:var(--glass);border:1.5px solid var(--border2);color:var(--text2);font-size:12px;font-weight:800;text-align:center;cursor:pointer;transition:all .2s">📋 History</div>
+      </div>
+
+      <!-- Overview Panel -->
+      <div id="efundPanelOverview" class="box">
+        <div id="efundResult"></div>
+      </div>
+
+      <!-- Transfer Panel -->
+      <div id="efundPanelTransfer" class="box" style="display:none">
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px">↔️ Transfer to Emergency Fund</div>
+        <div class="field"><div class="field-label">From Account</div>
+          <select class="field-input" id="efundFromAcct" style="width:100%">
+            <option value="">Select source account…</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">Amount</div>
+          <input type="number" class="field-input" id="efundTransferAmt" placeholder="0" style="width:100%">
+        </div>
+        <div class="field"><div class="field-label">Note (optional)</div>
+          <input type="text" class="field-input" id="efundTransferNote" placeholder="e.g. Monthly top-up" style="width:100%">
+        </div>
+        <button onclick="doEfundTransfer()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">Transfer ➜</button>
+      </div>
+
+      <!-- History Panel -->
+      <div id="efundPanelHistory" class="box" style="display:none">
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px">📋 Emergency Fund Transactions</div>
+        <div id="efundHistoryList"></div>
+      </div>
     </div>
 
     <!-- SPENDING TRENDS -->
@@ -1502,36 +1542,26 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </div>
       <div class="set-sec">
         <div class="set-sec-title">🎨 Theme</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px">
 
           <div class="theme-sw on" style="background:linear-gradient(135deg,#0a0a0f,#1a1a24);border:1.5px solid rgba(124,92,252,0.4);position:relative;overflow:hidden" onclick="setTheme('dark',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(124,92,252,0.2),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(157,127,254,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(124,92,252,0.8);position:relative">◉ MIDNIGHT</span>
+            <span style="font-size:8px;font-weight:700;color:rgba(157,127,254,0.98);letter-spacing:1px;text-shadow:0 0 10px rgba(124,92,252,0.8);position:relative">◉ DARK</span>
           </div>
 
           <div class="theme-sw" style="background:linear-gradient(135deg,#f5f5fa,#e8e8f5);border:1.5px solid rgba(108,79,240,0.25);position:relative;overflow:hidden" onclick="setTheme('light',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(108,79,240,0.1),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(108,79,240,0.9);letter-spacing:1.5px;position:relative">○ LIGHT</span>
+            <span style="font-size:8px;font-weight:700;color:rgba(108,79,240,0.9);letter-spacing:1px;position:relative">○ LIGHT</span>
           </div>
 
           <div class="theme-sw" style="background:linear-gradient(135deg,#020810,#071e34);border:1.5px solid rgba(41,182,246,0.4);position:relative;overflow:hidden" onclick="setTheme('ocean',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 25% 10%,rgba(41,182,246,0.2),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(79,195,247,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(41,182,246,0.8);position:relative">◈ OCEAN</span>
-          </div>
-
-          <div class="theme-sw" style="background:linear-gradient(135deg,#020c10,#072a38);border:1.5px solid rgba(0,229,204,0.4);position:relative;overflow:hidden" onclick="setTheme('aurora',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 30% 50%,rgba(0,229,204,0.18),transparent),radial-gradient(ellipse 50% 60% at 75% 30%,rgba(64,196,255,0.12),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(0,229,204,0.98);letter-spacing:1.5px;text-shadow:0 0 12px rgba(0,229,204,0.7);position:relative">✦ AURORA</span>
+            <span style="font-size:8px;font-weight:700;color:rgba(79,195,247,0.98);letter-spacing:1px;text-shadow:0 0 10px rgba(41,182,246,0.8);position:relative">◈ OCEAN</span>
           </div>
 
           <div class="theme-sw" style="background:linear-gradient(135deg,#fff1f2,#ffe4e6);border:1.5px solid rgba(225,29,72,0.3);position:relative;overflow:hidden" onclick="setTheme('rose',this)">
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(225,29,72,0.1),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(225,29,72,0.9);letter-spacing:1.5px;position:relative">🌸 ROSE</span>
-          </div>
-
-          <div class="theme-sw" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid rgba(22,163,74,0.3);position:relative;overflow:hidden" onclick="setTheme('forest',this)">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(22,163,74,0.1),transparent);pointer-events:none"></div>
-            <span style="font-size:9px;font-weight:700;color:rgba(22,163,74,0.9);letter-spacing:1.5px;position:relative">🌿 FOREST</span>
+            <span style="font-size:8px;font-weight:700;color:rgba(225,29,72,0.9);letter-spacing:1px;position:relative">🌸 ROSE</span>
           </div>
 
         </div>
@@ -3054,7 +3084,7 @@ let state={
   pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},bills:[],accounts:[],recurring:[],
-  allocTargets:{},
+  allocTargets:{},allocTargetsEnabled:false,
   familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
@@ -3100,6 +3130,7 @@ function loadState(){
   if(!Array.isArray(state.goals)) state.goals=[];
   if(!state.budgets||typeof state.budgets!=='object') state.budgets={};
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
+  if(state.allocTargetsEnabled===undefined) state.allocTargetsEnabled=false;
   if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
   if(!state.customCatEmojis) state.customCatEmojis={};
   if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
@@ -3449,7 +3480,7 @@ function initApp(){
   });
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
-  updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();
+  updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();applyAllocToggleUI();
   if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
   if(state.isLoggedIn&&currentUser){
     renderAuthSignedIn(currentUser);
@@ -4715,7 +4746,7 @@ function saveAsset(){
 
   // ── Simulate post-save allocation to check threshold breach ──
   var t=getEffectiveTarget(scheme);
-  if(t){
+  if(t&&state.allocTargetsEnabled){
     var simAssets=state.assets.slice();
     if(editId){
       var si=simAssets.findIndex(function(a){return a.id===parseInt(editId);});
@@ -4845,6 +4876,7 @@ function renderAllocTargetInputs(){
 function renderWealthAllocBars(){
   var wrap=document.getElementById('wealthAllocBars');
   if(!wrap) return;
+  if(!state.allocTargetsEnabled) return;
   if(!state.allocTargets||!Object.keys(state.allocTargets).length){
     wrap.innerHTML='<div style="font-size:12px;color:var(--text3);font-weight:600;padding:10px 0">No targets set yet. Tap ✏️ Edit to configure.</div>';
     var badge=document.getElementById('allocTotalBadge');
@@ -6588,6 +6620,8 @@ function renderAssets(){
   if(!state.assets.length){c.innerHTML='<div class="empty" style="padding:16px"><div class="empty-big">💼</div><div class="empty-desc">Add assets to see allocation</div></div>';renderSchemeList();return;}
 
   // Build allocation warnings (schemeMap for warning calc)
+  var warningHTML='';
+  if(state.allocTargetsEnabled){
   var schemeMap={};
   state.assets.forEach(function(a){
     if(!schemeMap[a.scheme]) schemeMap[a.scheme]=0;
@@ -6600,7 +6634,6 @@ function renderAssets(){
     var t=getEffectiveTarget(scheme);
     if(s&&s.type!=='ok') warnings.push({scheme,pct:pctVal.toFixed(1),status:s,target:t?.ideal||0,custom:t?.custom||false});
   });
-  var warningHTML='';
   if(warnings.length){
     var critical=warnings.filter(function(w){return w.status.type!=='ok';});
     var col=critical.length?'rgba(239,68,68,0.12)':'rgba(234,179,8,0.12)';
@@ -6619,6 +6652,7 @@ function renderAssets(){
   } else if(state.assets.length>0&&Object.keys(state.allocTargets||{}).length>0){
     warningHTML='<div style="background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div style="font-size:13px;font-weight:900;color:var(--green)">Portfolio on target!</div></div>';
   }
+  } // end allocTargetsEnabled
 
   // Group assets by scheme
   var groups={};
@@ -7153,12 +7187,20 @@ function autoCalcEMI(){
   var rate=parseFloat((document.getElementById('liabRate')||{}).value||'0');
   var tenure=parseFloat((document.getElementById('liabTenure')||{}).value||'0');
   var box=document.getElementById('emiAutoCalcBox');
-  if(remaining>0&&rate>0&&tenure>0){
-    var r=rate/100/12;
-    var pow=Math.pow(1+r,tenure);
-    var emi=Math.round(remaining*r*pow/(pow-1));
-    var totalInterest=Math.round(emi*tenure-remaining);
-    var totalPayable=emi*tenure;
+  if(remaining>0&&tenure>0){
+    var emi,totalInterest,totalPayable;
+    if(rate>0){
+      var r=rate/100/12;
+      var pow=Math.pow(1+r,tenure);
+      emi=Math.round(remaining*r*pow/(pow-1));
+      totalInterest=Math.round(emi*tenure-remaining);
+      totalPayable=emi*tenure;
+    } else {
+      // 0% interest — exact division, ceil to avoid under-payment leaving a stray month
+      emi=Math.ceil(remaining/tenure);
+      totalInterest=0;
+      totalPayable=remaining;
+    }
     var emiEl=document.getElementById('liabEMI');
     if(emiEl)emiEl.value=emi;
     var calcEMI=document.getElementById('calcEMIAmt');
@@ -7416,11 +7458,11 @@ async function generateInsights(){
   // Asset allocation analysis
   const schemeMap={};
   state.assets.forEach(a=>{if(!schemeMap[a.scheme])schemeMap[a.scheme]=0;schemeMap[a.scheme]+=a.alloc||0;});
-  const allocGaps=Object.entries(schemeMap).map(([s,actual])=>{
+  const allocGaps=state.allocTargetsEnabled?Object.entries(schemeMap).map(([s,actual])=>{
     const t=getEffectiveTarget(s);
     const diff=t?+(actual-t.ideal).toFixed(1):0;
     return {scheme:s,actual:actual.toFixed(1),target:t?.ideal||0,diff,status:diff>3?'over':diff<-3?'under':'ok'};
-  }).filter(g=>g.status!=='ok');
+  }).filter(g=>g.status!=='ok'):[];
 
   const schemes=new Set(state.assets.map(a=>a.scheme));
   const highestGain=state.assets.filter(a=>a.invested>0).map(a=>({name:a.name,gain:((a.value-a.invested)/a.invested*100).toFixed(1)})).sort((a,b)=>b.gain-a.gain)[0];
@@ -7786,6 +7828,27 @@ function clearScan(){scanResult=null;document.getElementById('scanResult').style
 function initCharts(){renderMiniChart();}
 function renderMiniChart(){const ctx=document.getElementById('miniChart');if(!ctx)return;if(charts.mini)charts.mini.destroy();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const now=new Date();const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const rawType=document.querySelector('#miniCtrl .cpill.on')?.getAttribute('data-type')||'line';const isArea=rawType==='area';const chartType=isArea?'line':rawType;const cc=chartColors();charts.mini=new Chart(ctx,{type:chartType,data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:isArea?'rgba(34,197,94,.25)':'rgba(34,197,94,.5)',borderColor:'#22c55e',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:3,pointBackgroundColor:'#22c55e'},{label:'Expense',data:eD,backgroundColor:isArea?'rgba(239,68,68,.2)':'rgba(239,68,68,.5)',borderColor:'#ef4444',borderRadius:6,borderWidth:2,tension:.4,fill:isArea,pointRadius:3,pointBackgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:cc.tick,font:{size:10}}},y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10}}}}}});}
 function setMini(type,el){document.querySelectorAll('#miniCtrl .cpill').forEach(c=>c.classList.remove('on'));el.classList.add('on');el.setAttribute('data-type',type);renderMiniChart();}
+function applyAllocToggleUI(){
+  const on=!!state.allocTargetsEnabled;
+  const track=document.getElementById('allocToggleTrack');
+  const thumb=document.getElementById('allocToggleThumb');
+  const label=document.getElementById('allocToggleLabel');
+  const content=document.getElementById('wealthAllocContent');
+  const disabled=document.getElementById('wealthAllocDisabled');
+  const badge=document.getElementById('allocTotalBadge');
+  if(track){track.style.background=on?'var(--accent)':'var(--bg3)';}
+  if(thumb){thumb.style.left=on?'18px':'2px';thumb.style.background=on?'#fff':'var(--text3)';}
+  if(label){label.textContent=on?'ON':'OFF';label.style.color=on?'var(--accent)':'var(--text3)';}
+  if(content)content.style.display=on?'':'none';
+  if(disabled)disabled.style.display=on?'none':'';
+  if(badge)badge.style.opacity=on?'1':'0.4';
+}
+function toggleAllocTargets(){
+  state.allocTargetsEnabled=!state.allocTargetsEnabled;
+  saveState();
+  applyAllocToggleUI();
+  if(state.allocTargetsEnabled) renderWealth();
+}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();setExpTrendTab(expTrendTab);renderYearlySummary();renderCatBreakdown();}
 
 function localDateStr(d){
@@ -8074,12 +8137,12 @@ function copyShareLink(){
 }
 function setTheme(t,el){state.theme=t;saveState();applyTheme(t);document.querySelectorAll('.theme-sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');setTimeout(()=>{renderMiniChart();if(curPage==='analytics')renderAnalytics();if(curPage==='assets')renderAssetChart();},300);}
 function applyTheme(t){
-  var valid=['dark','light','ocean','aurora','rose','forest'];
+  var valid=['dark','light','ocean','rose'];
   document.documentElement.setAttribute('data-theme',valid.includes(t)?t:'dark');
 }
 // Returns theme-aware colors for Chart.js axes/grids
 function chartColors(){
-  var isLight=(state.theme==='light'||state.theme==='rose'||state.theme==='forest');
+  var isLight=(state.theme==='light'||state.theme==='rose');
   return{
     tick:isLight?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)',
     grid:isLight?'rgba(0,0,0,0.07)':'rgba(255,255,255,0.05)',
@@ -9649,6 +9712,7 @@ function showAcctBalBreakdown(){
 }
 
 function renderWealth(){
+  applyAllocToggleUI();
   const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);
   const totalLiab=state.liabilities.reduce((s,l)=>s+l.remaining,0);
 
@@ -9901,7 +9965,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
 // ── Version stamp: change this string on every release to force SW update ──
-var BUILD = 'ft-build-20260503-v19';
+var BUILD = 'ft-build-20260603-v20';
 
 (function(){
   if(!('serviceWorker' in navigator)) return;
@@ -10083,8 +10147,8 @@ showPage=function(id){
   if(id==='calendar'){renderBillCalendar();}
   if(id==='transfers'){renderTransferList();populateTransferSelects();}
   if(id==='debtcountdown'){renderDebtCountdown();populatePrepaySelect();}
-  if(id==='retirement'){/* user triggers calc */}
-  if(id==='emergency'){calcEmergencyFund();}
+  if(id==='retirement'){renderRetirementPage();}
+  if(id==='emergency'){populateEfundDropdown();calcEmergencyFund();}
   if(id==='trends'){renderSpendingTrends();}
   if(id==='reports'){setReportPreset('thisMonth',document.querySelector('.chip.on'));generateForecast();renderNetWorthTimelineReport();}
   if(id==='sharecard'){refreshShareCard();}
@@ -10378,453 +10442,680 @@ function deleteTransfer(id){
 }
 
 // ======== DEBT PAYOFF COUNTDOWN ========
-function renderDebtCountdown(){
-  var c=document.getElementById('debtCountdownList');
-  if(!c) return;
-  if(!state.liabilities||!state.liabilities.length){
-    c.innerHTML='<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div>';return;
-  }
-  c.innerHTML=state.liabilities.map(function(l){
-    var monthsLeft=0;
-    var interest=0;
-    if(l.emi>0&&l.remaining>0){
-      if(l.rate>0){
-        var r=l.rate/12/100;
-        monthsLeft=Math.ceil(-Math.log(1-l.remaining*r/l.emi)/Math.log(1+r));
-        interest=(l.emi*monthsLeft)-l.remaining;
-      } else {
-        monthsLeft=Math.ceil(l.remaining/l.emi);
-      }
-    }
-    var payoffDate='';
-    if(monthsLeft>0){
-      var pd=new Date();pd.setMonth(pd.getMonth()+monthsLeft);
-      payoffDate=pd.toLocaleString('default',{month:'short',year:'numeric'});
-    }
-    var pct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;
-    return'<div class="box" style="margin-bottom:10px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-      +'<div style="font-size:14px;font-weight:900">'+l.name+'</div>'
-      +'<div style="font-size:11px;font-weight:700;color:var(--text3)">'+l.type+'</div>'
-      +'</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:10px">'
-      +'<div><div class="countdown-num">'+state.currSymbol+fmt(cv(l.remaining))+'</div><div class="countdown-lbl">Outstanding</div></div>'
-      +'<div><div class="countdown-num" style="color:var(--yellow)">'+(monthsLeft>0?monthsLeft+'mo':'—')+'</div><div class="countdown-lbl">Months Left</div></div>'
-      +'<div><div class="countdown-num" style="color:var(--red)">'+state.currSymbol+(interest>0?fmt(cv(interest)):'0')+'</div><div class="countdown-lbl">Remaining Interest</div></div>'
-      +'</div>'
-      +(payoffDate?'<div style="font-size:12px;font-weight:700;color:var(--green);text-align:center;margin-bottom:8px">🏁 Payoff by '+payoffDate+'</div>':'')
-      +'<div class="goal-bar"><div class="goal-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--green),var(--teal))"></div></div>'
-      +'<div style="font-size:10px;color:var(--text3);font-weight:700;text-align:right;margin-top:4px">'+pct+'% paid</div>'
-      +'</div>';
-  }).join('');
-}
+// ════════════════════════════════════════════
+//  DEBT PAYOFF — Full detail cards
+// ════════════════════════════════════════════
+var _dpExpanded = {}; // loanId -> active sub-tab ('schedule'|'suggestions')
 
-// ── Prepayment Calculator ──
-function populatePrepaySelect(){
-  var sel=document.getElementById('prepayLoanSel');
-  if(!sel) return;
-  sel.innerHTML='<option value="">-- Select Loan --</option>'
-    +state.liabilities.map(function(l){return'<option value="'+l.id+'">'+l.name+'</option>';}).join('');
-}
-function calcPrepay(){
-  var id=document.getElementById('prepayLoanSel')?.value;
-  var extra=parseFloat(document.getElementById('prepayAmt')?.value||0);
-  var res=document.getElementById('prepayResult');
-  if(!res) return;
-  if(!id||!extra){res.style.display='none';return;}
-  var l=state.liabilities.find(function(x){return String(x.id)===String(id);});
-  if(!l||!l.emi||l.remaining<=0){res.style.display='none';return;}
-  var r=l.rate>0?l.rate/12/100:0;
-  function monthsToPayoff(rem,emi){
-    if(emi<=0) return 0;
-    if(r<=0) return Math.ceil(rem/emi);
-    return Math.ceil(-Math.log(1-(rem*r/emi))/Math.log(1+r));
-  }
-  var origMonths=monthsToPayoff(l.remaining,l.emi);
-  var newRem=Math.max(0,l.remaining-extra/(state.currencyRate||1));
-  var newMonths=monthsToPayoff(newRem,l.emi);
-  var savedMonths=origMonths-newMonths;
-  var savedInterest=savedMonths*l.emi-(extra/(state.currencyRate||1));
-  res.style.display='block';
-  res.innerHTML='<div style="font-size:11px;font-weight:900;color:var(--green);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">⚡ Impact of '+state.currSymbol+fmt(cv(extra/(state.currencyRate||1)))+' Prepayment</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">'
-    +'<div><div style="font-size:16px;font-weight:900;color:var(--accent)">'+savedMonths+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Months Saved</div></div>'
-    +'<div><div style="font-size:16px;font-weight:900;color:var(--green)">'+state.currSymbol+fmt(cv(Math.max(0,savedInterest)))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Interest Saved</div></div>'
-    +'<div><div style="font-size:16px;font-weight:900;color:var(--yellow)">'+newMonths+'mo</div><div style="font-size:10px;color:var(--text3);font-weight:700">New Duration</div></div>'
-    +'</div>';
-}
-
-// ======== RETIREMENT CALCULATOR ========
-function calcRetirement(){
-  var curAge=parseFloat(document.getElementById('retCurrentAge')?.value||0);
-  var retAge=parseFloat(document.getElementById('retRetireAge')?.value||60);
-  var curSavings=parseFloat(document.getElementById('retCurrentSavings')?.value||0)/(state.currencyRate||1);
-  var monthly=parseFloat(document.getElementById('retMonthly')?.value||0)/(state.currencyRate||1);
-  var retPct=parseFloat(document.getElementById('retReturn')?.value||12);
-  var monthlyExp=parseFloat(document.getElementById('retMonthlyExp')?.value||0)/(state.currencyRate||1);
-  var lifeExp=parseFloat(document.getElementById('retLifeExp')?.value||80);
-  var inflation=parseFloat(document.getElementById('retInflation')?.value||6);
-  var res=document.getElementById('retirementResult');
-  if(!res) return;
-  if(!curAge||!retAge||retAge<=curAge){res.style.display='none';return;}
-  var yearsToRetire=retAge-curAge;
-  var retireYears=Math.max(0,lifeExp-retAge);
-  var monthlyRate=retPct/12/100;
-  var inflRate=inflation/12/100;
-  // Future value of current savings + monthly SIP
-  var fvSavings=curSavings*Math.pow(1+retPct/100,yearsToRetire);
-  var fvSIP=monthly*((Math.pow(1+monthlyRate,yearsToRetire*12)-1)/monthlyRate)*(1+monthlyRate);
-  var corpusNeeded=0;
-  if(monthlyExp>0&&retireYears>0){
-    // Inflation-adjusted monthly expense at retirement
-    var expAtRetire=monthlyExp*Math.pow(1+inflation/100,yearsToRetire);
-    // Real rate = (1+nom)/(1+inf)-1
-    var realRate=(1+retPct/100)/(1+inflation/100)-1;
-    var monthlyReal=realRate/12;
-    var n=retireYears*12;
-    if(monthlyReal>0){
-      corpusNeeded=expAtRetire*((1-Math.pow(1+monthlyReal,-n))/monthlyReal);
-    } else {
-      corpusNeeded=expAtRetire*n;
-    }
-  }
-  var totalCorpus=fvSavings+fvSIP;
-  var surplus=totalCorpus-corpusNeeded;
-  var onTrack=surplus>=0;
-  res.style.display='block';
-  res.innerHTML='<div style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:'+(onTrack?'var(--green)':'var(--red)')+';margin-bottom:10px">'+(onTrack?'✅ On Track!':'⚠️ Gap Detected')+'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-    +'<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--accent)">'+state.currSymbol+fmtCr(cv(totalCorpus))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Projected Corpus</div></div>'
-    +(corpusNeeded>0?'<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--yellow)">'+state.currSymbol+fmtCr(cv(corpusNeeded))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">Needed Corpus</div></div>':'<div></div>')
-    +'</div>'
-    +(corpusNeeded>0?'<div style="text-align:center;padding:10px;border-radius:10px;background:'+(onTrack?'rgba(34,197,94,0.1)':'rgba(255,69,105,0.1)')+'"><div style="font-size:15px;font-weight:900;color:'+(onTrack?'var(--green)':'var(--red)')+'">'+state.currSymbol+fmtCr(cv(Math.abs(surplus)))+'</div><div style="font-size:11px;font-weight:700;color:var(--text3)">'+(onTrack?'Surplus at Retirement':'Shortfall — increase SIP')+'</div></div>':'')
-    +'<div style="margin-top:10px;font-size:11px;color:var(--text3);font-weight:700;line-height:1.8">'
-    +'📅 Years to retire: <b style="color:var(--text)">'+yearsToRetire+'</b><br>'
-    +'🎂 Retirement duration: <b style="color:var(--text)">'+retireYears+' years</b><br>'
-    +'📈 From SIP: <b style="color:var(--text)">'+state.currSymbol+fmtCr(cv(fvSIP))+'</b><br>'
-    +'💰 From existing: <b style="color:var(--text)">'+state.currSymbol+fmtCr(cv(fvSavings))+'</b>'
-    +'</div>';
-}
-function fmtCr(n){
-  if(n>=10000000) return (n/10000000).toFixed(2)+'Cr';
-  if(n>=100000) return (n/100000).toFixed(2)+'L';
-  return fmt(n);
-}
-
-// ======== EMERGENCY FUND TRACKER ========
-var _efSubTab = 'overview';
-
-function setEfundMonths(n, el) {
-  efundTargetMonths = n;
-  state.efundTargetMonths = n;
-  saveState();
-  renderEmergencyFundPage();
-}
-
-function calcEmergencyFund() {
-  if (state.efundTargetMonths) efundTargetMonths = state.efundTargetMonths;
-  renderEmergencyFundPage();
-}
-
-function efSetTab(tab) { _efSubTab = tab; renderEmergencyFundPage(); }
-
-function efSelectAccount(id) {
-  state.emergencyAccountId = id;
-  saveState();
-  renderEmergencyFundPage();
-}
-
-function renderEmergencyFundPage() {
-  var c = document.getElementById('efPageContent');
+function renderDebtCountdown() {
+  var c = document.getElementById('debtCountdownList');
   if (!c) return;
-  var sym = state.currSymbol;
-  var accts = state.accounts || [];
-  var selectedId = state.emergencyAccountId || '';
-  var selAcct = selectedId ? accts.find(function(a) { return String(a.id) === String(selectedId); }) : null;
-
-  // Avg monthly expense (3-month rolling)
-  var expArr = [];
-  for (var i = 0; i < 3; i++) {
-    var mo = (new Date().getMonth() - i + 12) % 12;
-    var yr = new Date().getFullYear() - (new Date().getMonth() - i < 0 ? 1 : 0);
-    var e2 = state.transactions.filter(function(t) {
-      var d = new Date(t.date);
-      return d.getMonth() === mo && d.getFullYear() === yr && t.type === 'expense';
-    }).reduce(function(s, t) { return s + t.amount; }, 0);
-    if (e2 > 0) expArr.push(e2);
+  if (!state.liabilities || !state.liabilities.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div>';
+    return;
   }
-  var avgExp = expArr.length ? expArr.reduce(function(a, b) { return a + b; }, 0) / expArr.length : 0;
+  c.innerHTML = state.liabilities.map(function(l) { return dpBuildCard(l); }).join('');
+}
+
+function populatePrepaySelect() {} // legacy stub
+function calcPrepay() {} // legacy stub
+
+function dpToggleCard(id) {
+  _dpExpanded[id] = _dpExpanded[id] ? null : 'schedule';
+  renderDebtCountdown();
+}
+function dpCardTab(id, tab) {
+  _dpExpanded[id] = tab;
+  renderDebtCountdown();
+}
+
+function dpCalc(l) {
+  var r = l.rate > 0 ? l.rate / 12 / 100 : 0;
+  var emi = l.emi || 0;
+  var balance = l.remaining || 0;
+  var schedule = [], totalInterest = 0, month = 0, MAX = 600;
+  while (balance > 0.01 && month < MAX) {
+    var interest = r > 0 ? balance * r : 0;
+    var principal = Math.max(0, emi - interest);
+    // Last payment: absorb any remaining balance (handles rounding leftovers)
+    if (principal >= balance || (r === 0 && balance <= emi + 0.01)) {
+      principal = balance; interest = r > 0 ? balance * r : 0;
+      totalInterest += interest;
+      balance = 0;
+      schedule.push({ month: month + 1, interest: interest, principal: principal, payment: interest + principal, balance: 0 });
+      month++;
+      break;
+    }
+    totalInterest += interest;
+    balance = Math.max(0, balance - principal);
+    schedule.push({ month: month + 1, interest: interest, principal: principal, payment: interest + principal, balance: balance });
+    month++;
+  }
+  var payoffDate = null;
+  if (month > 0) { payoffDate = new Date(); payoffDate.setDate(1); payoffDate.setMonth(payoffDate.getMonth() + month); }
+  return { schedule: schedule, months: month, totalInterest: totalInterest, payoffDate: payoffDate };
+}
+
+function dpBuildCard(l) {
+  var sym = state.currSymbol;
+  var info = LIAB_TYPES[l.type] || LIAB_TYPES['Other'];
+  var d = dpCalc(l);
+  var pct = l.total > 0 ? Math.round((l.total - l.remaining) / l.total * 100) : 0;
+  var payoffStr = d.payoffDate ? d.payoffDate.toLocaleString('default', { month: 'short', year: 'numeric' }) : '—';
+  var emi = l.emi || 0;
+  var totalPayable = l.remaining + d.totalInterest;
+  var iRatio = totalPayable > 0 ? Math.round(d.totalInterest / totalPayable * 100) : 0;
+  var activeTab = _dpExpanded[l.id] || null;
+  var color = l.color || '#ef4444';
+
+  var html = '<div class="dp-card">';
+
+  // ── Header (always visible) ──
+  html += '<div class="dp-card-header" onclick="dpToggleCard(' + l.id + ')">'
+    + '<div style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:' + color + '22;border:1px solid ' + color + '44">' + info.emoji + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="font-size:14px;font-weight:900;color:var(--text)">' + l.name + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3)">' + l.type + (l.rate ? ' · ' + l.rate + '% p.a.' : '') + '</div>'
+    + '</div>'
+    + '<div style="text-align:right;flex-shrink:0">'
+    + '<div style="font-size:14px;font-weight:900;color:var(--red)">' + sym + fmt(cv(l.remaining)) + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3)">' + (d.months > 0 ? d.months + 'mo left' : 'no EMI') + '</div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-left:6px">' + (activeTab ? '▲' : '▼') + '</div>'
+    + '</div>';
+
+  // ── Progress bar ──
+  html += '<div style="padding:0 14px 10px">'
+    + '<div style="background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:4px">'
+    + '<div style="height:6px;width:' + pct + '%;background:linear-gradient(90deg,' + color + ',' + color + '88);border-radius:6px;transition:width .6s"></div></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text3)">'
+    + '<span>' + pct + '% paid</span>'
+    + (d.payoffDate ? '<span>🏁 ' + payoffStr + '</span>' : '')
+    + '</div></div>';
+
+  // ── Stats row (always visible) ──
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 14px 12px">'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px">'
+    + '<div style="font-size:12px;font-weight:900;color:var(--accent)">' + sym + fmtShort2(cv(l.remaining)) + '</div>'
+    + '<div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Outstanding</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px">'
+    + '<div style="font-size:12px;font-weight:900;color:var(--yellow)">' + sym + fmtShort2(cv(emi)) + '</div>'
+    + '<div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">EMI/mo</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px">'
+    + '<div style="font-size:12px;font-weight:900;color:var(--red)">' + sym + fmtShort2(cv(d.totalInterest)) + '</div>'
+    + '<div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Interest</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px">'
+    + '<div style="font-size:12px;font-weight:900;color:var(--text)">' + (d.months || '—') + (d.months ? 'mo' : '') + '</div>'
+    + '<div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Duration</div></div>'
+    + '</div>';
+
+  // ── Expanded detail ──
+  if (activeTab) {
+    html += '<div class="dp-card-body">';
+    // Sub-tab bar
+    html += '<div class="dp-tab-bar">'
+      + ['schedule', 'suggestions'].map(function(t) {
+          var lbl = t === 'schedule' ? '📅 Amortization' : '💡 Suggestions';
+          return '<div class="dp-tab' + (activeTab === t ? ' on' : '') + '" onclick="dpCardTab(' + l.id + ',\'' + t + '\');event.stopPropagation()">' + lbl + '</div>';
+        }).join('')
+      + '</div>';
+
+    if (activeTab === 'schedule') {
+      // Interest vs principal split bar
+      html += '<div style="margin-bottom:12px">'
+        + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+        + '<div style="flex:1;background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.2);border-radius:10px;padding:8px;text-align:center">'
+        + '<div style="font-size:13px;font-weight:900;color:var(--red)">' + sym + fmtShort2(cv(d.totalInterest)) + '</div>'
+        + '<div style="font-size:9px;font-weight:700;color:var(--text3);margin-top:2px">INTEREST (' + iRatio + '%)</div></div>'
+        + '<div style="flex:1;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:8px;text-align:center">'
+        + '<div style="font-size:13px;font-weight:900;color:var(--green)">' + sym + fmtShort2(cv(l.remaining)) + '</div>'
+        + '<div style="font-size:9px;font-weight:700;color:var(--text3);margin-top:2px">PRINCIPAL (' + (100 - iRatio) + '%)</div></div>'
+        + '</div>'
+        + '<div style="height:6px;border-radius:6px;overflow:hidden;display:flex">'
+        + '<div style="width:' + iRatio + '%;background:rgba(255,69,105,0.7)"></div>'
+        + '<div style="flex:1;background:rgba(34,197,94,0.7)"></div>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:var(--text3);margin-top:3px"><span>🔴 Interest</span><span>🟢 Principal</span></div>'
+        + '<div style="text-align:center;margin-top:8px;font-size:12px;font-weight:900;color:var(--text)">Total Payable: <span style="color:var(--yellow)">' + sym + fmtShort2(cv(totalPayable)) + '</span></div>'
+        + '</div>';
+      // Amortization table
+      html += '<div class="dp-amort-row dp-amort-hdr"><div>Mo.</div><div style="text-align:right">EMI</div><div style="text-align:right;color:var(--red)">Interest</div><div style="text-align:right;color:var(--text2)">Balance</div></div>';
+      html += '<div class="dp-amort-wrap">';
+      d.schedule.forEach(function(row) {
+        var dt = new Date(); dt.setDate(1); dt.setMonth(dt.getMonth() + row.month - 1);
+        var mo = dt.toLocaleString('default', { month: 'short', year: '2-digit' });
+        html += '<div class="dp-amort-row" style="' + (row.balance < 1 ? 'opacity:.5' : '') + '">'
+          + '<div style="font-size:10px;font-weight:700;color:var(--text2)">' + mo + '</div>'
+          + '<div style="text-align:right;font-weight:700;color:var(--text)">' + sym + fmtShort2(cv(row.payment)) + '</div>'
+          + '<div style="text-align:right;font-weight:700;color:var(--red)">' + sym + fmtShort2(cv(row.interest)) + '</div>'
+          + '<div style="text-align:right;font-weight:700;color:var(--text2)">' + sym + fmtShort2(cv(row.balance)) + '</div>'
+          + '</div>';
+      });
+      html += '</div>';
+
+    } else if (activeTab === 'suggestions') {
+      var r2 = l.rate > 0 ? l.rate / 12 / 100 : 0;
+      var rem = l.remaining;
+      var scenarios = [
+        { label: '⏱️ Close in 3 months', months: 3 },
+        { label: '⏱️ Close in 6 months', months: 6 },
+        { label: '⏱️ Close in 12 months', months: 12 },
+        { label: '🚀 EMI + 25% extra', mult: 1.25 },
+        { label: '🚀 EMI + 50% extra', mult: 1.5 },
+        { label: '🚀 Double EMI', mult: 2.0 },
+      ];
+      html += '<div style="background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:10px;font-size:11px;font-weight:700;color:var(--text2);line-height:1.8">'
+        + '📌 <b style="color:var(--text)">Current plan:</b> Pay ' + sym + fmtShort2(cv(emi)) + '/mo → debt free <b style="color:var(--green)">' + payoffStr + '</b><br>'
+        + '💸 Total interest at current pace: <b style="color:var(--red)">' + sym + fmt(cv(d.totalInterest)) + '</b>'
+        + '</div>';
+      scenarios.forEach(function(sc) {
+        var reqEMI, newMonths, newInterest, save, extra;
+        if (sc.months) {
+          if (r2 > 0) {
+            reqEMI = rem * r2 * Math.pow(1 + r2, sc.months) / (Math.pow(1 + r2, sc.months) - 1);
+          } else {
+            reqEMI = rem / sc.months;
+          }
+          extra = reqEMI - emi;
+          if (extra < 0 || reqEMI > rem * 0.9) return;
+        } else {
+          reqEMI = emi * sc.mult;
+          extra = reqEMI - emi;
+        }
+        var nb = dpCalc(Object.assign({}, l, { emi: reqEMI }));
+        newMonths = nb.months;
+        newInterest = nb.totalInterest;
+        save = Math.max(0, d.totalInterest - newInterest);
+        var savedMo = d.months - newMonths;
+        if (save < 1 && savedMo < 1) return;
+        var pd2 = nb.payoffDate ? nb.payoffDate.toLocaleString('default', { month: 'short', year: 'numeric' }) : '—';
+        html += '<div class="dp-sugg">'
+          + '<div class="dp-sugg-title">' + sc.label + '</div>'
+          + '<div class="dp-sugg-body">'
+          + 'Pay <b style="color:var(--accent)">' + sym + fmt(cv(reqEMI)) + '/mo</b>'
+          + (extra > 0 ? ' (+' + sym + fmt(cv(extra)) + ' extra)' : '') + '<br>'
+          + 'Debt free: <b>' + pd2 + '</b>'
+          + (savedMo > 0 ? ' · saves <b style="color:var(--yellow)">' + savedMo + ' months</b>' : '')
+          + '</div>'
+          + (save > 0 ? '<div class="dp-sugg-save">💰 Save ' + sym + fmt(cv(save)) + ' in interest</div>' : '')
+          + '</div>';
+      });
+      html += '<div style="font-size:10px;color:var(--text3);font-weight:700;text-align:center;margin-top:4px;line-height:1.5">💡 Reducing-balance method — interest charged only on outstanding principal each month</div>';
+    }
+    html += '</div>'; // dp-card-body
+  }
+
+  html += '</div>'; // dp-card
+  return html;
+}
+
+function fmtShort2(n) {
+  if (!n || isNaN(n)) return '0';
+  var abs = Math.abs(n);
+  if (abs >= 10000000) return (abs / 10000000).toFixed(1) + 'Cr';
+  if (abs >= 100000) return (abs / 100000).toFixed(1) + 'L';
+  if (abs >= 1000) return (abs / 1000).toFixed(1) + 'K';
+  return Math.round(abs).toLocaleString('en-IN');
+}
+
+// ════════════════════════════════════════════
+//  RETIREMENT PLANNER — Multi-plan with save
+// ════════════════════════════════════════════
+var _retActiveTab = 'plans'; // 'plans' | 'new' | 'edit'
+var _retEditId = null;
+
+function calcRetirement() { renderRetirementPage(); } // called by page trigger
+
+function renderRetirementPage() {
+  var c = document.getElementById('retPageContent');
+  if (!c) return;
+  if (!state.retirementPlans) state.retirementPlans = [];
+  var sym = state.currSymbol;
 
   var html = '';
 
-  // ── STEP 1: Account selector ──
-  html += '<div class="box" style="margin-bottom:12px">';
-  html += '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">🏦 Emergency Fund Account</div>';
+  // ── Top tab bar ──
+  html += '<div class="ret-tab-bar">'
+    + '<div class="ret-tab' + (_retActiveTab === 'plans' ? ' on' : '') + '" onclick="retSetTab(\'plans\')">📋 My Plans</div>'
+    + '<div class="ret-tab' + (_retActiveTab === 'new' ? ' on' : '') + '" onclick="retSetTab(\'new\')">➕ New Plan</div>'
+    + '</div>';
 
-  if (!accts.length) {
-    html += '<div style="background:rgba(255,184,0,0.08);border:1.5px dashed rgba(255,184,0,0.4);border-radius:14px;padding:20px;text-align:center">'
-      + '<div style="font-size:24px;margin-bottom:8px">🏦</div>'
-      + '<div style="font-size:13px;font-weight:900;color:var(--text);margin-bottom:4px">No accounts added yet</div>'
-      + '<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:12px">Add a bank/savings account first from the Accounts page</div>'
-      + '<button onclick="showPage(\'accounts\')" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 20px;font-family:var(--font);font-size:12px;font-weight:900;cursor:pointer">Go to Accounts →</button>'
-      + '</div>';
-  } else {
-    html += '<div class="ef-tip">💡 Choose a <b>dedicated account</b> as your emergency fund — separate from your daily spending so you always know your exact safety net balance.</div>';
-    html += '<div class="ef-select-wrap">'
-      + '<select id="efAcctSel" onchange="efSelectAccount(this.value)">'
-      + '<option value="">— Select an account —</option>'
-      + accts.map(function(a) {
-          var info = ACCT_TYPES[a.type] || { emoji: '🏦' };
-          return '<option value="' + a.id + '"' + (String(a.id) === String(selectedId) ? ' selected' : '') + '>'
-            + info.emoji + ' ' + a.name + '  (' + sym + fmt(cv(a.balance)) + ')</option>';
-        }).join('')
-      + '</select></div>';
-
-    if (selAcct) {
-      var sInfo = ACCT_TYPES[selAcct.type] || { emoji: '🏦' };
-      var sColor = selAcct.color || '#448aff';
-      html += '<div class="ef-acct-card">'
-        + '<div style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:' + sColor + '22;border:1px solid ' + sColor + '44">' + sInfo.emoji + '</div>'
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:13px;font-weight:900;color:var(--text)">' + selAcct.name + '</div>'
-        + '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">' + selAcct.type + '</div>'
-        + '<div style="font-size:13px;font-weight:900;color:var(--green);margin-top:2px">' + sym + fmt(cv(selAcct.balance)) + '</div>'
-        + '</div>'
-        + '<div style="font-size:20px">✅</div>'
+  if (_retActiveTab === 'plans') {
+    if (!state.retirementPlans.length) {
+      html += '<div style="background:rgba(124,92,252,0.06);border:1.5px dashed rgba(124,92,252,0.3);border-radius:14px;padding:24px;text-align:center">'
+        + '<div style="font-size:28px;margin-bottom:8px">🧓</div>'
+        + '<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:4px">No plans saved yet</div>'
+        + '<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:14px">Create your first retirement plan to see projections and suggestions</div>'
+        + '<button onclick="retSetTab(\'new\')" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-family:var(--font);font-size:13px;font-weight:900;cursor:pointer">➕ Create Plan</button>'
         + '</div>';
     } else {
-      html += '<div style="font-size:12px;font-weight:700;color:var(--yellow);text-align:center;padding:10px 0;border-top:1px solid var(--border);margin-top:10px">👆 Select an account above to continue</div>';
+      state.retirementPlans.forEach(function(p) {
+        html += retBuildPlanCard(p, sym);
+      });
     }
-  }
-  html += '</div>';
-
-  // ── Only show rest if account is selected ──
-  if (selAcct) {
-    var current = selAcct.balance;
-    var target = avgExp * efundTargetMonths;
-    var pct = target > 0 ? Math.min(100, Math.max(0, current / target * 100)) : 0;
-    var monthsCovered = avgExp > 0 ? current / avgExp : 0;
-    var gap = Math.max(0, target - current);
-    var color = pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
-
-    // Target months selector
-    html += '<div class="box" style="margin-bottom:12px">'
-      + '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">🎯 Target Coverage</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + [3, 6, 9, 12].map(function(n) {
-          return '<div class="chip' + (efundTargetMonths === n ? ' on' : '') + '" onclick="efSetMonthsN(' + n + ')">' + n + ' Months</div>';
-        }).join('')
+  } else if (_retActiveTab === 'new' || _retActiveTab === 'edit') {
+    var editPlan = _retEditId ? state.retirementPlans.find(function(p) { return p.id === _retEditId; }) : null;
+    var v = editPlan || {};
+    html += '<div class="box">'
+      + '<div style="font-size:12px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">' + (editPlan ? '✏️ Edit Plan' : '➕ New Retirement Plan') + '</div>'
+      + '<div class="field" style="margin-bottom:10px">'
+      + '<div class="field-label">📝 Plan Name</div>'
+      + '<input class="field-input" id="retPlanName" placeholder="e.g. Conservative, Aggressive…" value="' + (v.name || '') + '">'
       + '</div>'
-      + (avgExp > 0 ? '<div style="font-size:11px;font-weight:700;color:var(--text3);margin-top:8px">📊 Avg monthly expense: <b style="color:var(--text)">' + sym + fmt(cv(avgExp)) + '</b></div>' : '<div style="font-size:11px;font-weight:700;color:var(--text3);margin-top:8px">No expense data yet — add transactions to calculate</div>')
-      + '</div>';
+      + '<div class="ret-field-grid">'
+      + retField('retCurAge', '🎂 Current Age', v.curAge || '', '30', 'number')
+      + retField('retRetAge', '🏖️ Retire at Age', v.retAge || '', '60', 'number')
+      + retField('retCurSav', '💰 Current Savings (' + sym + ')', v.curSav || '', '500000', 'number')
+      + retField('retMonthly', '📅 Monthly SIP (' + sym + ')', v.monthly || '', '10000', 'number')
+      + retField('retReturn', '📈 Expected Return %', v.retReturn || '', '12', 'number')
+      + retField('retMonthExp', '💸 Monthly Expense at Retire (' + sym + ')', v.monthExp || '', '50000', 'number')
+      + retField('retLifeExp', '🎂 Life Expectancy', v.lifeExp || '', '80', 'number')
+      + retField('retInflation', '📉 Inflation %', v.inflation || '', '6', 'number')
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:4px">'
+      + '<button onclick="retSavePlan()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px;font-family:var(--font);font-size:13px;font-weight:900;cursor:pointer">'
+      + (editPlan ? '💾 Update Plan' : '💾 Save Plan') + '</button>'
+      + '<button onclick="retSetTab(\'plans\')" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">Cancel</button>'
+      + '</div></div>';
 
-    // Sub tabs
-    html += '<div class="ef-tab-bar">'
-      + [['overview', '📊 Overview'], ['transfer', '🔀 Transfer'], ['history', '📋 History']].map(function(t) {
-          return '<div class="ef-tab' + (_efSubTab === t[0] ? ' on' : '') + '" onclick="efSetTab(\'' + t[0] + '\')">' + t[1] + '</div>';
-        }).join('')
-      + '</div>';
-
-    if (_efSubTab === 'overview') {
-      // Arc gauge
-      html += '<div class="box" style="margin-bottom:12px">'
-        + '<div style="text-align:center;padding:8px 0 4px">'
-        + '<svg width="200" height="110" viewBox="0 0 200 110">'
-        + '<path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="var(--bg3)" stroke-width="18" stroke-linecap="round"/>'
-        + '<path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="' + color + '" stroke-width="18" stroke-linecap="round"'
-        + ' stroke-dasharray="' + (Math.PI * 80) + '"'
-        + ' stroke-dashoffset="' + (Math.PI * 80 * (1 - pct / 100)) + '"/>'
-        + '<text x="100" y="88" text-anchor="middle" font-size="28" font-weight="900" fill="' + color + '">' + pct.toFixed(0) + '%</text>'
-        + '<text x="100" y="106" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text3)">of ' + efundTargetMonths + '-month target</text>'
-        + '</svg></div>'
-        + '<div class="ef-stat-row">'
-        + '<div class="ef-stat"><div class="ef-stat-val" style="color:var(--blue)">' + sym + fmt(cv(current)) + '</div><div class="ef-stat-lbl">Fund Balance</div></div>'
-        + '<div class="ef-stat"><div class="ef-stat-val" style="color:var(--accent)">' + sym + fmt(cv(target)) + '</div><div class="ef-stat-lbl">Target</div></div>'
-        + '<div class="ef-stat"><div class="ef-stat-val" style="color:' + color + '">' + monthsCovered.toFixed(1) + 'mo</div><div class="ef-stat-lbl">Covered</div></div>'
-        + '</div>'
-        + (gap > 0
-          ? '<div style="background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.2);border-radius:12px;padding:12px;text-align:center">'
-            + '<div style="font-size:15px;font-weight:900;color:var(--red)">' + sym + fmt(cv(gap)) + ' more needed</div>'
-            + '<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:4px">Transfer ' + sym + fmt(cv(Math.ceil(gap / 6))) + '/mo for 6 months to reach target</div>'
-            + '</div>'
-          : '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px;text-align:center">'
-            + '<div style="font-size:16px;font-weight:900;color:var(--green)">🛡️ Target met! You\'re covered.</div>'
-            + '<div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:4px">' + monthsCovered.toFixed(1) + ' months of expenses secured</div>'
-            + '</div>')
-        + '</div>';
-
-      // Tips
-      var tips = pct >= 100
-        ? ['Don\'t touch this fund unless it\'s a true emergency', 'Consider a high-yield savings account or liquid MF for better returns', 'Review target every 6 months as your expenses change']
-        : pct >= 60
-        ? ['Keep this account separate from your daily spending account', 'Set a monthly auto-transfer to build faster', 'Avoid investing emergency funds in volatile assets like stocks']
-        : ['Build this before aggressive investing — it\'s your financial airbag', 'Even ₹1,000/week adds up — start small, stay consistent', 'Liquid accounts only: savings account, FD, or liquid mutual fund'];
-      html += '<div class="box">'
-        + '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">💡 Tips</div>'
-        + tips.map(function(t) {
-            return '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">'
-              + '<span style="color:var(--accent);font-size:12px;margin-top:1px;flex-shrink:0">●</span>'
-              + '<span style="font-size:12px;font-weight:700;color:var(--text2);line-height:1.5">' + t + '</span></div>';
-          }).join('')
-        + '</div>';
-
-    } else if (_efSubTab === 'transfer') {
-      var otherAccts = accts.filter(function(a) { return String(a.id) !== String(selAcct.id); });
-
-      // Add to fund
-      html += '<div class="box" style="margin-bottom:12px">'
-        + '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:8px">➕ Add to Emergency Fund</div>'
-        + '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px">Transfer money from another account into your emergency fund.</div>';
-      if (otherAccts.length) {
-        html += '<div class="ef-select-wrap" style="margin-bottom:10px">'
-          + '<select id="efFromAcct"><option value="">— From account —</option>'
-          + otherAccts.map(function(a) {
-              var info = ACCT_TYPES[a.type] || { emoji: '🏦' };
-              return '<option value="' + a.id + '">' + info.emoji + ' ' + a.name + '  (' + sym + fmt(cv(a.balance)) + ')</option>';
-            }).join('')
-          + '</select></div>'
-          + '<div class="ef-transfer-row">'
-          + '<input type="number" id="efAddAmt" placeholder="Amount to add" inputmode="numeric">'
-          + '<button class="ef-transfer-btn" onclick="efDoTransfer(\'to\')">➕ Add</button>'
-          + '</div>';
-      } else {
-        html += '<div style="font-size:12px;color:var(--text3);font-weight:700;text-align:center;padding:12px 0">No other accounts to transfer from</div>';
-      }
-      html += '</div>';
-
-      // Withdraw from fund
-      html += '<div class="box">'
-        + '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:8px">⚠️ Withdraw from Fund</div>'
-        + '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;line-height:1.5">Only withdraw for genuine emergencies. This is a last resort.</div>';
-      if (otherAccts.length) {
-        html += '<div class="ef-select-wrap" style="margin-bottom:10px">'
-          + '<select id="efToAcct"><option value="">— To account —</option>'
-          + otherAccts.map(function(a) {
-              var info = ACCT_TYPES[a.type] || { emoji: '🏦' };
-              return '<option value="' + a.id + '">' + info.emoji + ' ' + a.name + '  (' + sym + fmt(cv(a.balance)) + ')</option>';
-            }).join('')
-          + '</select></div>'
-          + '<div class="ef-transfer-row">'
-          + '<input type="number" id="efWithdrawAmt" placeholder="Amount to withdraw" inputmode="numeric">'
-          + '<button class="ef-transfer-btn" style="background:var(--red)" onclick="efDoTransfer(\'from\')">📤 Withdraw</button>'
-          + '</div>';
-      } else {
-        html += '<div style="font-size:12px;color:var(--text3);font-weight:700;text-align:center;padding:12px 0">No other accounts available</div>';
-      }
-      html += '</div>';
-
-    } else if (_efSubTab === 'history') {
-      var hist = state.efTransfers || [];
-      html += '<div class="box">'
-        + '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">📋 Transfer History</div>';
-      if (!hist.length) {
-        html += '<div style="font-size:12px;color:var(--text3);font-weight:700;text-align:center;padding:20px 0">No transfers yet — use the Transfer tab to move funds</div>';
-      } else {
-        html += '<div class="ef-history-wrap">';
-        hist.slice().reverse().forEach(function(h, ri) {
-          var isAdd = h.direction === 'to';
-          var ds = new Date(h.date).toLocaleString('default', { day: 'numeric', month: 'short', year: 'numeric' });
-          html += '<div class="ef-history-row">'
-            + '<div><div style="font-size:12px;font-weight:900;color:var(--text)">' + (isAdd ? '➕ Added' : '📤 Withdrawn') + ' ' + sym + fmt(cv(h.amount)) + '</div>'
-            + '<div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px">' + ds + ' · ' + (isAdd ? (h.fromName + ' → ' + selAcct.name) : (selAcct.name + ' → ' + h.toName)) + '</div></div>'
-            + '<div style="display:flex;align-items:center;gap:8px">'
-            + '<span style="font-size:13px;font-weight:900;color:' + (isAdd ? 'var(--green)' : 'var(--red)') + '">' + (isAdd ? '+' : '-') + sym + fmt(cv(h.amount)) + '</span>'
-            + '<span onclick="efDeleteTransfer(' + ri + ')" style="font-size:10px;color:var(--text3);cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-weight:700">✕</span>'
-            + '</div></div>';
-        });
-        html += '</div>';
-        var totalAdded = hist.filter(function(h) { return h.direction === 'to'; }).reduce(function(s, h) { return s + h.amount; }, 0);
-        var totalOut = hist.filter(function(h) { return h.direction === 'from'; }).reduce(function(s, h) { return s + h.amount; }, 0);
-        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">'
-          + '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:900;color:var(--green)">+' + sym + fmt(cv(totalAdded)) + '</div><div style="font-size:10px;font-weight:700;color:var(--text3)">Total Added</div></div>'
-          + '<div style="background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:13px;font-weight:900;color:var(--red)">-' + sym + fmt(cv(totalOut)) + '</div><div style="font-size:10px;font-weight:700;color:var(--text3)">Total Withdrawn</div></div>'
-          + '</div>';
-      }
-      html += '</div>';
-    }
+    // Live preview
+    html += '<div id="retLivePreview" style="margin-top:10px"></div>';
+    // Trigger live calc after render
+    html += '<script>setTimeout(retLiveCalc,50)<\/script>';
   }
 
   c.innerHTML = html;
 }
 
-function efSetMonthsN(n) {
-  efundTargetMonths = n;
-  state.efundTargetMonths = n;
+function retField(id, label, value, placeholder, type) {
+  return '<div class="ret-field">'
+    + '<label for="' + id + '">' + label + '</label>'
+    + '<input id="' + id + '" type="' + type + '" placeholder="' + placeholder + '" value="' + (value || '') + '" oninput="retLiveCalc()" step="0.1">'
+    + '</div>';
+}
+
+function retSetTab(tab) {
+  _retActiveTab = tab;
+  if (tab !== 'edit') _retEditId = null;
+  renderRetirementPage();
+}
+
+function retEditPlan(id) {
+  _retEditId = id;
+  _retActiveTab = 'edit';
+  renderRetirementPage();
+}
+
+function retDeletePlan(id) {
+  state.retirementPlans = state.retirementPlans.filter(function(p) { return p.id !== id; });
   saveState();
-  renderEmergencyFundPage();
+  renderRetirementPage();
 }
 
-function efDoTransfer(direction) {
-  var sym = state.currSymbol;
-  var selId = state.emergencyAccountId;
-  var efAcct = state.accounts.find(function(a) { return String(a.id) === String(selId); });
-  if (!efAcct) { showToast('Select an emergency fund account first', 'yellow'); return; }
-
-  if (direction === 'to') {
-    var amt = parseFloat(document.getElementById('efAddAmt') ? document.getElementById('efAddAmt').value : 0);
-    var fromId = document.getElementById('efFromAcct') ? document.getElementById('efFromAcct').value : '';
-    var fromAcct = state.accounts.find(function(a) { return String(a.id) === String(fromId); });
-    if (!fromAcct) { showToast('Select a source account', 'yellow'); return; }
-    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'yellow'); return; }
-    var amtINR = amt / (state.currencyRate || 1);
-    if (fromAcct.balance < amtINR) { showToast('Insufficient balance in ' + fromAcct.name, 'red'); return; }
-    fromAcct.balance -= amtINR;
-    efAcct.balance += amtINR;
-    if (!state.efTransfers) state.efTransfers = [];
-    state.efTransfers.push({ direction: 'to', amount: amtINR, fromName: fromAcct.name, date: new Date().toISOString() });
-    if (!state.transfers) state.transfers = [];
-    state.transfers.unshift({ id: Date.now(), from: String(fromAcct.id), to: String(efAcct.id), fromName: fromAcct.name, toName: efAcct.name, amount: amtINR, date: localDateStr(new Date()), note: 'Emergency Fund Deposit' });
-    saveState();
-    showToast('✅ Added ' + sym + fmt(cv(amtINR)) + ' to Emergency Fund', 'green');
+function retSavePlan() {
+  var name = (document.getElementById('retPlanName') ? document.getElementById('retPlanName').value.trim() : '') || 'My Plan';
+  var rate2 = state.currencyRate || 1;
+  var plan = {
+    id: _retEditId || Date.now(),
+    name: name,
+    curAge: parseFloat(document.getElementById('retCurAge') ? document.getElementById('retCurAge').value : 0) || 0,
+    retAge: parseFloat(document.getElementById('retRetAge') ? document.getElementById('retRetAge').value : 60) || 60,
+    curSav: parseFloat(document.getElementById('retCurSav') ? document.getElementById('retCurSav').value : 0) / rate2 || 0,
+    monthly: parseFloat(document.getElementById('retMonthly') ? document.getElementById('retMonthly').value : 0) / rate2 || 0,
+    retReturn: parseFloat(document.getElementById('retReturn') ? document.getElementById('retReturn').value : 12) || 12,
+    monthExp: parseFloat(document.getElementById('retMonthExp') ? document.getElementById('retMonthExp').value : 0) / rate2 || 0,
+    lifeExp: parseFloat(document.getElementById('retLifeExp') ? document.getElementById('retLifeExp').value : 80) || 80,
+    inflation: parseFloat(document.getElementById('retInflation') ? document.getElementById('retInflation').value : 6) || 6,
+    savedAt: new Date().toISOString()
+  };
+  if (!plan.curAge || plan.retAge <= plan.curAge) { showToast('Enter valid ages', 'yellow'); return; }
+  if (_retEditId) {
+    var idx = state.retirementPlans.findIndex(function(p) { return p.id === _retEditId; });
+    if (idx >= 0) state.retirementPlans[idx] = plan;
   } else {
-    var amt2 = parseFloat(document.getElementById('efWithdrawAmt') ? document.getElementById('efWithdrawAmt').value : 0);
-    var toId = document.getElementById('efToAcct') ? document.getElementById('efToAcct').value : '';
-    var toAcct = state.accounts.find(function(a) { return String(a.id) === String(toId); });
-    if (!toAcct) { showToast('Select a destination account', 'yellow'); return; }
-    if (!amt2 || amt2 <= 0) { showToast('Enter a valid amount', 'yellow'); return; }
-    var amtINR2 = amt2 / (state.currencyRate || 1);
-    if (efAcct.balance < amtINR2) { showToast('Insufficient balance in Emergency Fund', 'red'); return; }
-    efAcct.balance -= amtINR2;
-    toAcct.balance += amtINR2;
-    if (!state.efTransfers) state.efTransfers = [];
-    state.efTransfers.push({ direction: 'from', amount: amtINR2, toName: toAcct.name, date: new Date().toISOString() });
-    if (!state.transfers) state.transfers = [];
-    state.transfers.unshift({ id: Date.now(), from: String(efAcct.id), to: String(toAcct.id), fromName: efAcct.name, toName: toAcct.name, amount: amtINR2, date: localDateStr(new Date()), note: 'Emergency Fund Withdrawal' });
-    saveState();
-    showToast('📤 Withdrawn ' + sym + fmt(cv(amtINR2)) + ' from Emergency Fund', 'yellow');
+    if (!state.retirementPlans) state.retirementPlans = [];
+    state.retirementPlans.push(plan);
   }
-  _efSubTab = 'history';
-  renderEmergencyFundPage();
-  renderAccounts();
-  renderHistory();
-  updateDashboard();
+  saveState();
+  showToast('Plan saved ✅', 'green');
+  _retActiveTab = 'plans';
+  _retEditId = null;
+  renderRetirementPage();
 }
 
-function efDeleteTransfer(reversedIdx) {
-  var arr = state.efTransfers || [];
-  var realIdx = arr.length - 1 - reversedIdx;
-  if (realIdx < 0 || realIdx >= arr.length) return;
-  var h = arr[realIdx];
-  var efAcct = state.accounts.find(function(a) { return String(a.id) === String(state.emergencyAccountId); });
-  if (efAcct) {
-    if (h.direction === 'to') {
-      efAcct.balance = Math.max(0, efAcct.balance - h.amount);
-      var src = state.accounts.find(function(a) { return a.name === h.fromName; });
-      if (src) src.balance += h.amount;
-    } else {
-      efAcct.balance += h.amount;
-      var dst = state.accounts.find(function(a) { return a.name === h.toName; });
-      if (dst) dst.balance = Math.max(0, dst.balance - h.amount);
+function retCalcPlan(p) {
+  var yearsLeft = p.retAge - p.curAge;
+  var retireYears = Math.max(0, p.lifeExp - p.retAge);
+  var mr = p.retReturn / 12 / 100;
+  var fvSav = p.curSav * Math.pow(1 + p.retReturn / 100, yearsLeft);
+  var fvSIP = mr > 0 ? p.monthly * ((Math.pow(1 + mr, yearsLeft * 12) - 1) / mr) * (1 + mr) : p.monthly * yearsLeft * 12;
+  var totalCorpus = fvSav + fvSIP;
+  var corpusNeeded = 0;
+  if (p.monthExp > 0 && retireYears > 0) {
+    var expAtRet = p.monthExp * Math.pow(1 + p.inflation / 100, yearsLeft);
+    var realRate = (1 + p.retReturn / 100) / (1 + p.inflation / 100) - 1;
+    var mReal = realRate / 12;
+    var n = retireYears * 12;
+    corpusNeeded = mReal > 0.00001 ? expAtRet * ((1 - Math.pow(1 + mReal, -n)) / mReal) : expAtRet * n;
+  }
+  var surplus = totalCorpus - corpusNeeded;
+  return { yearsLeft: yearsLeft, retireYears: retireYears, fvSav: fvSav, fvSIP: fvSIP, totalCorpus: totalCorpus, corpusNeeded: corpusNeeded, surplus: surplus, onTrack: surplus >= 0 };
+}
+
+function retBuildPlanCard(p, sym) {
+  var d = retCalcPlan(p);
+  var onTrack = d.onTrack;
+  var pct = d.corpusNeeded > 0 ? Math.min(100, Math.max(0, d.totalCorpus / d.corpusNeeded * 100)) : 100;
+  var color = onTrack ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
+  var html = '<div class="ret-plan-card">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    + '<div><span class="ret-plan-name">' + p.name + '</span>'
+    + (onTrack ? '<span class="ret-plan-badge">ON TRACK</span>' : '<span class="ret-plan-badge" style="background:var(--red)">GAP</span>')
+    + '</div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="retEditPlan(' + p.id + ')" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:var(--font);font-size:11px;font-weight:700;color:var(--text2);cursor:pointer">✏️ Edit</button>'
+    + '<button onclick="retDeletePlan(' + p.id + ')" style="background:transparent;border:none;font-size:14px;cursor:pointer;color:var(--text3);padding:4px">✕</button>'
+    + '</div></div>'
+    // Stats grid
+    + '<div class="ret-result-grid">'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:var(--accent)">' + sym + fmtCr(cv(d.totalCorpus)) + '</div><div class="ret-result-lbl">Projected Corpus</div></div>'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:var(--yellow)">' + sym + fmtCr(cv(d.corpusNeeded)) + '</div><div class="ret-result-lbl">Needed Corpus</div></div>'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:' + color + '">' + sym + fmtCr(cv(Math.abs(d.surplus))) + '</div><div class="ret-result-lbl">' + (onTrack ? 'Surplus ✅' : 'Shortfall ⚠️') + '</div></div>'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:var(--text)">' + d.yearsLeft + 'yr</div><div class="ret-result-lbl">Years to Retire</div></div>'
+    + '</div>'
+    // Progress bar
+    + '<div style="background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:4px">'
+    + '<div style="height:8px;width:' + pct.toFixed(0) + '%;background:linear-gradient(90deg,' + (onTrack ? 'var(--green)' : 'var(--yellow)') + ',var(--teal));border-radius:6px;transition:width .6s"></div></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:12px;text-align:right">' + pct.toFixed(0) + '% of target corpus projected</div>'
+    // Key numbers
+    + '<div style="background:var(--bg3);border-radius:10px;padding:10px;font-size:11px;font-weight:700;color:var(--text2);line-height:1.8;margin-bottom:12px">'
+    + '📅 Retire in <b style="color:var(--text)">' + d.yearsLeft + ' years</b> (Age ' + p.retAge + ') · Live ' + d.retireYears + ' years in retirement<br>'
+    + '📈 From SIP: <b style="color:var(--text)">' + sym + fmtCr(cv(d.fvSIP)) + '</b> · From existing savings: <b style="color:var(--text)">' + sym + fmtCr(cv(d.fvSav)) + '</b><br>'
+    + '💸 Expense at retirement (inflation-adj): <b style="color:var(--yellow)">' + sym + fmt(cv(p.monthExp * Math.pow(1 + p.inflation / 100, d.yearsLeft))) + '/mo</b>'
+    + '</div>'
+    // Suggestions
+    + retBuildSuggestions(p, d, sym)
+    + '</div>';
+  return html;
+}
+
+function retBuildSuggestions(p, d, sym) {
+  var html = '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">💡 Suggestions</div>';
+  var suggestions = [];
+
+  // 1. Is on track?
+  if (d.onTrack) {
+    suggestions.push({ title: '🎉 You\'re on track!', body: 'Your projected corpus of <b style="color:var(--accent)">' + sym + fmtCr(cv(d.totalCorpus)) + '</b> exceeds the needed <b>' + sym + fmtCr(cv(d.corpusNeeded)) + '</b> with a surplus of <b style="color:var(--green)">' + sym + fmtCr(cv(d.surplus)) + '</b>. Keep investing consistently.' });
+  } else {
+    // How much extra SIP needed to close gap
+    var shortfall = -d.surplus;
+    var mr = p.retReturn / 12 / 100;
+    var n = d.yearsLeft * 12;
+    var extraSIP = mr > 0 ? shortfall / (((Math.pow(1 + mr, n) - 1) / mr) * (1 + mr)) : shortfall / n;
+    suggestions.push({ title: '⚠️ Increase Monthly SIP', body: 'You have a shortfall of <b style="color:var(--red)">' + sym + fmtCr(cv(shortfall)) + '</b>. Increase monthly investment by <b style="color:var(--accent)">' + sym + fmt(cv(extraSIP)) + '/mo</b> to close the gap.' });
+  }
+
+  // 2. Retire later scenario
+  if (d.yearsLeft > 3) {
+    var p2 = Object.assign({}, p, { retAge: p.retAge + 3 });
+    var d2 = retCalcPlan(p2);
+    var extraCorpus = d2.totalCorpus - d.totalCorpus;
+    suggestions.push({ title: '📅 Retire 3 Years Later (Age ' + p2.retAge + ')', body: 'Delaying retirement by just 3 years adds <b style="color:var(--green)">' + sym + fmtCr(cv(extraCorpus)) + '</b> to your corpus through extra SIP + compounding. Total: <b>' + sym + fmtCr(cv(d2.totalCorpus)) + '</b>.' });
+  }
+
+  // 3. Increase SIP by 10%
+  var p3 = Object.assign({}, p, { monthly: p.monthly * 1.10 });
+  var d3 = retCalcPlan(p3);
+  suggestions.push({ title: '📈 Boost SIP by 10%', body: 'Investing just 10% more each month (<b style="color:var(--accent)">' + sym + fmt(cv(p3.monthly * (state.currencyRate || 1))) + '/mo</b>) grows your corpus by <b style="color:var(--green)">' + sym + fmtCr(cv(d3.totalCorpus - d.totalCorpus)) + '</b> — a big reward for a small step-up.' });
+
+  // 4. Annual step-up
+  var stepUpCorpus = retCalcWithStepUp(p, 0.10);
+  if (stepUpCorpus > d.totalCorpus) {
+    suggestions.push({ title: '🪜 Annual SIP Step-up (10%/yr)', body: 'Increasing your SIP by 10% every year (as salary grows) can build a corpus of <b style="color:var(--accent)">' + sym + fmtCr(cv(stepUpCorpus)) + '</b> — <b style="color:var(--green)">+' + sym + fmtCr(cv(stepUpCorpus - d.totalCorpus)) + '</b> more than a flat SIP.' });
+  }
+
+  // 5. Higher return scenario (equity tilt)
+  if (p.retReturn < 14) {
+    var p5 = Object.assign({}, p, { retReturn: p.retReturn + 2 });
+    var d5 = retCalcPlan(p5);
+    suggestions.push({ title: '🏦 2% Higher Return (Equity Tilt)', body: 'If you achieve ' + p5.retReturn + '% returns (e.g. more equity in portfolio), your corpus grows to <b style="color:var(--accent)">' + sym + fmtCr(cv(d5.totalCorpus)) + '</b> — <b style="color:var(--green)">+' + sym + fmtCr(cv(d5.totalCorpus - d.totalCorpus)) + '</b> more.' });
+  }
+
+  // 6. Lower inflation scenario
+  if (p.inflation > 4) {
+    var p6 = Object.assign({}, p, { inflation: p.inflation - 2 });
+    var d6 = retCalcPlan(p6);
+    if (d6.surplus > d.surplus) {
+      suggestions.push({ title: '💡 Reduce Lifestyle Inflation', body: 'By reducing your expected retirement spending growth to ' + p6.inflation + '% p.a., your needed corpus drops to <b style="color:var(--yellow)">' + sym + fmtCr(cv(d6.corpusNeeded)) + '</b> — saving you <b style="color:var(--green)">' + sym + fmtCr(cv(d.corpusNeeded - d6.corpusNeeded)) + '</b> in corpus needed.' });
     }
   }
-  arr.splice(realIdx, 1);
-  saveState();
-  showToast('Transfer reversed', 'blue');
-  renderEmergencyFundPage();
-  renderAccounts();
-  updateDashboard();
+
+  // 7. EPFO/NPS
+  suggestions.push({ title: '🏛️ Maximise EPFO & NPS', body: 'EPFO contributes a guaranteed ~8.25% on your provident fund. Voluntary NPS (Tier 1) gives up to <b>₹50,000 extra tax deduction</b> under 80CCD(1B). These are risk-free corpuses that complement your equity SIP.' });
+
+  html += suggestions.map(function(s) {
+    return '<div class="ret-sugg"><div class="ret-sugg-title">' + s.title + '</div><div class="ret-sugg-body">' + s.body + '</div></div>';
+  }).join('');
+
+  return html;
 }
 
+function retCalcWithStepUp(p, stepUpRate) {
+  var mr = p.retReturn / 12 / 100;
+  var months = p.yearsLeft ? p.yearsLeft * 12 : (p.retAge - p.curAge) * 12;
+  var balance = p.curSav * Math.pow(1 + p.retReturn / 100, p.retAge - p.curAge);
+  var monthly = p.monthly;
+  var corpus = p.curSav * Math.pow(1 + p.retReturn / 100, (p.retAge - p.curAge));
+  var sipTotal = 0;
+  for (var yr = 0; yr < (p.retAge - p.curAge); yr++) {
+    var yearlyIncrease = monthly * Math.pow(1 + stepUpRate, yr);
+    sipTotal += yearlyIncrease * 12 * Math.pow(1 + p.retReturn / 100, (p.retAge - p.curAge) - yr - 0.5);
+  }
+  return p.curSav * Math.pow(1 + p.retReturn / 100, (p.retAge - p.curAge)) + sipTotal;
+}
+
+function retLiveCalc() {
+  var prev = document.getElementById('retLivePreview');
+  if (!prev) return;
+  var rate2 = state.currencyRate || 1;
+  var sym = state.currSymbol;
+  var p = {
+    curAge: parseFloat(document.getElementById('retCurAge') ? document.getElementById('retCurAge').value : 0) || 0,
+    retAge: parseFloat(document.getElementById('retRetAge') ? document.getElementById('retRetAge').value : 0) || 0,
+    curSav: (parseFloat(document.getElementById('retCurSav') ? document.getElementById('retCurSav').value : 0) || 0) / rate2,
+    monthly: (parseFloat(document.getElementById('retMonthly') ? document.getElementById('retMonthly').value : 0) || 0) / rate2,
+    retReturn: parseFloat(document.getElementById('retReturn') ? document.getElementById('retReturn').value : 12) || 12,
+    monthExp: (parseFloat(document.getElementById('retMonthExp') ? document.getElementById('retMonthExp').value : 0) || 0) / rate2,
+    lifeExp: parseFloat(document.getElementById('retLifeExp') ? document.getElementById('retLifeExp').value : 80) || 80,
+    inflation: parseFloat(document.getElementById('retInflation') ? document.getElementById('retInflation').value : 6) || 6,
+  };
+  if (!p.curAge || !p.retAge || p.retAge <= p.curAge) { prev.innerHTML = ''; return; }
+  var d = retCalcPlan(p);
+  var color = d.onTrack ? 'var(--green)' : 'var(--red)';
+  prev.innerHTML = '<div class="box">'
+    + '<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">📊 Live Preview</div>'
+    + '<div class="ret-result-grid">'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:var(--accent)">' + sym + fmtCr(cv(d.totalCorpus)) + '</div><div class="ret-result-lbl">Projected Corpus</div></div>'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:var(--yellow)">' + sym + fmtCr(cv(d.corpusNeeded)) + '</div><div class="ret-result-lbl">Needed Corpus</div></div>'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:' + color + '">' + sym + fmtCr(cv(Math.abs(d.surplus))) + '</div><div class="ret-result-lbl">' + (d.onTrack ? 'Surplus ✅' : 'Shortfall ⚠️') + '</div></div>'
+    + '<div class="ret-result-box"><div class="ret-result-val" style="color:var(--text)">' + d.yearsLeft + 'yr</div><div class="ret-result-lbl">Years to Retire</div></div>'
+    + '</div>'
+    + retBuildSuggestions(p, d, sym)
+    + '</div>';
+}
+
+function fmtCr(n) {
+  if (!n || isNaN(n)) return '0';
+  var abs = Math.abs(n);
+  if (abs >= 10000000) return (abs / 10000000).toFixed(2) + 'Cr';
+  if (abs >= 100000) return (abs / 100000).toFixed(2) + 'L';
+  return fmt(abs);
+}
+
+
+// ======== EMERGENCY FUND TRACKER ========
+function setEfundMonths(n,el){
+  efundTargetMonths=n;
+  document.querySelectorAll('#efundMonthBtns .chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  calcEmergencyFund();
+}
+var _efundTab='overview';
+function switchEfundTab(tab){
+  _efundTab=tab;
+  var tabs={overview:'efundTabOv',transfer:'efundTabTr',history:'efundTabHi'};
+  var panels={overview:'efundPanelOverview',transfer:'efundPanelTransfer',history:'efundPanelHistory'};
+  Object.keys(tabs).forEach(function(k){
+    var el=document.getElementById(tabs[k]);
+    if(el){if(k===tab){el.style.background='var(--accent)';el.style.color='#fff';el.style.border='none';}else{el.style.background='var(--glass)';el.style.color='var(--text2)';el.style.border='1.5px solid var(--border2)';}}
+  });
+  Object.keys(panels).forEach(function(k){
+    var el=document.getElementById(panels[k]);if(el) el.style.display=k===tab?'':'none';
+  });
+  if(tab==='history') renderEfundHistory();
+}
+function populateEfundDropdown(){
+  var sel=document.getElementById('efundAcctSelect');
+  var fromSel=document.getElementById('efundFromAcct');
+  if(!sel) return;
+  var accts=state.accounts||[];
+  var savedId=state.efundAcctId||'';
+  sel.innerHTML='<option value="">🏦 Select an account…</option>'+accts.map(function(a){
+    var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[a.type])||{emoji:'🏦'};
+    var bal=cv(a.balance);
+    return '<option value="'+a.id+'"'+(String(a.id)===String(savedId)?' selected':'')+'>'+info.emoji+' '+a.name+' ('+state.currSymbol+fmt(bal)+')</option>';
+  }).join('');
+  if(fromSel){
+    var otherId=savedId;
+    fromSel.innerHTML='<option value="">Select source account…</option>'+accts.filter(function(a){return String(a.id)!==String(otherId);}).map(function(a){
+      var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[a.type])||{emoji:'🏦'};
+      return '<option value="'+a.id+'">'+info.emoji+' '+a.name+' ('+state.currSymbol+fmt(cv(a.balance))+')</option>';
+    }).join('');
+  }
+  if(savedId) updateEfundAcctCard(savedId);
+}
+function onEfundAcctChange(){
+  var sel=document.getElementById('efundAcctSelect');
+  var id=sel?sel.value:'';
+  state.efundAcctId=id;
+  saveState();
+  updateEfundAcctCard(id);
+  populateEfundDropdown();
+  calcEmergencyFund();
+}
+function updateEfundAcctCard(id){
+  var card=document.getElementById('efundAcctCard');
+  if(!card) return;
+  if(!id){card.style.display='none';return;}
+  var a=(state.accounts||[]).find(function(x){return String(x.id)===String(id);});
+  if(!a){card.style.display='none';return;}
+  var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[a.type])||{emoji:'🏦'};
+  card.style.display='flex';
+  document.getElementById('efundAcctIcon').textContent=info.emoji;
+  document.getElementById('efundAcctName').textContent=a.name;
+  document.getElementById('efundAcctType').textContent=a.type;
+  var bal=cv(a.balance);
+  var balEl=document.getElementById('efundAcctBal');
+  balEl.textContent=state.currSymbol+fmt(bal);
+  balEl.style.color=a.balance>=0?'var(--green)':'var(--red)';
+}
+function calcEmergencyFund(){
+  var res=document.getElementById('efundResult');
+  if(!res) return;
+  // Avg monthly expense label
+  var expArr=[];
+  for(var i=0;i<3;i++){
+    var m2=(new Date().getMonth()-i+12)%12;
+    var y2=new Date().getFullYear()-(new Date().getMonth()-i<0?1:0);
+    var e2=state.transactions.filter(function(t){var d=new Date(t.date);return d.getMonth()===m2&&d.getFullYear()===y2&&t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    if(e2>0) expArr.push(e2);
+  }
+  var monthTxs=getMonthTxs();
+  var monthlyExp=monthTxs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var avgExp=expArr.length?expArr.reduce(function(a,b){return a+b;},0)/expArr.length:monthlyExp;
+  var avgLabel=document.getElementById('efundAvgLabel');
+  if(avgLabel) avgLabel.innerHTML='📊 Avg monthly expense: <b style="color:var(--text)">'+state.currSymbol+fmt(cv(avgExp))+'</b>';
+  // Current balance from selected account
+  var acctId=state.efundAcctId||'';
+  var current=0;
+  if(acctId){
+    var a=(state.accounts||[]).find(function(x){return String(x.id)===String(acctId);});
+    if(a) current=a.balance;
+  }
+  var target=avgExp*efundTargetMonths;
+  var pct=target>0?Math.min(100,current/target*100):0;
+  var monthsCovered=avgExp>0?current/avgExp:0;
+  var gap=Math.max(0,target-current);
+  var color=pct>=100?'var(--green)':pct>=60?'var(--yellow)':'var(--red)';
+  // Arc gauge
+  var arc=Math.PI*70;
+  res.innerHTML=''
+    +'<div style="text-align:center;margin-bottom:8px">'
+    +'<svg width="200" height="110" viewBox="0 0 200 110">'
+    +'<path d="M15,95 A85,85 0 0,1 185,95" fill="none" stroke="var(--bg3)" stroke-width="16" stroke-linecap="round"/>'
+    +'<path d="M15,95 A85,85 0 0,1 185,95" fill="none" stroke="'+color+'" stroke-width="16" stroke-linecap="round" stroke-dasharray="'+Math.PI*85+'" stroke-dashoffset="'+(Math.PI*85*(1-pct/100))+'"/>'
+    +'<text x="100" y="80" text-anchor="middle" font-size="28" font-weight="900" fill="'+color+'">'+pct.toFixed(0)+'%</text>'
+    +'<text x="100" y="98" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text3)">of '+efundTargetMonths+'-month target</text>'
+    +'</svg></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:14px">'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:10px 4px"><div style="font-size:14px;font-weight:900;color:var(--text)">'+state.currSymbol+fmt(cv(current))+'</div><div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:3px;letter-spacing:.5px">FUND BALANCE</div></div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:10px 4px"><div style="font-size:14px;font-weight:900;color:var(--accent)">'+state.currSymbol+fmt(cv(target))+'</div><div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:3px;letter-spacing:.5px">TARGET</div></div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:10px 4px"><div style="font-size:14px;font-weight:900;color:'+color+'">'+monthsCovered.toFixed(1)+'mo</div><div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:3px;letter-spacing:.5px">COVERED</div></div>'
+    +'</div>'
+    +(acctId?''
+      +'<div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.2);border-radius:10px;padding:10px;text-align:center;margin-bottom:10px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--yellow)">👆 Select an account above to track your fund</div></div>':'')
+    +(gap>0
+      ?'<div style="background:rgba(255,69,105,0.08);border:1px solid rgba(255,69,105,0.2);border-radius:12px;padding:12px;text-align:center">'
+        +'<div style="font-size:14px;font-weight:900;color:var(--red);margin-bottom:4px">'+state.currSymbol+fmt(cv(gap))+' more needed</div>'
+        +'<div style="font-size:11px;color:var(--text3);font-weight:700">Save '+state.currSymbol+fmt(cv(gap/6))+'/mo to reach target in 6 months</div>'
+        +'</div>'
+      :'<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px;text-align:center">'
+        +'<div style="font-size:14px;font-weight:900;color:var(--green)">🎉 Emergency fund target met!</div>'
+        +'</div>');
+}
+function doEfundTransfer(){
+  var fromId=document.getElementById('efundFromAcct').value;
+  var toId=state.efundAcctId||'';
+  var amt=parseFloat(document.getElementById('efundTransferAmt').value||0);
+  var note=document.getElementById('efundTransferNote').value||'Emergency Fund Transfer';
+  if(!fromId||!toId){customAlert('⚠️','Select both a source account and an emergency fund account.');return;}
+  if(!amt||amt<=0){customAlert('⚠️','Enter a valid transfer amount.');return;}
+  var amtINR=amt*(state.currencyRate||1);
+  var from=(state.accounts||[]).find(function(a){return String(a.id)===String(fromId);});
+  var to=(state.accounts||[]).find(function(a){return String(a.id)===String(toId);});
+  if(!from||!to){customAlert('⚠️','Account not found.');return;}
+  from.balance-=amtINR; to.balance+=amtINR;
+  var today=localDateStr(new Date());
+  if(!Array.isArray(state.transfers)) state.transfers=[];
+  state.transfers.push({id:String(Date.now()),from:fromId,to:toId,amount:amtINR,date:today,note:note});
+  saveState();
+  document.getElementById('efundTransferAmt').value='';
+  document.getElementById('efundTransferNote').value='';
+  populateEfundDropdown();
+  updateEfundAcctCard(toId);
+  calcEmergencyFund();
+  switchEfundTab('overview');
+  customAlert('✅','Transfer complete! '+state.currSymbol+fmt(cv(amtINR))+' moved to emergency fund.');
+}
+function renderEfundHistory(){
+  var el=document.getElementById('efundHistoryList');
+  if(!el) return;
+  var toId=state.efundAcctId||'';
+  var transfers=(state.transfers||[]).filter(function(t){return String(t.to)===String(toId)||String(t.from)===String(toId);});
+  transfers=transfers.slice().reverse();
+  if(!transfers.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;font-weight:700">No transfers yet</div>';return;}
+  el.innerHTML=transfers.map(function(t){
+    var isIn=String(t.to)===String(toId);
+    var other=(state.accounts||[]).find(function(a){return String(a.id)===String(isIn?t.from:t.to);});
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:'+(isIn?'rgba(34,197,94,0.15)':'rgba(255,69,105,0.12)')+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">'+(isIn?'⬇️':'⬆️')+'</div>'
+      +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">'+(other?other.name:(isIn?'External':'External'))+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);font-weight:600">'+t.date+(t.note?' · '+t.note:'')+'</div></div>'
+      +'<div style="font-size:13px;font-weight:900;color:'+(isIn?'var(--green)':'var(--red)')+')">'+(isIn?'+':'-')+state.currSymbol+fmt(cv(t.amount))+'</div>'
+      +'</div>';
+  }).join('');
+}
 
 // ======== SPENDING TRENDS ========
 function setTrendPeriod(p,el){
@@ -11199,17 +11490,36 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v19 LATEST -->
+      <!-- v20 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">19</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">20</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v19 — 03 May 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v20 — 03 Jun 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🆘 <b style="color:var(--text)">Emergency Fund redesigned</b> — Account dropdown, tip card, Transfer &amp; History tabs, larger arc gauge<br>
+            🧓 <b style="color:var(--text)">Retirement Planner fixed</b> — Page renders on open<br>
+            🎨 <b style="color:var(--text)">Themes streamlined</b> — 4 themes in one compact row; Aurora &amp; Forest removed<br>
+            🎯 <b style="color:var(--text)">Allocation Targets toggle</b> — Enable/disable switch; OFF by default; asset &amp; AI warnings suppressed when OFF<br>
+            📊 <b style="color:var(--text)">Home chart simplified</b> — Bar removed; Line &amp; Area only<br>
+            🔢 <b style="color:var(--text)">Debt Payoff month fix</b> — 0% interest + 12-month tenure correctly shows 12 months; EMI auto-calc works at 0% rate
+          </div>
+        </div>
+      </div>
+
+      <!-- v19 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">19</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">v19 — 03 May 2026</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             ⚡ <b style="color:var(--text)">Bulk Hide / Show All</b> — one-tap Hide All / Show All per group in Expense, Income, Platforms &amp; Pay Methods customise lists
           </div>
@@ -11426,7 +11736,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v19 — 03 May 2026</span>
+      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v20 — 03 Jun 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
