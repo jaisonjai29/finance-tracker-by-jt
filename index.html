@@ -7808,13 +7808,19 @@ function checkRecurring(){
     if(r.freq==='weekly'&&today.getDay()===(r.day%7))shouldAdd=true;
     if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===0)shouldAdd=true;
     if(shouldAdd){
-      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:r.amount,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
+      const amtINR=r.amount/(state.currencyRate||1);
+      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:amtINR,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
+      // ── Update account balance (same logic as saveTx) ──
+      if(r.account){
+        const a=state.accounts.find(a=>String(a.id)===String(r.account));
+        if(a) a.balance+=(r.type==='income'?amtINR:-amtINR);
+      }
       r.lastAdded=todayKey;
       added++;
     }
   });
   state.lastRecurCheck=todayKey;
-  if(added>0){saveState();updateDashboard();renderHistory();if(added>0)setTimeout(()=>showToast('📅 '+added+' recurring transaction'+(added>1?'s':'')+' auto-added!','green'),500);}
+  if(added>0){saveState();updateDashboard();renderHistory();renderAccounts();setTimeout(()=>showToast('📅 '+added+' recurring transaction'+(added>1?'s':'')+' auto-added!','green'),500);}
 }
 
 // ======== RECEIPT SCANNER ========
