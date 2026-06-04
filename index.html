@@ -1105,7 +1105,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- MULTI-ACCOUNT -->
     <div class="page" id="page-accounts">
-      <div class="sec-head"><div class="sec-title">🏦 Accounts</div><button class="sec-btn" onclick="showModal('acctModal')">➕ Add</button></div>
+      <div class="sec-head"><div class="sec-title">🏦 Accounts</div><div style="display:flex;gap:6px"><button class="sec-btn" style="font-size:11px;background:rgba(79,142,247,0.12);color:var(--accent);border:1.5px solid rgba(79,142,247,0.3)" onclick="openMonthlyOpeningModal()">📅 Month Opening</button><button class="sec-btn" onclick="showModal('acctModal')">➕ Add</button></div></div>
       <div id="acctSummary" style="margin-bottom:14px"></div>
       <div class="box">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">💳 My Accounts</div>
@@ -1738,6 +1738,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div class="set-row" onclick="showPage('transfers')">
           <div class="set-row-left"><span class="set-row-icon">🔀</span><div><div class="set-row-label">Account Transfers</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Move money between accounts</div></div></div>
           <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="showPage('accounts')">
+          <div class="set-row-left"><span class="set-row-icon">🏦</span><div><div class="set-row-label">Accounts</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Manage bank, cash & card accounts</div></div></div>
+          <div class="set-row-right">Open ▶</div>
+        </div>
+        <div class="set-row" onclick="openMonthlyOpeningModal()">
+          <div class="set-row-left"><span class="set-row-icon">📅</span><div><div class="set-row-label">Set Month Opening Balances</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Record actual balance at start of month</div></div></div>
+          <div class="set-row-right">Set ▶</div>
         </div>
         <div class="set-row" onclick="showPage('debtcountdown')">
           <div class="set-row-left"><span class="set-row-icon">⏱️</span><div><div class="set-row-label">Debt Payoff Countdown</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Track debt-free date & prepayment impact</div></div></div>
@@ -3084,7 +3092,7 @@ let state={
   pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},bills:[],accounts:[],recurring:[],
-  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',
+  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',monthlyOpenings:{},
   familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
@@ -3132,6 +3140,7 @@ function loadState(){
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
   if(state.allocTargetsEnabled===undefined) state.allocTargetsEnabled=false;
   if(!state.billsResetMonth) state.billsResetMonth='';
+  if(!state.monthlyOpenings||typeof state.monthlyOpenings!=='object') state.monthlyOpenings={};
   if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
   if(!state.customCatEmojis) state.customCatEmojis={};
   if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
@@ -3482,6 +3491,7 @@ function initApp(){
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
   updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();applyAllocToggleUI();
+  checkMonthlyOpeningPrompt();
   if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
   if(state.isLoggedIn&&currentUser){
     renderAuthSignedIn(currentUser);
@@ -4382,6 +4392,12 @@ function saveEditTx(){
   const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
   // Reverse original real-account balance effect (origAmt is already in INR)
   if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
+  // Reverse original liability-link effect
+  const origLiabLink=tx.liabLink||'';
+  if(origLiabLink&&origType==='expense'){
+    const l=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
+    if(l) l.remaining=Math.min(l.total||l.remaining+origAmt, l.remaining+origAmt);
+  }
   // Apply all updated fields
   tx.type=editTxType;tx.amount=amtINR2;
   tx.desc=desc||(cat||'Transaction');
@@ -4393,6 +4409,12 @@ function saveEditTx(){
   tx.member=member;
   // Balance moves only on the real bank/cash account
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amtINR2:-amtINR2);}
+  // Re-apply liability-link effect with new values
+  const newLiabLink=tx.liabLink||'';
+  if(newLiabLink&&editTxType==='expense'){
+    const l=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
+    if(l) l.remaining=Math.max(0,l.remaining-amtINR2);
+  }
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
   if(curPage==='analytics')renderAnalytics();
   showToast('Transaction updated!','green');
@@ -4403,6 +4425,11 @@ function deleteFromEdit(){
   customConfirm('🗑️','Delete Transaction','This cannot be undone.',function(){
     const tx=state.transactions.find(t=>String(t.id)===String(id));
     if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
+    // Restore liability remaining if this was a liability-linked expense
+    if(tx?.liabLink&&tx.type==='expense'){
+      const l=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
+      if(l) l.remaining=Math.min(l.total||l.remaining+tx.amount, l.remaining+tx.amount);
+    }
     state.transactions=state.transactions.filter(t=>String(t.id)!==String(id));
     saveState();updateDashboard();renderHistory();updateBudget();renderAccounts();
     if(curPage==='analytics')renderAnalytics();
@@ -7383,7 +7410,9 @@ function renderAccounts(){
     const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
     const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     const openBal=typeof a.openingBalance==='number'?a.openingBalance:0;
-    const openNote=Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'';
+    const today=new Date();const mobVal=getMonthlyOpening(a.id,today.getFullYear(),today.getMonth());
+    const mobNote=mobVal!=null?`<div style="margin-top:3px"><span style="font-size:9px;color:var(--accent);font-weight:700;background:rgba(79,142,247,0.1);padding:1px 6px;border-radius:6px;border:1px solid rgba(79,142,247,0.2)">📅 ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()]} opening: ${state.currSymbol}${fmt(cv(mobVal))}</span></div>`:'';
+    const openNote=(Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'')+mobNote;
     return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div>${openNote}</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:4px"><div style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:900;background:rgba(68,138,255,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(68,138,255,0.3)" onclick="editAcct('${a.id}')">✏️ Edit</div><div style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.1);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,69,105,0.2)" onclick="deleteAcct('${a.id}')">Remove</div></div></div></div>`;
   }).join('');
   // Update history filter dropdown
@@ -7871,6 +7900,77 @@ function toggleAllocTargets(){
   saveState();
   applyAllocToggleUI();
   if(state.allocTargetsEnabled) renderWealth();
+}
+
+// ── MONTHLY OPENING BALANCE ──────────────────────────────────────────────────
+function getMonthKey(date){return `${date.getFullYear()}-${date.getMonth()}`;}
+
+function checkMonthlyOpeningPrompt(){
+  const today=new Date();
+  // Only prompt on the 1st of the month
+  if(today.getDate()!==1) return;
+  if(!state.accounts||!state.accounts.length) return;
+  const key=getMonthKey(today);
+  // Already set this month
+  if(state.monthlyOpenings[key]) return;
+  // Show modal after a short delay so app renders first
+  setTimeout(()=>showMonthlyOpeningModal(key),800);
+}
+
+function showMonthlyOpeningModal(key){
+  const today=new Date();
+  const monthName=['January','February','March','April','May','June','July','August','September','October','November','December'][today.getMonth()];
+  const fields=document.getElementById('monthlyOpeningFields');
+  if(!fields)return;
+  fields.innerHTML=state.accounts.map(a=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${a.color};flex-shrink:0"></div>
+        <div style="font-size:13px;font-weight:900;color:var(--text)">${a.name}</div>
+        <div style="font-size:10px;color:var(--text3);font-weight:700">${a.type}</div>
+      </div>
+      <div style="position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--text3)">${state.currSymbol}</span>
+        <input type="number" id="mob_${a.id}" class="field-input" style="padding-left:28px" placeholder="0"
+          value="${state.monthlyOpenings[key]?.[a.id]!=null?cv(state.monthlyOpenings[key][a.id]):''}">
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">
+        Current running balance: ${state.currSymbol}${fmt(cv(a.balance))}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('monthlyOpeningModal').dataset.key=key;
+  document.querySelector('#monthlyOpeningModal .modal-title').textContent=`📅 ${monthName} Opening Balances`;
+  showModal('monthlyOpeningModal');
+}
+
+function saveMonthlyOpenings(){
+  const key=document.getElementById('monthlyOpeningModal').dataset.key;
+  if(!key)return;
+  if(!state.monthlyOpenings[key]) state.monthlyOpenings[key]={};
+  let filled=0;
+  state.accounts.forEach(a=>{
+    const el=document.getElementById('mob_'+a.id);
+    if(el&&el.value!==''){
+      const val=parseFloat(el.value)||0;
+      state.monthlyOpenings[key][a.id]=val/(state.currencyRate||1);
+      filled++;
+    }
+  });
+  saveState();
+  closeModal('monthlyOpeningModal');
+  if(filled>0) showToast(`✅ ${filled} account opening balance${filled>1?'s':''} saved for this month`,'green');
+}
+
+function getMonthlyOpening(acctId,year,month){
+  const key=`${year}-${month}`;
+  return state.monthlyOpenings?.[key]?.[acctId]??null;
+}
+
+// Call from accounts page — manual trigger button
+function openMonthlyOpeningModal(){
+  const today=new Date();
+  showMonthlyOpeningModal(getMonthKey(today));
 }
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();setExpTrendTab(expTrendTab);renderYearlySummary();renderCatBreakdown();}
 
@@ -11300,8 +11400,13 @@ function detectDuplicates(){
   showToast(dups.length+' possible duplicate(s) found','yellow');
 }
 function deleteDuplicate(id){
+  const tx=state.transactions.find(function(t){return t.id===id;});
+  if(tx&&tx.account){
+    const a=state.accounts.find(function(a){return String(a.id)===String(tx.account);});
+    if(a) a.balance-=(tx.type==='income'?tx.amount:-tx.amount);
+  }
   state.transactions=state.transactions.filter(function(t){return t.id!==id;});
-  saveState();renderHistory();detectDuplicates();
+  saveState();renderHistory();renderAccounts();detectDuplicates();
   showToast('Duplicate removed','green');
 }
 
@@ -11795,6 +11900,19 @@ initGoogleDrive();
     <button class="btn-go" onclick="allocWarnAdjust()" style="background:var(--accent);margin-bottom:8px">🎯 Adjust Target</button>
     <button class="btn-cancel" onclick="allocWarnForce()" style="width:100%;margin-bottom:8px">➕ Add Anyway</button>
     <button class="btn-cancel" onclick="closeModal('allocWarnModal')" style="width:100%">✕ Cancel</button>
+  </div>
+</div>
+
+<!-- MONTHLY OPENING BALANCE MODAL -->
+<div class="modal-bg" id="monthlyOpeningModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="font-size:28px;text-align:center;margin-bottom:6px">📅</div>
+    <div class="modal-title" style="justify-content:center;text-align:center">Month Opening Balances</div>
+    <div style="font-size:12px;color:var(--text3);font-weight:600;text-align:center;margin-bottom:16px;line-height:1.6">Enter each account's actual balance at the start of this month.<br>This won't affect your transaction history.</div>
+    <div id="monthlyOpeningFields" style="margin-bottom:16px"></div>
+    <button class="btn-go" onclick="saveMonthlyOpenings()">✅ Save Opening Balances</button>
+    <button class="btn-cancel" onclick="closeModal('monthlyOpeningModal');showToast('Skipped — you can set this from Accounts page','yellow')" style="width:100%;margin-top:8px">Skip for now</button>
   </div>
 </div>
 
