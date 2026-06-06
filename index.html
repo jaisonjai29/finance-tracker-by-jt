@@ -7436,9 +7436,21 @@ function saveAcct(){
   if(editId){
     const a=state.accounts.find(a=>a.id===editId);
     if(a){
-      // Recalculate balance = new opening + existing tx net (don't double-count)
-      const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
-      a.name=name;a.type=type;a.openingBalance=balINR;a.balance=balINR+txNet;a.color=acctColor;
+      const prevOpeningINR=typeof a.openingBalance==='number'?a.openingBalance:0;
+      const openingChanged=Math.abs(balINR-prevOpeningINR)>0.001;
+      if(openingChanged){
+        // User intentionally changed opening balance — recompute from scratch including transfers
+        const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
+        const trNetVal=(state.transfers||[]).reduce((s,t)=>{
+          if(String(t.to)===String(a.id))   return s+t.amount;
+          if(String(t.from)===String(a.id)) return s-t.amount;
+          return s;
+        },0);
+        a.openingBalance=balINR;
+        a.balance=balINR+txNet+trNetVal;
+      }
+      // Always update non-balance fields
+      a.name=name;a.type=type;a.color=acctColor;
     }
   }else{
     // New account: opening balance stored separately; balance starts equal to opening (no txns yet)
