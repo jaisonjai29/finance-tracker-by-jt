@@ -4201,7 +4201,58 @@ function saveCarryOpening(){
   showToast('Tracker opening balance set to '+state.currSymbol+fmt(cv(state.trackerOpeningBalance)),'green');
   showCarryBreakdown();
 }
-function txHTML(tx){
+// ── Build per-account running balance for every transaction ──────────────────
+// Returns Map<String(txId), {balance:Number, acctColor:String}>
+// Sorts ALL transactions + transfers chronologically, then walks through them
+// accumulating per-account running totals. Transfers move money between accounts.
+function buildRunningBalances(){
+  var balMap = new Map();
+  // Seed from a.balance (the live authoritative value). Walk newest→oldest,
+  // recording the balance AFTER each tx, then undo it to step backwards.
+  // This guarantees the most-recent tx shows exactly the same balance as the Accounts page.
+  var acctBal = {};
+  (state.accounts||[]).forEach(function(a){
+    acctBal[String(a.id)] = typeof a.balance==='number' ? a.balance : 0;
+  });
+
+  // Build unified event list: transactions + transfers
+  var events = [];
+  (state.transactions||[]).forEach(function(tx){
+    events.push({sortKey: tx.date + '_' + String(tx.id).padStart(16,'0'), isTx: true, data: tx});
+  });
+  (state.transfers||[]).forEach(function(tr){
+    events.push({sortKey: tr.date + '_t' + String(tr.id).padStart(15,'0'), isTx: false, data: tr});
+  });
+
+  // Sort newest → oldest
+  events.sort(function(a,b){ return b.sortKey.localeCompare(a.sortKey); });
+
+  events.forEach(function(ev){
+    if(ev.isTx){
+      var tx = ev.data;
+      var aid = String(tx.account);
+      if(!acctBal.hasOwnProperty(aid)) return;
+      var acct = (state.accounts||[]).find(function(a){ return String(a.id)===aid; });
+      // record balance AFTER this tx (acctBal is still at post-tx value)
+      balMap.set(String(tx.id), {
+        balance: acctBal[aid],
+        acctColor: (acct && acct.color) || 'var(--text2)'
+      });
+      // undo this tx to get the balance before it
+      if(tx.type==='income')        acctBal[aid] -= tx.amount;
+      else if(tx.type==='expense')  acctBal[aid] += tx.amount;
+    } else {
+      var tr = ev.data;
+      var fid = String(tr.from), tid = String(tr.to);
+      // undo transfer
+      if(acctBal.hasOwnProperty(fid)) acctBal[fid] += tr.amount;
+      if(acctBal.hasOwnProperty(tid)) acctBal[tid] -= tr.amount;
+    }
+  });
+  return balMap;
+}
+
+function txHTML(tx, balInfo){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
   const acct=tx.account?state.accounts.find(a=>String(a.id)===String(tx.account)):null;
@@ -4219,7 +4270,14 @@ function txHTML(tx){
   const _safeD=(tx.desc||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _safeN=(tx.notes||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _iBtn=tx.desc?` <span onclick="event.stopPropagation();showTxDescInfo('${_safeD}','${tx.category}','${formatDate(tx.date)}','${_safeN}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:9px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle">ℹ</span>`:'';
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div class="tx-amt" style="color:${col};align-self:flex-start;padding-top:2px">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div>`;
+  // Running balance pill — shown only when balInfo is passed (History page) and tx has an account
+  var balPill='';
+  if(balInfo && tx.account){
+    var balColor=balInfo.acctColor||'var(--text2)';
+    var balNeg=balInfo.balance<0;
+    balPill=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:4px"><span style="font-size:9px;color:var(--text3);font-weight:600">bal</span><span style="font-size:10px;font-weight:800;color:${balNeg?'var(--red)':balColor};background:${balColor}18;border:1px solid ${balColor}33;border-radius:5px;padding:1px 6px;letter-spacing:-0.2px">${balNeg?'−':''}${state.currSymbol}${fmt(cv(Math.abs(balInfo.balance)))}</span></div>`;
+  }
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
 }
 function showTxDescInfo(desc,cat,date,notes){
   var m=document.getElementById('txDescInfoModal');
@@ -4552,6 +4610,9 @@ function renderHistory(){
   const c=document.getElementById('histList');
   if(!items.length){c.innerHTML=`<div class="empty"><div class="empty-big">🔍</div><div class="empty-title">${tr('noTx')}</div></div>`;return;}
 
+  // Build running balances across ALL transactions (unfiltered)
+  var runBal=buildRunningBalances();
+
   const groups={};
   items.forEach(function(item){if(!groups[item.date])groups[item.date]=[];groups[item.date].push(item);});
   let html='';
@@ -4573,7 +4634,9 @@ function renderHistory(){
     var netStr=summaryParts.length>1?'<span style="color:'+netColor+';font-size:9px;font-weight:700;opacity:.8;white-space:nowrap">net '+(dayNet>=0?'+':'')+state.currSymbol+fmt(cv(Math.abs(dayNet)))+'</span>':'';
     var summaryHTML=summaryParts.length?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:2px 7px;margin-left:6px;flex-shrink:0;white-space:nowrap;overflow:hidden;max-width:calc(100vw - 120px)">'+summaryParts.join('<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>')+( netStr?'<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>'+netStr:'')+'</span>':'';
     html+=`<div style="display:flex;align-items:center;gap:0;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px;overflow:hidden;white-space:nowrap">${formatDate(date)}${summaryHTML}</div><div class="box" style="padding:8px 14px">`;
-    rows.forEach(function(item){html+=item.isTx?txHTML(item.data):transferHistHTML(item.data);});
+    rows.forEach(function(item){
+      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=txHTML(item.data,bi);}else{html+=transferHistHTML(item.data);}
+    });
     html+='</div>';
   });
   c.innerHTML=html;
@@ -10086,7 +10149,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
 // ── Version stamp: change this string on every release to force SW update ──
-var BUILD = 'ft-build-20260603-v20';
+var BUILD = 'ft-build-20260606-v21';
 
 (function(){
   if(!('serviceWorker' in navigator)) return;
@@ -11616,7 +11679,24 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v20 LATEST -->
+      <!-- v21 LATEST -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">21</div>
+          <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v21 — 06 Jun 2026</span>
+            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            💰 <b style="color:var(--text)">Running account balance on every transaction</b> — History page now shows the account balance after each transaction as a coloured pill, making it easy to track how each entry affects your account in real time
+          </div>
+        </div>
+      </div>
+
+      <!-- v20 -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">20</div>
@@ -11625,7 +11705,6 @@ initGoogleDrive();
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
             <span style="font-size:13px;font-weight:800;color:var(--text)">v20 — 03 Jun 2026</span>
-            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             🆘 <b style="color:var(--text)">Emergency Fund redesigned</b> — Account dropdown, tip card, Transfer &amp; History tabs, larger arc gauge<br>
@@ -11863,7 +11942,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v20 — 03 Jun 2026</span>
+      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v21 — 06 Jun 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
