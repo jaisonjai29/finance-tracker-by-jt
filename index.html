@@ -4048,7 +4048,8 @@ function saveTx(){
 
 function addAsRecurring(desc,amt,type,cat){
   var today=new Date().getDate();
-  state.recurring.push({id:Date.now(),type:type,desc:desc,amount:amt,day:today,freq:'monthly',category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:new Date().toISOString().split('T')[0]});
+  var amtINR=amt/(state.currencyRate||1);
+  state.recurring.push({id:Date.now(),type:type,desc:desc,amount:amtINR,day:today,freq:'monthly',category:cat,emoji:CAT_EMOJI[cat]||'🌀',lastAdded:new Date().toISOString().split('T')[0]});
   saveState();renderRecurring();
 
   showToast('Added as monthly recurring on day '+today,'green');
@@ -4798,7 +4799,6 @@ function saveEditTx(){
 }
 function deleteFromEdit(){
   const id=document.getElementById('editTxId').value;
-  closeModal('editTxModal');
   customConfirm('🗑️','Delete Transaction','This cannot be undone.',function(){
     const tx=state.transactions.find(t=>String(t.id)===String(id));
     if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
@@ -4808,7 +4808,7 @@ function deleteFromEdit(){
       if(l) l.remaining=Math.min(l.total||l.remaining+tx.amount, l.remaining+tx.amount);
     }
     state.transactions=state.transactions.filter(t=>String(t.id)!==String(id));
-    saveState();updateDashboard();renderHistory();updateBudget();renderAccounts();
+    saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
     if(curPage==='analytics')renderAnalytics();
   });
 }
@@ -8302,9 +8302,10 @@ function saveRecur(){
   const amtRecurINR=amt/(state.currencyRate||1);
   if(editId){
     const r=state.recurring.find(function(r){return String(r.id)===String(editId);});
-    if(r){r.type=recurType;r.desc=desc;r.amount=amtRecurINR;r.day=day;r.freq=freq;r.category=cat;r.emoji=CAT_EMOJI[cat]||'🌀';r.account=acct;r.platform=platform;r.payMethod=payMethod;r.member=member;}
+    if(r){r.type=recurType;r.desc=desc;r.amount=amtRecurINR;r.day=day;r.freq=freq;if(freq==='yearly')r.month=new Date().getMonth();r.category=cat;r.emoji=CAT_EMOJI[cat]||'🌀';r.account=acct;r.platform=platform;r.payMethod=payMethod;r.member=member;}
   } else {
-    state.recurring.push({id:Date.now(),type:recurType,desc,amount:amtRecurINR,day,freq,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,platform,payMethod,member,lastAdded:''});
+    const recurMonth=(freq==='yearly')?new Date().getMonth():undefined;
+  state.recurring.push({id:Date.now(),type:recurType,desc,amount:amtRecurINR,day,freq,month:recurMonth,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,platform,payMethod,member,lastAdded:''});
   }
   saveState();closeModal('recurModal');renderRecurring();
   ['recurDesc','recurAmt','recurDay'].forEach(id=>document.getElementById(id).value='');
@@ -8466,7 +8467,7 @@ function checkRecurring(){
     let shouldAdd=false;
     if(r.freq==='monthly'&&today.getDate()===r.day)shouldAdd=true;
     if(r.freq==='weekly'&&today.getDay()===(r.day%7))shouldAdd=true;
-    if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===0)shouldAdd=true;
+    if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===(r.month!==undefined?r.month:0))shouldAdd=true;
     if(shouldAdd){
       const amtINR=r.amount/(state.currencyRate||1);
       state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:amtINR,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
@@ -8504,7 +8505,7 @@ async function handleReceiptUpload(event){
   };
   reader.readAsDataURL(file);
 }
-function saveScanAsTx(){if(!scanResult)return;const today=new Date().toISOString().split('T')[0];const cat=scanResult.category||'Other';state.transactions.unshift({id:Date.now(),type:'expense',amount:scanResult.amount||0,desc:scanResult.description||'Receipt',date:scanResult.date||today,notes:'Scanned receipt',category:cat,emoji:CAT_EMOJI[cat]||'🧾',account:''});saveState();clearScan();updateDashboard();renderHistory();showToast('Receipt added as transaction!','green');}
+function saveScanAsTx(){if(!scanResult)return;const today=new Date().toISOString().split('T')[0];const cat=scanResult.category||'Other';const scanAmtINR=(scanResult.amount||0)/(state.currencyRate||1);state.transactions.unshift({id:Date.now(),type:'expense',amount:scanAmtINR,desc:scanResult.description||'Receipt',date:scanResult.date||today,notes:'Scanned receipt',category:cat,emoji:CAT_EMOJI[cat]||'🧾',account:''});saveState();clearScan();updateDashboard();renderHistory();showToast('Receipt added as transaction!','green');}
 function clearScan(){scanResult=null;document.getElementById('scanResult').style.display='none';document.getElementById('receiptInput').value='';}
 
 // ======== CHARTS ========
@@ -11005,7 +11006,7 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
 // ── Version stamp: change this string on every release to force SW update ──
-var BUILD = 'ft-build-20260606-v20';
+var BUILD = 'ft-build-20260607-v21';
 
 (function(){
   if(!('serviceWorker' in navigator)) return;
@@ -12538,7 +12539,7 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v20 LATEST -->
+      <!-- v21 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">21</div>
@@ -12546,8 +12547,29 @@ initGoogleDrive();
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v20 — 06 Jun 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v21 — 07 Jun 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            ⚠️ <b style="color:var(--text)">Live budget warning on Add Transaction</b> — inline banner appears as you pick a category and type an amount; shows 📋 not in budget, ⚠️ 80%+ used, or 🚨 will exceed with exact overage<br>
+            ✏️ <b style="color:var(--text)">Budget warning on Edit Transaction</b> — same live banner in the edit modal; correctly excludes the transaction&#39;s own original amount to avoid false over-budget alerts<br>
+            🔄 <b style="color:var(--text)">Recurring amount currency fix</b> — "Add as recurring" from new transaction now stores INR base amount; previously stored display-currency causing double-conversion for non-INR users<br>
+            📅 <b style="color:var(--text)">Yearly recurring month fix</b> — yearly recurrences were hardcoded to fire only in January; now correctly stores and checks the month the recurring was created in<br>
+            📷 <b style="color:var(--text)">Receipt scan amount fix</b> — scanned receipt amounts now correctly normalised to INR base before saving<br>
+            🗑️ <b style="color:var(--text)">Delete transaction UX fix</b> — edit modal now stays open until the user confirms deletion; cancelling the confirm no longer dismisses the modal
+          </div>
+        </div>
+      </div>
+
+      <!-- v20 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">20</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v20 — 06 Jun 2026</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             💰 <b style="color:var(--text)">Running account balance on every transaction</b> — History page now shows the account balance after each transaction as a coloured pill, making it easy to track how each entry affects your account in real time<br>
