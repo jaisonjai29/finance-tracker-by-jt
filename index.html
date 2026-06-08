@@ -2073,7 +2073,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </select>
     </div>
     <div id="editTxBudgetWarning" style="display:none;border-radius:11px;padding:9px 13px;margin-bottom:8px;font-size:12px;font-weight:800;align-items:center;gap:8px"></div>
-    <div class="field"><div class="field-label">📝 Description</div><input type="text" class="field-input" id="editTxDesc" placeholder="What was this for?"></div>
     <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="editTxDate"></div>
     <div class="field" id="editTxAccountField"><div class="field-label" id="editTxAccountLabel">🏦 Deduct from Account</div><select class="field-input" id="editTxAccount"><option value="">-- No Account --</option></select></div>
     <div class="field">
@@ -2127,7 +2126,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </select>
     </div>
     <div id="txBudgetWarning" style="display:none;border-radius:11px;padding:9px 13px;margin-bottom:8px;font-size:12px;font-weight:800;align-items:center;gap:8px"></div>
-    <input type="hidden" id="txDesc">
     <div class="chips" id="catChips" style="display:none"></div>
     <div class="field" id="txAccountField"><div class="field-label">🏦 Deposit to Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
     <div class="field">
@@ -2866,7 +2864,7 @@ function getExpenseCatsGrouped(){
 function getExpenseCats(){ return Object.values(getExpenseCatsGrouped()).flat(); }
 function getPlatforms(){
   var base=[
-    {name:'Offline / Store',emoji:'🏪'},{name:'Online / Website',emoji:'🌐'},{name:'App Purchase',emoji:'📲'},
+    {name:'Offline / Store',emoji:'🏪'},{name:'Online / Website',emoji:'🌐'},
     {name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
     {name:'Meesho',emoji:'🛍️'},{name:'Myntra',emoji:'👗'},{name:'Nykaa',emoji:'💄'},
     {name:'Reliance / JioMart',emoji:'🏬'},{name:'DMart',emoji:'🛒'},{name:'BigBasket',emoji:'🥦'},
@@ -3460,6 +3458,11 @@ function migrateCategoryNames(){
   var changed=false;
   if(Array.isArray(state.transactions)){
     state.transactions.forEach(function(tx){
+      // Remove description field from all transactions
+      if(tx.desc!==undefined){
+        delete tx.desc;
+        changed=true;
+      }
       if(tx.type==='expense'&&CAT_MIGRATE_EXP[tx.category]){
         tx.category=CAT_MIGRATE_EXP[tx.category];
         tx.emoji=CAT_EMOJI[tx.category]||'🌀';
@@ -3995,13 +3998,8 @@ function renderCatChips(){
     });
   }
   sel.value='';
-  // Reset hidden desc
-  var descEl=document.getElementById('txDesc');
-  if(descEl)descEl.value='';
 }
 function onCatSelectChange(sel){
-  var descEl=document.getElementById('txDesc');
-  if(descEl)descEl.value=sel.value||'';
   checkTxBudgetWarning();
 }
 function checkTxBudgetWarning(){
@@ -4091,15 +4089,12 @@ function saveTx(){
   const acct=document.getElementById('txAccount').value;
   const liabLink=document.getElementById('txLiabLink')?.value||'';
   const cat=getSelCatFromSelect();
-  const desc=document.getElementById('txDesc').value||cat;
   const platform=document.getElementById('txPlatform')?.value||'';
-  // payMethod = UPI/Credit Card/etc — metadata only, no balance effect
   const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
-  // Normalize entered amount back to INR base for storage
   const amtINR=amt/(state.currencyRate||1);
   const member=getSelMember();
-  const tx={id:Date.now(),type:txType,amount:amtINR,desc,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
+  const tx={id:Date.now(),type:txType,amount:amtINR,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
   state.transactions.unshift(tx);
   // Balance only moves on the real bank/cash account — never on UPI/card (those are just payment rails)
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amtINR:-amtINR);}}
@@ -4153,7 +4148,6 @@ function setRecurToggle(val){
 }
 function resetTxForm(){
   document.getElementById('txAmt').value='';
-  document.getElementById('txDesc').value='';
   document.getElementById('txNotes').value='';
   var sel=document.getElementById('txCatSelect');if(sel)sel.value='';
   var plat=document.getElementById('txPlatform');if(plat)plat.value='';
@@ -4651,40 +4645,34 @@ function txHTML(tx, balInfo){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
   const acct=tx.account?state.accounts.find(a=>String(a.id)===String(tx.account)):null;
-  // Badges: only account and member (self/others) — platform & payMethod moved to ℹ popup
   const badges=[];
   if(acct) badges.push(`<span class="tx-badge" style="background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44">${acct.name}</span>`);
   const member=tx.member&&tx.member!=='Self'?tx.member:null;
   if(member) badges.push(`<span class="tx-badge" style="background:rgba(29,233,182,0.12);color:var(--teal);border:1px solid rgba(29,233,182,0.3)">👤 ${member}</span>`);
   const badgeRow=badges.length?`<div class="tx-badges">${badges.join('')}</div>`:'';
   const emojiHtml=tx.emoji&&tx.emoji.startsWith('data:')?`<img src="${tx.emoji}" style="width:26px;height:26px;border-radius:6px;object-fit:cover">`:(tx.emoji||'🌀');
-  const _safeD=(tx.desc||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _safeN=(tx.notes||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _safeP=(tx.platform||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _safePM=(tx.payMethod||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  // ℹ button always shown — shows desc, notes, platform, pay method
-  const _iBtn=` <span onclick="event.stopPropagation();showTxDescInfo('${_safeD}','${tx.category}','${formatDate(tx.date)}','${_safeN}','${_safeP}','${_safePM}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:9px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle">ℹ</span>`;
-  // Running balance pill — shown only when balInfo is passed (History page) and tx has an account
+  const _iBtn=` <span onclick="event.stopPropagation();showTxDescInfo('${tx.category}','${tx.category}','${formatDate(tx.date)}','${_safeN}','${_safeP}','${_safePM}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:9px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle">ℹ</span>`;
   var balPill='';
   if(balInfo && tx.account){
     var balColor=balInfo.acctColor||'var(--text2)';
     var balNeg=balInfo.balance<0;
     balPill=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:4px"><span style="font-size:9px;color:var(--text3);font-weight:600">bal</span><span style="font-size:10px;font-weight:800;color:${balNeg?'var(--red)':balColor};background:${balColor}18;border:1px solid ${balColor}33;border-radius:5px;padding:1px 6px;letter-spacing:-0.2px">${balNeg?'−':''}${state.currSymbol}${fmt(cv(Math.abs(balInfo.balance)))}</span></div>`;
   }
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
+  // Title = category; subtitle = date + ℹ
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.category}</div><div class="tx-meta">${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
 }
-function showTxDescInfo(desc,cat,date,notes,platform,payMethod){
+function showTxDescInfo(cat,_unused,date,notes,platform,payMethod){
   var m=document.getElementById('txDescInfoModal');
   if(!m){
     var el=document.createElement('div');
     el.className='modal-bg';el.id='txDescInfoModal';el.style.zIndex='9000';
-    el.innerHTML='<div class="modal" style="max-width:340px"><div class="modal-handle"></div><div class="modal-title" style="font-size:15px;margin-bottom:10px">📋 Details</div><div id="txDescInfoText" style="font-size:15px;font-weight:700;color:var(--text);line-height:1.6;word-break:break-word;padding-bottom:8px"></div><div id="txDescInfoNotes" style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;word-break:break-word;display:none"></div><div id="txDescInfoPlatform" style="font-size:12px;color:var(--yellow);font-weight:700;margin-bottom:4px;display:none"></div><div id="txDescInfoPayMethod" style="font-size:12px;color:var(--blue);font-weight:700;margin-bottom:6px;display:none"></div><div id="txDescInfoMeta" style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:16px"></div><button class="btn-cancel" onclick="closeModal(\'txDescInfoModal\')" style="width:100%">✕ Close</button></div></div>';
+    el.innerHTML='<div class="modal" style="max-width:340px"><div class="modal-handle"></div><div class="modal-title" style="font-size:15px;margin-bottom:10px">📋 Details</div><div id="txDescInfoNotes" style="font-size:13px;color:var(--text2);font-weight:600;margin-bottom:6px;word-break:break-word;display:none"></div><div id="txDescInfoPlatform" style="font-size:12px;color:var(--yellow);font-weight:700;margin-bottom:4px;display:none"></div><div id="txDescInfoPayMethod" style="font-size:12px;color:var(--blue);font-weight:700;margin-bottom:6px;display:none"></div><div id="txDescInfoMeta" style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:16px"></div><button class="btn-cancel" onclick="closeModal(\'txDescInfoModal\')" style="width:100%">✕ Close</button></div></div>';
     el.addEventListener('click',function(e){if(e.target===el)closeModal('txDescInfoModal');});
     document.body.appendChild(el);m=el;
   }
-  var txtEl=document.getElementById('txDescInfoText');
-  txtEl.textContent=desc||'—';
-  txtEl.style.display=desc?'block':'none';
   var ne=document.getElementById('txDescInfoNotes');
   if(notes){ne.textContent='📎 '+notes;ne.style.display='block';}else{ne.style.display='none';}
   var pe=document.getElementById('txDescInfoPlatform');
@@ -4719,7 +4707,6 @@ function editTx(id){
   const todayStr=new Date().toISOString().split('T')[0];
   document.getElementById('editTxId').value=id;
   document.getElementById('editTxAmt').value=parseFloat((tx.amount*(state.currencyRate||1)).toFixed(2));
-  document.getElementById('editTxDesc').value=tx.desc;
   const dateField=document.getElementById('editTxDate');
   dateField.value=tx.date;
   dateField.max=todayStr; // block future dates
@@ -4801,12 +4788,11 @@ function setEditTxType(t){
   checkEditTxBudgetWarning();
   var accLbl=document.getElementById('editTxAccountLabel');
   if(accLbl) accLbl.textContent=t==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
-  // Repopulate account select with real accounts only
+  // Show ALL accounts regardless of type
   var accSel=document.getElementById('editTxAccount');
   if(accSel){
     var curr=accSel.value;
-    var filtered=state.accounts.filter(function(a){return INCOME_ACCT_TYPES.indexOf(a.type)>-1;});
-    if(!filtered.length) filtered=state.accounts;
+    var filtered=state.accounts;
     accSel.innerHTML='<option value="">-- Select Account --</option>'+filtered.map(function(a){
       var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
       var bal=a.balance!==0?' · '+state.currSymbol+fmt(cv(Math.abs(a.balance))):'';
@@ -4815,11 +4801,6 @@ function setEditTxType(t){
   }
 }
 function onEditCatSelectChange(sel){
-  // Update description to match category if description is empty or was same as old cat
-  var descEl=document.getElementById('editTxDesc');
-  if(descEl&&(!descEl.value||getExpenseCats().includes(descEl.value)||getIncomeCats().includes(descEl.value))){
-    descEl.value=sel.value||'';
-  }
   checkEditTxBudgetWarning();
 }
 function renderEditMemberChips(selectedMember){
@@ -4843,7 +4824,6 @@ function getEditSelMember(){
 function saveEditTx(){
   const id=document.getElementById('editTxId').value;
   const amt=parseFloat(document.getElementById('editTxAmt').value);
-  const desc=document.getElementById('editTxDesc').value.trim();
   const date=document.getElementById('editTxDate').value;
   const notes=document.getElementById('editTxNotes').value.trim();
   const acct=document.getElementById('editTxAccount').value;
@@ -4870,7 +4850,6 @@ function saveEditTx(){
   }
   // Apply all updated fields
   tx.type=editTxType;tx.amount=amtINR2;
-  tx.desc=desc||(cat||'Transaction');
   tx.date=date;tx.notes=notes;tx.account=acct;
   tx.category=cat||tx.category||'Other';
   tx.emoji=CAT_EMOJI[tx.category]||'🌀';
@@ -5179,7 +5158,7 @@ function renderHistory(){
     txs=txs.filter(t=>t.type===histFilt);
   }
   if(histMemberFilt!=='all')txs=txs.filter(t=>(t.member||'Self')===histMemberFilt);
-  if(search)txs=txs.filter(t=>t.desc.toLowerCase().includes(search)||t.category.toLowerCase().includes(search));
+  if(search)txs=txs.filter(t=>t.category.toLowerCase().includes(search)||(t.notes&&t.notes.toLowerCase().includes(search)));
   if(acctFilter)txs=txs.filter(t=>String(t.account)===String(acctFilter));
 
   // Build combined items — merge transfers for 'all' and 'transfer' filters
@@ -6280,13 +6259,13 @@ function renderIconManagerList(){
 }
 
 // ── CUSTOM PLATFORMS ──────────────────────────────────────────────────────
-var _builtInPlatNames=['Offline / Store','Online / Website','App Purchase','Amazon','Flipkart','Meesho','Myntra','Nykaa','Reliance / JioMart','DMart','BigBasket','Zepto','Blinkit','Swiggy','Zomato','Swiggy Instamart','Dunzo','PharmEasy','1mg','BookMyShow','MakeMyTrip','IRCTC','Ola','Uber','Rapido','Paytm','PhonePe','mStock','Zerodha','Groww','Angel One','Other'];
+var _builtInPlatNames=['Offline / Store','Online / Website','Amazon','Flipkart','Meesho','Myntra','Nykaa','Reliance / JioMart','DMart','BigBasket','Zepto','Blinkit','Swiggy','Zomato','Swiggy Instamart','Dunzo','PharmEasy','1mg','BookMyShow','MakeMyTrip','IRCTC','Ola','Uber','Rapido','Paytm','PhonePe','mStock','Zerodha','Groww','Angel One','Other'];
 function renderCustomPlatformsList(){
   var wrap=document.getElementById('customPlatformsList');
   if(!wrap) return;
   // Build full unfiltered list so hidden items still appear with Show button
   var _builtInPlats=[
-    {name:'Offline / Store',emoji:'🏪'},{name:'Online / Website',emoji:'🌐'},{name:'App Purchase',emoji:'📲'},
+    {name:'Offline / Store',emoji:'🏪'},{name:'Online / Website',emoji:'🌐'},
     {name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
     {name:'Meesho',emoji:'🛍️'},{name:'Myntra',emoji:'👗'},{name:'Nykaa',emoji:'💄'},
     {name:'Reliance / JioMart',emoji:'🏬'},{name:'DMart',emoji:'🛒'},{name:'BigBasket',emoji:'🥦'},
@@ -8165,10 +8144,8 @@ function updateTxAccountSelect(){
   if(!sel) return;
   var curr=sel.value;
 
-  // Show all real store-of-value accounts for both income and expense
-  var validTypes=INCOME_ACCT_TYPES;
-  var filtered=state.accounts.filter(function(a){return validTypes.indexOf(a.type)>-1;});
-  if(!filtered.length) filtered=state.accounts;
+  // Show ALL accounts regardless of type — user may have any account type
+  var filtered=state.accounts;
 
   // Label changes based on type
   var fieldLbl=document.querySelector('#txAccountField .field-label');
@@ -8189,7 +8166,7 @@ function updateTxAccountSelect(){
       return '<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
     }).join('');
 
-  // Restore previous selection; don't auto-pick — let user choose consciously
+  // Restore previous selection
   if(curr && filtered.find(function(a){return String(a.id)===String(curr);})){
     sel.value=curr;
   }
@@ -8372,9 +8349,7 @@ function updateRecurAccountSelect(){
   var sel=document.getElementById('recurAccount');
   if(!sel)return;
   var curr=sel.value;
-  var validTypes=INCOME_ACCT_TYPES;
-  var filtered=state.accounts.filter(function(a){return validTypes.indexOf(a.type)>-1;});
-  if(!filtered.length)filtered=state.accounts;
+  var filtered=state.accounts;
   var lbl=document.getElementById('recurAccountLabel');
   if(lbl)lbl.textContent=recurType==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
   sel.innerHTML='<option value="">-- Select Account --</option>'+filtered.map(function(a){var info=ACCT_TYPES[a.type]||{emoji:'🏦'};return'<option value="'+a.id+'"'+(String(a.id)===String(curr)?' selected':'')+'>'+info.emoji+' '+a.name+'</option>';}).join('');
@@ -8568,7 +8543,7 @@ function checkRecurring(){
     if(r.freq==='yearly'&&today.getDate()===r.day&&today.getMonth()===(r.month!==undefined?r.month:0))shouldAdd=true;
     if(shouldAdd){
       const amtINR=r.amount/(state.currencyRate||1);
-      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:amtINR,desc:r.desc+' (Auto)',date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
+      state.transactions.unshift({id:Date.now()+Math.random(),type:r.type,amount:amtINR,date:todayKey,notes:'Recurring',category:r.category,emoji:r.emoji,account:r.account||'',platform:r.platform||'',payMethod:r.payMethod||'',member:r.member||'Self'});
       // ── Update account balance (same logic as saveTx) ──
       if(r.account){
         const a=state.accounts.find(a=>String(a.id)===String(r.account));
@@ -12415,7 +12390,7 @@ function detectDuplicates(){
   el.innerHTML=dups.map(function(d){
     return'<div class="dup-alert" onclick="deleteDuplicate('+d.duplicate.id+')">'
       +'<div style="font-size:12px;font-weight:900;color:var(--red)">🔍 Possible Duplicate — Tap to Delete</div>'
-      +'<div style="font-size:11px;color:var(--text2);margin-top:4px;font-weight:700">'+d.duplicate.date+' · '+(d.duplicate.emoji||'🌀')+' '+d.duplicate.desc+' · '+state.currSymbol+fmt(cv(d.duplicate.amount))+'</div>'
+      +'<div style="font-size:11px;color:var(--text2);margin-top:4px;font-weight:700">'+d.duplicate.date+' · '+(d.duplicate.emoji||'🌀')+' '+d.duplicate.category+' · '+state.currSymbol+fmt(cv(d.duplicate.amount))+'</div>'
       +'</div>';
   }).join('');
   showToast(dups.length+' possible duplicate(s) found','yellow');
