@@ -2073,25 +2073,32 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </select>
     </div>
     <div id="editTxBudgetWarning" style="display:none;border-radius:11px;padding:9px 13px;margin-bottom:8px;font-size:12px;font-weight:800;align-items:center;gap:8px"></div>
-    <div class="field" id="editPlatformField" style="display:none">
-      <div class="field-label">🛒 Platform / Where bought</div>
-      <select class="field-input" id="editTxPlatform">
-        <option value="">-- Select Platform --</option>
-      </select>
-    </div>
     <div class="field"><div class="field-label">📝 Description</div><input type="text" class="field-input" id="editTxDesc" placeholder="What was this for?"></div>
     <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="editTxDate"></div>
     <div class="field" id="editTxAccountField"><div class="field-label" id="editTxAccountLabel">🏦 Deduct from Account</div><select class="field-input" id="editTxAccount"><option value="">-- No Account --</option></select></div>
-    <div class="field" id="editTxPayMethodField" style="display:none">
-      <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
-      <select class="field-input" id="editTxPayMethod">
-        <option value="">-- Select Method --</option>
-      </select>
-    </div>
-    <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="editTxNotes" placeholder="Optional notes"></div>
     <div class="field">
       <div class="field-label">👤 For</div>
       <div class="chips" id="editMemberChips" style="gap:6px"></div>
+    </div>
+    <div class="field"><div class="field-label">📌 Notes</div><input type="text" class="field-input" id="editTxNotes" placeholder="Optional notes"></div>
+    <!-- Extra details: platform & pay method — collapsed by default -->
+    <div onclick="toggleEditTxExtra()" style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer">
+      <span style="font-size:12px;font-weight:700;color:var(--text2)">➕ More details <span style="font-size:10px;color:var(--text3)">(platform, pay method)</span></span>
+      <span id="editTxExtraArrow" style="font-size:12px;color:var(--text3);transition:transform .2s">▼</span>
+    </div>
+    <div id="editTxExtraFields" style="display:none">
+      <div class="field" id="editPlatformField">
+        <div class="field-label">🛒 Platform / Where bought</div>
+        <select class="field-input" id="editTxPlatform">
+          <option value="">-- Select Platform --</option>
+        </select>
+      </div>
+      <div class="field" id="editTxPayMethodField">
+        <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
+        <select class="field-input" id="editTxPayMethod">
+          <option value="">-- Select Method --</option>
+        </select>
+      </div>
     </div>
     <input type="hidden" id="editTxId">
     <input type="hidden" id="editTxOrigAmt">
@@ -2120,26 +2127,33 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </select>
     </div>
     <div id="txBudgetWarning" style="display:none;border-radius:11px;padding:9px 13px;margin-bottom:8px;font-size:12px;font-weight:800;align-items:center;gap:8px"></div>
-    <div class="field" id="platformField" style="display:none">
-      <div class="field-label">🛒 Platform / Where bought</div>
-      <select class="field-input" id="txPlatform">
-        <option value="">-- Select Platform --</option>
-      </select>
-    </div>
     <input type="hidden" id="txDesc">
     <div class="chips" id="catChips" style="display:none"></div>
     <div class="field" id="txAccountField"><div class="field-label">🏦 Deposit to Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
-    <div class="field" id="txPayMethodField" style="display:none">
-      <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
-      <select class="field-input" id="txPayMethod">
-        <option value="">-- Select Method --</option>
-      </select>
-    </div>
-    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
-    <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
     <div class="field">
       <div class="field-label">👤 For</div>
       <div class="chips" id="memberChips" style="gap:6px"></div>
+    </div>
+    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
+    <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
+    <!-- Extra details: platform & pay method — collapsed by default -->
+    <div onclick="toggleTxExtra()" style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer">
+      <span style="font-size:12px;font-weight:700;color:var(--text2)">➕ More details <span style="font-size:10px;color:var(--text3)">(platform, pay method)</span></span>
+      <span id="txExtraArrow" style="font-size:12px;color:var(--text3);transition:transform .2s">▼</span>
+    </div>
+    <div id="txExtraFields" style="display:none">
+      <div class="field" id="platformField">
+        <div class="field-label">🛒 Platform / Where bought</div>
+        <select class="field-input" id="txPlatform">
+          <option value="">-- Select Platform --</option>
+        </select>
+      </div>
+      <div class="field" id="txPayMethodField">
+        <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
+        <select class="field-input" id="txPayMethod">
+          <option value="">-- Select Method --</option>
+        </select>
+      </div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;margin-bottom:12px">
       <div>
@@ -2290,7 +2304,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <span onclick="quickAddAcct('ICICI Bank','Savings Account','#f97316')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🏦 ICICI</span>
         <span onclick="quickAddAcct('Axis Bank','Savings Account','#8b5cf6')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">🏦 Axis</span>
         <span onclick="quickAddAcct('Cash','Cash','#22c55e')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">💵 Cash</span>
-        <span onclick="quickAddAcct('GPay / PhonePe','UPI / GPay','#f97316')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">📱 UPI</span>
+        <span onclick="quickAddAcct('GPay / PhonePe','UPI','#f97316')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">📱 UPI</span>
         <span onclick="quickAddAcct('Credit Card','Credit Card','#ef4444')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">💳 CC</span>
         <span onclick="quickAddAcct('Salary Account','Salary Account','#6366f1')" style="background:var(--bg3);border:2px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer">💼 Salary</span>
       </div>
@@ -2301,7 +2315,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <option>Salary Account</option>
         <option>Current Account</option>
         <option>Cash</option>
-        <option>UPI / GPay</option>
+        <option>UPI</option>
         <option>Credit Card</option>
         <option>Debit Card</option>
         <option>Fixed Deposit</option>
@@ -2738,34 +2752,34 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 // ======== CONSTANTS ========
 const CAT_EMOJI={
   // Income
-  Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Bonus:'🎉',Dividend:'💹',Commission:'🤝',Pension:'👴',Cashback:'🏷️','Interest Income':'💰','Side Hustle':'🔥','Refund':'↩️','Scholarship':'🎓',Award:'🏆',Lottery:'🎰',Allowance:'🪙',
+  Salary:'💼',Freelance:'💻',Business:'🏢',Investment:'📈',Rental:'🏘️',Gift:'🎁',Bonus:'🎉',Dividend:'💹',Commission:'🤝',Pension:'👴',Cashback:'🏷️','Interest Income':'💰','Side Hustle':'🔥','Refund':'↩️','Scholarship':'🎓',Award:'🏆',Lottery:'🎰',Allowance:'🪙','Passive Income':'💰','Balance Correction':'⚖️',
   // Home & Utilities
-  Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🛢️',Internet:'🌐',Mobile:'📱',
+  Rent:'🏠',Electricity:'⚡',Water:'💧','LPG/Gas':'🛢️',Internet:'🌐',Mobile:'📱',LPG:'🛢️','Recharge/Internet':'📱',
   // Food
-  Grocery:'🧺',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',Bakery:'🥐',
+  Grocery:'🧺',Fruits:'🍎',Restaurant:'🍽️','Food Delivery':'🛵',Bakery:'🥐','Grocery/Fruits':'🧺','Food/Hotel':'🍽️',
   Coffee:'☕',Tea:'🫖',Milk:'🥛',Sweet:'🍬',Juice:'🥤','Ice Cream':'🍦',
   Pizza:'🍕',Burger:'🍔',Biryani:'🍛',Cake:'🎂',Chocolate:'🍫',
   Honey:'🍯',Eggs:'🥚',Cheese:'🧀',Snacks:'🍿',Candy:'🍭',
   // Transport
-  Fuel:'⛽',Train:'🚆',Bus:'🚌',Flight:'✈️',Cab:'🚕',Metro:'🚇',Parking:'🅿️',
+  Fuel:'⛽',Train:'🚆',Bus:'🚌',Flight:'✈️',Cab:'🚕',Metro:'🚇',Parking:'🅿️','Transport/Travel':'🚗',
   // Health
-  'Doctor/Hospital':'🏥',Medicine:'💊',Insurance:'🛡️','Health Checkup':'🩺',
+  'Doctor/Hospital':'🏥',Medicine:'💊',Insurance:'🛡️','Health Checkup':'🩺','Health/Medicine':'🏥',
   Gym:'🏋️',Yoga:'🧘',Dental:'🦷',
   // Education
-  'School Fees':'🏫','College Fees':'🎓',Books:'📖',Tuition:'✏️','Online Course':'🎧',
+  'School Fees':'🏫','College Fees':'🎓',Books:'📖',Tuition:'✏️','Online Course':'🎧','Institution/Education':'🏫',
   // Finance
-  EMI:'🏦','Loan Repayment':'📑','Credit Card':'💳',Tax:'🧾',
+  EMI:'🏦','Loan Repayment':'📑','Credit Card':'💳',Tax:'🧾','EMI & Payments':'🏦',
   // Shopping & Lifestyle
   Shopping:'🛍️',Clothing:'👗',Electronics:'🔌',Furniture:'🛋️',
   // Entertainment
-  OTT:'📺',Movies:'🎬',Games:'🎮',Sports:'⚽',Events:'🎪',
+  OTT:'📺',Movies:'🎬',Games:'🎮',Sports:'⚽',Events:'🎪','Leisure/Entertainment':'🎬',
   Cricket:'🏏',Football:'⚽',Swimming:'🏊',Cycling:'🚴',
   // Investment Expenses
   'Mutual Fund Buy':'📈','SIP':'🔁','Stocks Buy':'📊','ETF Buy':'📉',
-  'Crypto Buy':'₿','Gold Buy':'🥇','NPS/PPF':'🏛️','Bonds Buy':'📜','FD Deposit':'🏦',
+  'Crypto Buy':'₿','Gold Buy':'🥇','NPS/PPF':'🏛️','Bonds Buy':'📜','FD Deposit':'🏦','Investments':'📈',
   // Other
   'Personal Care':'🪥',Travel:'🗺️',Flowers:'🌸',Education:'📚',Bills:'💡',Food:'🍔',Transport:'🚍',Health:'🩹',Entertainment:'🎭',
-  Pet:'🐶',Garden:'🌱',Donation:'🙏',Subscription:'🔄',Stationery:'✏️',
+  Pet:'🐶',Garden:'🌱',Donation:'🙏',Subscription:'🔄',Stationery:'✏️',Miscellaneous:'🌀',
   'Toys & Kids':'🧸',Baby:'👶',Wedding:'💒',Party:'🎊',Holiday:'🏖️',Other:'🌀'
 };
 const CAT_COLOR={
@@ -2811,7 +2825,7 @@ const ASSET_COLORS=['#6366f1','#22d3ee','#34d399','#f472b6','#fb923c','#a78bfa',
 const SCHEME_INFO={'Mutual Fund':{desc:'Diversified equity & debt',risk:'Medium',returns:'10-15%',emoji:'📈'},'Stocks':{desc:'Direct equity investments',risk:'High',returns:'12-20%',emoji:'📊'},'Cryptocurrency':{desc:'Digital assets & DeFi',risk:'Very High',returns:'Variable',emoji:'₿'},'Gold':{desc:'Gold & precious metals',risk:'Low',returns:'6-10%',emoji:'🥇'},'Real Estate':{desc:'Property & REITs',risk:'Medium',returns:'8-14%',emoji:'🏠'},'ETF':{desc:'Exchange traded funds',risk:'Medium',returns:'10-14%',emoji:'📉'},'PPF':{desc:'Public Provident Fund',risk:'Very Low',returns:'7.1%',emoji:'🏛️'},'EPFO':{desc:'Employee Provident Fund',risk:'Very Low',returns:'8.1%',emoji:'🏢'},'NPS':{desc:'National Pension System',risk:'Low',returns:'8-10%',emoji:'👴'},'Fixed Deposit':{desc:'Bank fixed deposits',risk:'Very Low',returns:'6-7.5%',emoji:'🏦'},'Bonds':{desc:'Govt & corporate bonds',risk:'Low',returns:'6-8%',emoji:'📜'},'Cash':{desc:'Liquid savings',risk:'None',returns:'3-4%',emoji:'💵'},'Other':{desc:'Other investments',risk:'Varies',returns:'Varies',emoji:'💼'}};
 const IDEAL_ALLOC={'Mutual Fund':{ideal:25,min:10,max:40},'Stocks':{ideal:20,min:10,max:35},'ETF':{ideal:10,min:5,max:20},'Gold':{ideal:10,min:5,max:15},'Fixed Deposit':{ideal:10,min:5,max:20},'PPF':{ideal:10,min:5,max:20},'EPFO':{ideal:10,min:5,max:20},'NPS':{ideal:5,min:2,max:15},'Bonds':{ideal:5,min:2,max:15},'Real Estate':{ideal:10,min:5,max:25},'Cryptocurrency':{ideal:5,min:0,max:10},'Cash':{ideal:5,min:2,max:10},'Other':{ideal:5,min:0,max:15}};
 const THRESHOLD=2;
-const INCOME_CATS=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Cashback','Interest Income','Side Hustle','Refund','Gift','Other'];
+const INCOME_CATS=['Salary','Freelance','Business','Rental','Passive Income','Bonus','Pension','Refund','Gift','Balance Correction','Other'];
 function getIncomeCats(){
   var base=INCOME_CATS.slice();
   if(state&&Array.isArray(state.customIncomeCats)){
@@ -2824,16 +2838,16 @@ function getIncomeCats(){
 
 // PLATFORMS is now dynamic — see getPlatforms()
 const EXPENSE_CATS_GROUPED={
-  'Home':['Rent','Electricity','Water','LPG/Gas','Internet','Mobile'],
-  'Food':['Grocery','Fruits','Restaurant','Food Delivery','Bakery'],
-  'Transport':['Fuel','Train','Bus','Flight','Cab','Metro','Parking'],
-  'Health':['Doctor/Hospital','Medicine','Insurance','Health Checkup'],
-  'Education':['School Fees','College Fees','Books','Tuition','Online Course'],
-  'Finance':['EMI','Loan Repayment','Credit Card','Tax'],
-  'Shopping':['Shopping','Clothing','Electronics','Furniture'],
-  'Entertainment':['OTT','Movies','Games','Sports','Events'],
-  'Investments':['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'],
-  'Other':['Personal Care','Travel','Flowers','Other']
+  'Home':['Rent','Electricity','Water','LPG','Recharge/Internet'],
+  'Food':['Grocery/Fruits','Food/Hotel'],
+  'Transport':['Transport/Travel'],
+  'Health':['Health/Medicine'],
+  'Education':['Institution/Education'],
+  'Finance':['EMI & Payments','Tax','Balance Correction'],
+  'Shopping':['Shopping'],
+  'Entertainment':['Leisure/Entertainment'],
+  'Investments':['Investments'],
+  'Other':['Miscellaneous']
 };
 function getExpenseCatsGrouped(){
   var base=JSON.parse(JSON.stringify(EXPENSE_CATS_GROUPED));
@@ -2852,14 +2866,17 @@ function getExpenseCatsGrouped(){
 function getExpenseCats(){ return Object.values(getExpenseCatsGrouped()).flat(); }
 function getPlatforms(){
   var base=[
-    {name:'Offline / Store',emoji:'🏪'},{name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
+    {name:'Offline / Store',emoji:'🏪'},{name:'Online / Website',emoji:'🌐'},{name:'App Purchase',emoji:'📲'},
+    {name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
     {name:'Meesho',emoji:'🛍️'},{name:'Myntra',emoji:'👗'},{name:'Nykaa',emoji:'💄'},
     {name:'Reliance / JioMart',emoji:'🏬'},{name:'DMart',emoji:'🛒'},{name:'BigBasket',emoji:'🥦'},
     {name:'Zepto',emoji:'⚡'},{name:'Blinkit',emoji:'💛'},{name:'Swiggy',emoji:'🧡'},
-    {name:'Zomato',emoji:'❤️'},{name:'Swiggy Instamart',emoji:'🟠'},{name:'PharmEasy',emoji:'💊'},
-    {name:'1mg',emoji:'🩺'},{name:'BookMyShow',emoji:'🎬'},{name:'MakeMyTrip',emoji:'✈️'},
-    {name:'Ola / Uber',emoji:'🚕'},{name:'Rapido',emoji:'🛵'},{name:'IRCTC',emoji:'🚆'},
-    {name:'Paytm',emoji:'💙'},{name:'mStock',emoji:'📊'},{name:'Zerodha',emoji:'🟦'},
+    {name:'Zomato',emoji:'❤️'},{name:'Swiggy Instamart',emoji:'🟠'},{name:'Dunzo',emoji:'🚴'},
+    {name:'PharmEasy',emoji:'💊'},{name:'1mg',emoji:'🩺'},{name:'BookMyShow',emoji:'🎬'},
+    {name:'MakeMyTrip',emoji:'✈️'},{name:'IRCTC',emoji:'🚆'},
+    {name:'Ola',emoji:'🚕'},{name:'Uber',emoji:'🚗'},{name:'Rapido',emoji:'🛵'},
+    {name:'Paytm',emoji:'💙'},{name:'PhonePe',emoji:'🔵'},
+    {name:'mStock',emoji:'📊'},{name:'Zerodha',emoji:'🟦'},
     {name:'Groww',emoji:'💚'},{name:'Angel One',emoji:'🔴'},{name:'Other',emoji:'🌀'}
   ];
   if(state&&Array.isArray(state.customPlatforms)){
@@ -2872,7 +2889,7 @@ function getPlatforms(){
   return base;
 }
 function getPaymentMethods(){
-  var base=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
+  var base=['UPI','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
   if(state&&Array.isArray(state.customPaymentMethods)){
     state.customPaymentMethods.forEach(function(m){ if(!base.includes(m)) base.splice(base.length-1,0,m); });
   }
@@ -2881,7 +2898,7 @@ function getPaymentMethods(){
   return base;
 }
 const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat(); // base list — use getExpenseCats() for dynamic (custom) list
-const INVEST_EXP_CATS=['Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'];
+const INVEST_EXP_CATS=['Investments','Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'];
 function isInvestmentExpense(cat){ return INVEST_EXP_CATS.includes(cat); }
 
 // ── TRANSLATION STRINGS ──────────────────────────────────────────────────────
@@ -2991,7 +3008,7 @@ function applyTranslations(){
   renderLiabilities();
 }
 const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#e879f9'}};
-const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI / GPay':{emoji:'📱',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💰',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
+const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI':{emoji:'🔷',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💰',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
 // ======== MULTI-USER PROFILE SYSTEM ========
 // Profiles list: ft_profiles  → [{id,name,emoji,color}]
@@ -3401,6 +3418,60 @@ function loadState(){
       id:''
     };
   }
+  // ── Category migration: map old category names to new ones ──────────────────
+  migrateCategoryNames();
+}
+function migrateCategoryNames(){
+  // Map old category names → new category names
+  var CAT_MIGRATE_EXP={
+    // Home
+    'LPG/Gas':'LPG','Internet':'Recharge/Internet','Mobile':'Recharge/Internet',
+    // Food
+    'Grocery':'Grocery/Fruits','Fruits':'Grocery/Fruits',
+    'Restaurant':'Food/Hotel','Food Delivery':'Food/Hotel','Bakery':'Food/Hotel',
+    // Transport
+    'Fuel':'Transport/Travel','Train':'Transport/Travel','Bus':'Transport/Travel',
+    'Flight':'Transport/Travel','Cab':'Transport/Travel','Metro':'Transport/Travel','Parking':'Transport/Travel',
+    // Health
+    'Doctor/Hospital':'Health/Medicine','Medicine':'Health/Medicine',
+    'Insurance':'Health/Medicine','Health Checkup':'Health/Medicine',
+    // Education
+    'School Fees':'Institution/Education','College Fees':'Institution/Education',
+    'Books':'Institution/Education','Tuition':'Institution/Education','Online Course':'Institution/Education',
+    // Finance
+    'EMI':'EMI & Payments','Loan Repayment':'EMI & Payments','Credit Card':'EMI & Payments',
+    // Shopping
+    'Clothing':'Shopping','Electronics':'Shopping','Furniture':'Shopping',
+    // Entertainment
+    'OTT':'Leisure/Entertainment','Movies':'Leisure/Entertainment','Games':'Leisure/Entertainment',
+    'Sports':'Leisure/Entertainment','Events':'Leisure/Entertainment',
+    // Investments — all old subcategories → single Investments
+    'Mutual Fund Buy':'Investments','SIP':'Investments','Stocks Buy':'Investments',
+    'ETF Buy':'Investments','Crypto Buy':'Investments','Gold Buy':'Investments',
+    'NPS/PPF':'Investments','Bonds Buy':'Investments','FD Deposit':'Investments',
+    // Other
+    'Travel':'Transport/Travel','Flowers':'Miscellaneous','Personal Care':'Miscellaneous','Other':'Miscellaneous'
+  };
+  var CAT_MIGRATE_INC={
+    'Dividend':'Passive Income','Interest Income':'Passive Income',
+    'Cashback':'Refund','Commission':'Freelance','Side Hustle':'Freelance',
+    'Investment':'Passive Income'
+  };
+  var changed=false;
+  if(Array.isArray(state.transactions)){
+    state.transactions.forEach(function(tx){
+      if(tx.type==='expense'&&CAT_MIGRATE_EXP[tx.category]){
+        tx.category=CAT_MIGRATE_EXP[tx.category];
+        tx.emoji=CAT_EMOJI[tx.category]||'🌀';
+        changed=true;
+      } else if(tx.type==='income'&&CAT_MIGRATE_INC[tx.category]){
+        tx.category=CAT_MIGRATE_INC[tx.category];
+        tx.emoji=CAT_EMOJI[tx.category]||'🌀';
+        changed=true;
+      }
+    });
+  }
+  if(changed) saveState();
 }
 function saveState(){
   try{
@@ -3822,7 +3893,7 @@ function showModal(id){
     var panel=modalBg.querySelector('.modal');
     if(panel)panel.scrollTop=0;
   },10);
-  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';}
+  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';var ef=document.getElementById('txExtraFields');if(ef)ef.style.display='none';var ea=document.getElementById('txExtraArrow');if(ea)ea.style.transform='';}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
@@ -3853,7 +3924,7 @@ document.querySelectorAll('.modal-bg').forEach(function(o){
 });
 
 // ======== TRANSACTIONS ========
-var _pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛','Other':'🌀'};
+var _pmIcons={'UPI':'🔷','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛','Other':'🌀'};
 function _pmOptHtml(m){return'<option value="'+m+'">'+((_pmIcons[m]||'💳')+' '+m)+'</option>';}
 function populatePayMethodSelects(){
   var methods=getPaymentMethods();
@@ -3866,18 +3937,32 @@ function populatePayMethodSelects(){
     if(cur) el.value=cur;
   });
 }
-function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';var pmf=document.getElementById('txPayMethodField');if(pmf)pmf.style.display=(t==='expense')?'block':'none';checkTxBudgetWarning();}
+function toggleTxExtra(){
+  var ef=document.getElementById('txExtraFields');
+  var ea=document.getElementById('txExtraArrow');
+  if(!ef)return;
+  var open=ef.style.display==='block';
+  ef.style.display=open?'none':'block';
+  if(ea)ea.style.transform=open?'':'rotate(180deg)';
+}
+function toggleEditTxExtra(){
+  var ef=document.getElementById('editTxExtraFields');
+  var ea=document.getElementById('editTxExtraArrow');
+  if(!ef)return;
+  var open=ef.style.display==='block';
+  ef.style.display=open?'none':'block';
+  if(ea)ea.style.transform=open?'':'rotate(180deg)';
+}
+function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';checkTxBudgetWarning();}
 function renderCatChips(){
   // Populate the category select dropdown
   var sel=document.getElementById('txCatSelect');
   var lbl=document.getElementById('catSelectLabel');
-  var platField=document.getElementById('platformField');
   var platSel=document.getElementById('txPlatform');
   if(!sel)return;
   sel.innerHTML='<option value="">-- Select --</option>';
   if(txType==='income'){
     if(lbl)lbl.textContent='💰 Income Source';
-    if(platField)platField.style.display='none';
     getIncomeCats().forEach(function(cat){
       var opt=document.createElement('option');
       opt.value=cat;
@@ -3886,8 +3971,7 @@ function renderCatChips(){
     });
   } else {
     if(lbl)lbl.textContent='📂 Expense Category';
-    // Platform dropdown for expenses
-    if(platField)platField.style.display='block';
+    // Platform dropdown for expenses — populate if visible
     if(platSel){
       platSel.innerHTML='<option value="">-- Select Platform --</option>';
       getPlatforms().forEach(function(p){
@@ -4075,6 +4159,8 @@ function resetTxForm(){
   var plat=document.getElementById('txPlatform');if(plat)plat.value='';
   var pm=document.getElementById('txPayMethod');if(pm)pm.value='';
   var ll=document.getElementById('txLiabLink');if(ll)ll.value='';
+  var ef=document.getElementById('txExtraFields');if(ef)ef.style.display='none';
+  var ea=document.getElementById('txExtraArrow');if(ea)ea.style.transform='';
   setTxType('income');setRecurToggle(false);
 }
 function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx.date);return d.getMonth()===state.currentMonth&&d.getFullYear()===state.currentYear;});}
@@ -4565,20 +4651,19 @@ function txHTML(tx, balInfo){
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
   const acct=tx.account?state.accounts.find(a=>String(a.id)===String(tx.account)):null;
-  // Collect badges into a dedicated wrapping row — never crammed into the title line
+  // Badges: only account and member (self/others) — platform & payMethod moved to ℹ popup
   const badges=[];
   if(acct) badges.push(`<span class="tx-badge" style="background:${acct.color}22;color:${acct.color};border:1px solid ${acct.color}44">${acct.name}</span>`);
   const member=tx.member&&tx.member!=='Self'?tx.member:null;
   if(member) badges.push(`<span class="tx-badge" style="background:rgba(29,233,182,0.12);color:var(--teal);border:1px solid rgba(29,233,182,0.3)">👤 ${member}</span>`);
-  const platInfo=tx.platform?getPlatforms().find(function(p){return p.name===tx.platform;}):null;
-  if(platInfo) badges.push(`<span class="tx-badge" style="background:rgba(255,215,64,0.1);color:var(--yellow);border:1px solid rgba(255,215,64,0.25)">${platInfo.emoji} ${platInfo.name}</span>`);
-  const pmIcons={'UPI / GPay':'📱','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛'};
-  if(tx.payMethod) badges.push(`<span class="tx-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.25)">${pmIcons[tx.payMethod]||'💳'} ${tx.payMethod}</span>`);
   const badgeRow=badges.length?`<div class="tx-badges">${badges.join('')}</div>`:'';
   const emojiHtml=tx.emoji&&tx.emoji.startsWith('data:')?`<img src="${tx.emoji}" style="width:26px;height:26px;border-radius:6px;object-fit:cover">`:(tx.emoji||'🌀');
   const _safeD=(tx.desc||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _safeN=(tx.notes||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const _iBtn=tx.desc?` <span onclick="event.stopPropagation();showTxDescInfo('${_safeD}','${tx.category}','${formatDate(tx.date)}','${_safeN}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:9px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle">ℹ</span>`:'';
+  const _safeP=(tx.platform||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const _safePM=(tx.payMethod||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  // ℹ button always shown — shows desc, notes, platform, pay method
+  const _iBtn=` <span onclick="event.stopPropagation();showTxDescInfo('${_safeD}','${tx.category}','${formatDate(tx.date)}','${_safeN}','${_safeP}','${_safePM}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:var(--accent);font-size:9px;font-weight:900;cursor:pointer;flex-shrink:0;vertical-align:middle">ℹ</span>`;
   // Running balance pill — shown only when balInfo is passed (History page) and tx has an account
   var balPill='';
   if(balInfo && tx.account){
@@ -4588,18 +4673,32 @@ function txHTML(tx, balInfo){
   }
   return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.desc}</div><div class="tx-meta">${tx.category} · ${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
 }
-function showTxDescInfo(desc,cat,date,notes){
+function showTxDescInfo(desc,cat,date,notes,platform,payMethod){
   var m=document.getElementById('txDescInfoModal');
   if(!m){
     var el=document.createElement('div');
     el.className='modal-bg';el.id='txDescInfoModal';el.style.zIndex='9000';
-    el.innerHTML='<div class="modal" style="max-width:340px"><div class="modal-handle"></div><div class="modal-title" style="font-size:15px;margin-bottom:10px">📝 Description</div><div id="txDescInfoText" style="font-size:15px;font-weight:700;color:var(--text);line-height:1.6;word-break:break-word;padding-bottom:8px"></div><div id="txDescInfoNotes" style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;word-break:break-word;display:none"></div><div id="txDescInfoMeta" style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:16px"></div><button class="btn-cancel" onclick="closeModal(\'txDescInfoModal\')" style="width:100%">✕ Close</button></div></div>';
+    el.innerHTML='<div class="modal" style="max-width:340px"><div class="modal-handle"></div><div class="modal-title" style="font-size:15px;margin-bottom:10px">📋 Details</div><div id="txDescInfoText" style="font-size:15px;font-weight:700;color:var(--text);line-height:1.6;word-break:break-word;padding-bottom:8px"></div><div id="txDescInfoNotes" style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;word-break:break-word;display:none"></div><div id="txDescInfoPlatform" style="font-size:12px;color:var(--yellow);font-weight:700;margin-bottom:4px;display:none"></div><div id="txDescInfoPayMethod" style="font-size:12px;color:var(--blue);font-weight:700;margin-bottom:6px;display:none"></div><div id="txDescInfoMeta" style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:16px"></div><button class="btn-cancel" onclick="closeModal(\'txDescInfoModal\')" style="width:100%">✕ Close</button></div></div>';
     el.addEventListener('click',function(e){if(e.target===el)closeModal('txDescInfoModal');});
     document.body.appendChild(el);m=el;
   }
-  document.getElementById('txDescInfoText').textContent=desc;
+  var txtEl=document.getElementById('txDescInfoText');
+  txtEl.textContent=desc||'—';
+  txtEl.style.display=desc?'block':'none';
   var ne=document.getElementById('txDescInfoNotes');
   if(notes){ne.textContent='📎 '+notes;ne.style.display='block';}else{ne.style.display='none';}
+  var pe=document.getElementById('txDescInfoPlatform');
+  if(platform){
+    var platInfo=getPlatforms().find(function(p){return p.name===platform;});
+    pe.textContent=(platInfo?platInfo.emoji:'🛒')+' '+platform;
+    pe.style.display='block';
+  }else{pe.style.display='none';}
+  var pme=document.getElementById('txDescInfoPayMethod');
+  if(payMethod){
+    var pmIcons={'UPI':'🔷','Credit Card':'💳','Debit Card':'💳','Net Banking / NEFT':'🏦','Cash':'💵','Wallet':'👛'};
+    pme.textContent=(pmIcons[payMethod]||'💳')+' '+payMethod;
+    pme.style.display='block';
+  }else{pme.style.display='none';}
   document.getElementById('txDescInfoMeta').textContent=cat+' · '+date;
   showModal('txDescInfoModal');
 }
@@ -4630,6 +4729,13 @@ function editTx(id){
   document.getElementById('editTxOrigAcct').value=tx.account||'';
   // Set type — also repopulates category dropdown
   setEditTxType(tx.type);
+  // Reset extra fields panel
+  var ef=document.getElementById('editTxExtraFields');
+  var ea=document.getElementById('editTxExtraArrow');
+  // Auto-expand if tx has platform or payMethod stored
+  var hasExtra=(tx.platform||tx.payMethod);
+  if(ef) ef.style.display=hasExtra?'block':'none';
+  if(ea) ea.style.transform=hasExtra?'rotate(180deg)':'';
   // Restore category, platform, payMethod after dropdown is built
   setTimeout(function(){
     var catSel=document.getElementById('editTxCatSelect');
@@ -4658,14 +4764,12 @@ function setEditTxType(t){
   // Repopulate category select for this type
   var sel=document.getElementById('editTxCatSelect');
   var lbl=document.getElementById('editCatSelectLabel');
-  var platField=document.getElementById('editPlatformField');
   var platSel=document.getElementById('editTxPlatform');
   if(!sel)return;
   var prevCat=sel.value;
   sel.innerHTML='<option value="">-- Select --</option>';
   if(t==='income'){
     if(lbl)lbl.textContent='💰 Income Source';
-    if(platField)platField.style.display='none';
     getIncomeCats().forEach(function(cat){
       var opt=document.createElement('option');
       opt.value=cat;opt.textContent=(CAT_EMOJI[cat]||'🌀')+' '+cat;
@@ -4673,7 +4777,6 @@ function setEditTxType(t){
     });
   } else {
     if(lbl)lbl.textContent='📂 Expense Category';
-    if(platField)platField.style.display='block';
     if(platSel){
       platSel.innerHTML='<option value="">-- Select Platform --</option>';
       getPlatforms().forEach(function(p){
@@ -4695,9 +4798,6 @@ function setEditTxType(t){
   }
   // Restore previous selection if still valid
   if(prevCat) sel.value=prevCat;
-  // Show/hide pay method field and update account label
-  var pmField=document.getElementById('editTxPayMethodField');
-  if(pmField) pmField.style.display=(t==='expense')?'block':'none';
   checkEditTxBudgetWarning();
   var accLbl=document.getElementById('editTxAccountLabel');
   if(accLbl) accLbl.textContent=t==='income'?'🏦 Deposit to Account':'🏦 Deduct from Account';
@@ -5965,7 +6065,7 @@ function deleteCustomCat(grp,cat){
 }
 
 // ── CUSTOM INCOME SOURCES ──────────────────────────────────────────────────
-var _builtInIncomeCats=['Salary','Freelance','Business','Rental','Investment','Bonus','Dividend','Commission','Pension','Cashback','Interest Income','Side Hustle','Refund','Gift','Other'];
+var _builtInIncomeCats=['Salary','Freelance','Business','Rental','Passive Income','Bonus','Pension','Refund','Gift','Balance Correction','Other'];
 function renderCustomIncomeCatsList(){
   var wrap=document.getElementById('customIncomeCatsList');
   if(!wrap) return;
@@ -6180,20 +6280,24 @@ function renderIconManagerList(){
 }
 
 // ── CUSTOM PLATFORMS ──────────────────────────────────────────────────────
-var _builtInPlatNames=['Offline / Store','Amazon','Flipkart','Meesho','Myntra','Nykaa','Reliance / JioMart','DMart','BigBasket','Zepto','Blinkit','Swiggy','Zomato','Swiggy Instamart','PharmEasy','1mg','BookMyShow','MakeMyTrip','Ola / Uber','Rapido','IRCTC','Paytm','mStock','Zerodha','Groww','Angel One','Other'];
+var _builtInPlatNames=['Offline / Store','Online / Website','App Purchase','Amazon','Flipkart','Meesho','Myntra','Nykaa','Reliance / JioMart','DMart','BigBasket','Zepto','Blinkit','Swiggy','Zomato','Swiggy Instamart','Dunzo','PharmEasy','1mg','BookMyShow','MakeMyTrip','IRCTC','Ola','Uber','Rapido','Paytm','PhonePe','mStock','Zerodha','Groww','Angel One','Other'];
 function renderCustomPlatformsList(){
   var wrap=document.getElementById('customPlatformsList');
   if(!wrap) return;
   // Build full unfiltered list so hidden items still appear with Show button
   var _builtInPlats=[
-    {name:'Offline / Store',emoji:'🏪'},{name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
+    {name:'Offline / Store',emoji:'🏪'},{name:'Online / Website',emoji:'🌐'},{name:'App Purchase',emoji:'📲'},
+    {name:'Amazon',emoji:'📦'},{name:'Flipkart',emoji:'🛒'},
     {name:'Meesho',emoji:'🛍️'},{name:'Myntra',emoji:'👗'},{name:'Nykaa',emoji:'💄'},
     {name:'Reliance / JioMart',emoji:'🏬'},{name:'DMart',emoji:'🛒'},{name:'BigBasket',emoji:'🥦'},
-    {name:'Swiggy',emoji:'🛵'},{name:'Zomato',emoji:'🍽️'},{name:'Dunzo',emoji:'🚴'},
-    {name:'Blinkit',emoji:'⚡'},{name:'Zepto',emoji:'🏃'},{name:'Ola',emoji:'🚕'},
-    {name:'Uber',emoji:'🚗'},{name:'Rapido',emoji:'🏍️'},{name:'PhonePe',emoji:'📱'},
-    {name:'Paytm',emoji:'💙'},{name:'IRCTC',emoji:'🚆'},{name:'MakeMyTrip',emoji:'✈️'},
-    {name:'BookMyShow',emoji:'🎬'},{name:'Other',emoji:'🏪'}
+    {name:'Zepto',emoji:'⚡'},{name:'Blinkit',emoji:'💛'},{name:'Swiggy',emoji:'🧡'},
+    {name:'Zomato',emoji:'❤️'},{name:'Swiggy Instamart',emoji:'🟠'},{name:'Dunzo',emoji:'🚴'},
+    {name:'PharmEasy',emoji:'💊'},{name:'1mg',emoji:'🩺'},{name:'BookMyShow',emoji:'🎬'},
+    {name:'MakeMyTrip',emoji:'✈️'},{name:'IRCTC',emoji:'🚆'},
+    {name:'Ola',emoji:'🚕'},{name:'Uber',emoji:'🚗'},{name:'Rapido',emoji:'🛵'},
+    {name:'Paytm',emoji:'💙'},{name:'PhonePe',emoji:'🔵'},
+    {name:'mStock',emoji:'📊'},{name:'Zerodha',emoji:'🟦'},
+    {name:'Groww',emoji:'💚'},{name:'Angel One',emoji:'🔴'},{name:'Other',emoji:'🌀'}
   ];
   var all=_builtInPlats.slice();
   if(state&&Array.isArray(state.customPlatforms)){
@@ -6276,7 +6380,7 @@ function showAllPlatforms(){
 }
 
 // ── CUSTOM PAYMENT METHODS ─────────────────────────────────────────────────
-var _builtInPayMethods=['UPI / GPay','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
+var _builtInPayMethods=['UPI','Credit Card','Debit Card','Net Banking / NEFT','Cash','Wallet','Other'];
 function renderCustomPayList(){
   var wrap=document.getElementById('customPayList');
   if(!wrap) return;
@@ -8051,7 +8155,7 @@ function renderAccounts(){
 }
 function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();renderHistory();renderTransferList();});}
 // Real store-of-value accounts — income deposits here, expenses deduct from here
-var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Fixed Deposit','PPF Account','Investment / Demat','Wallet','UPI / GPay','Credit Card','Debit Card','Loan Account'];
+var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Fixed Deposit','PPF Account','Investment / Demat','Wallet','UPI','Credit Card','Debit Card','Loan Account'];
 var EXPENSE_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Wallet'];
 // Payment methods — metadata label for expenses only (no balance tracking)
 // PAYMENT_METHODS is now dynamic — see getPaymentMethods()
@@ -8074,8 +8178,6 @@ function updateTxAccountSelect(){
 
   if(!filtered.length){
     sel.innerHTML='<option value="">-- No accounts added yet --</option>';
-    var pmField2=document.getElementById('txPayMethodField');
-    if(pmField2) pmField2.style.display=txType==='expense'?'block':'none';
     return;
   }
 
@@ -8091,10 +8193,6 @@ function updateTxAccountSelect(){
   if(curr && filtered.find(function(a){return String(a.id)===String(curr);})){
     sel.value=curr;
   }
-
-  // Show/hide the payment method field (expenses only)
-  var pmField=document.getElementById('txPayMethodField');
-  if(pmField) pmField.style.display=txType==='expense'?'block':'none';
 }
 function updateTxLiabSelect(){
   var sel=document.getElementById('txLiabLink');
