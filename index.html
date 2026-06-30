@@ -2168,24 +2168,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     </div>
     <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
-    <!-- Extra details: platform & pay method — collapsed by default -->
-    <div onclick="toggleTxExtra()" style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer">
-      <span style="font-size:12px;font-weight:700;color:var(--text2)">➕ More details <span style="font-size:10px;color:var(--text3)">(platform, pay method)</span></span>
-      <span id="txExtraArrow" style="font-size:12px;color:var(--text3);transition:transform .2s">▼</span>
+    <div class="field" id="platformField">
+      <div class="field-label">🛒 Platform / Where bought</div>
+      <select class="field-input" id="txPlatform">
+        <option value="">-- Select Platform --</option>
+      </select>
     </div>
-    <div id="txExtraFields" style="display:none">
-      <div class="field" id="platformField">
-        <div class="field-label">🛒 Platform / Where bought</div>
-        <select class="field-input" id="txPlatform">
-          <option value="">-- Select Platform --</option>
-        </select>
-      </div>
-      <div class="field" id="txPayMethodField">
-        <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
-        <select class="field-input" id="txPayMethod">
-          <option value="">-- Select Method --</option>
-        </select>
-      </div>
+    <div class="field" id="txPayMethodField">
+      <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
+      <select class="field-input" id="txPayMethod">
+        <option value="">-- Select Method --</option>
+      </select>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;margin-bottom:12px">
       <div>
@@ -3980,7 +3973,7 @@ function showModal(id){
     var panel=modalBg.querySelector('.modal');
     if(panel)panel.scrollTop=0;
   },10);
-  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';var ef=document.getElementById('txExtraFields');if(ef)ef.style.display='none';var ea=document.getElementById('txExtraArrow');if(ea)ea.style.transform='';}
+  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
@@ -4040,7 +4033,7 @@ function toggleEditTxExtra(){
   ef.style.display=open?'none':'block';
   if(ea)ea.style.transform=open?'':'rotate(180deg)';
 }
-function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';checkTxBudgetWarning();}
+function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';var pf=document.getElementById('platformField');if(pf){pf.style.display=(t==='income')?'none':'';if(t==='income'){var ps=document.getElementById('txPlatform');if(ps)ps.value='';}}checkTxBudgetWarning();}
 function renderCatChips(){
   // Populate the category select dropdown
   var sel=document.getElementById('txCatSelect');
@@ -4174,7 +4167,7 @@ function saveTx(){
   const acct=document.getElementById('txAccount').value;
   const liabLink=document.getElementById('txLiabLink')?.value||'';
   const cat=getSelCatFromSelect();
-  const platform=document.getElementById('txPlatform')?.value||'';
+  const platform=txType==='expense'?(document.getElementById('txPlatform')?.value||''):'';
   const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
   const amtINR=amt/(state.currencyRate||1);
@@ -4238,8 +4231,7 @@ function resetTxForm(){
   var plat=document.getElementById('txPlatform');if(plat)plat.value='';
   var pm=document.getElementById('txPayMethod');if(pm)pm.value='';
   var ll=document.getElementById('txLiabLink');if(ll)ll.value='';
-  var ef=document.getElementById('txExtraFields');if(ef)ef.style.display='none';
-  var ea=document.getElementById('txExtraArrow');if(ea)ea.style.transform='';
+
   setTxType('income');setRecurToggle(false);
 }
 function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx.date);return d.getMonth()===state.currentMonth&&d.getFullYear()===state.currentYear;});}
@@ -4835,6 +4827,8 @@ function setEditTxType(t){
   document.getElementById('editTxTypeInc').classList.toggle('inc',t==='income');
   document.getElementById('editTxTypeExp').classList.toggle('on',t==='expense');
   document.getElementById('editTxTypeExp').classList.toggle('exp',t==='expense');
+  var epf=document.getElementById('editPlatformField');
+  if(epf){epf.style.display=(t==='income')?'none':'';if(t==='income'){var eps=document.getElementById('editTxPlatform');if(eps)eps.value='';}}
   // Repopulate category select for this type
   var sel=document.getElementById('editTxCatSelect');
   var lbl=document.getElementById('editCatSelectLabel');
@@ -4916,7 +4910,7 @@ function saveEditTx(){
   const notes=document.getElementById('editTxNotes').value.trim();
   const acct=document.getElementById('editTxAccount').value;
   const cat=(document.getElementById('editTxCatSelect')?.value)||'Other';
-  const platform=document.getElementById('editTxPlatform')?.value||'';
+  const platform=editTxType==='expense'?(document.getElementById('editTxPlatform')?.value||''):'';
   // payMethod = UPI/Credit Card/etc — metadata only, no balance effect
   const payMethod=editTxType==='expense'?(document.getElementById('editTxPayMethod')?.value||''):'';
   const member=getEditSelMember();
@@ -9146,21 +9140,23 @@ function renderExpTrendChart(){
   if(expTrendTab==='day'){
     // TODAY only — one bar per category that has transactions today
     var todayTxs=state.transactions.filter(function(t){return t.date===todayStr;});
-    var catMap={};
+    var catMapExp={},catMapInc={};
     todayTxs.forEach(function(t){
       if(t.type==='expense'){
-        catMap[t.category]=(catMap[t.category]||0)+t.amount;
+        catMapExp[t.category]=(catMapExp[t.category]||0)+t.amount;
+      } else if(t.type==='income'){
+        catMapInc[t.category]=(catMapInc[t.category]||0)+t.amount;
       }
     });
-    var cats=Object.keys(catMap);
+    var cats=Object.keys(catMapExp).concat(Object.keys(catMapInc).filter(function(c){return Object.keys(catMapExp).indexOf(c)===-1;}));
     if(cats.length===0){
       // No transactions today — show empty single bar labeled "Today"
       labels=['Today'];expData=[0];incData=[0];
     } else {
       cats.forEach(function(c){
         labels.push((CAT_EMOJI[c]||'💸')+' '+c);
-        expData.push(cv(catMap[c]));
-        incData.push(0);
+        expData.push(cv(catMapExp[c]||0));
+        incData.push(cv(catMapInc[c]||0));
       });
     }
     var todayInc=cv(todayTxs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0));
@@ -9298,7 +9294,20 @@ function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').for
 function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));var isPie=chartType==='pie'||chartType==='doughnut';
   const cc2=chartColors();charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:2,hoverOffset:isPie?16:0,borderRadius:['bar'].includes(chartType)?8:(isPie?4:0),borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,cutout:chartType==='doughnut'?'65%':undefined,animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{color:cc2.legend,font:{size:11,weight:'700'},boxWidth:10,boxHeight:10,padding:12,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce(function(a,b){return a+b;},0);var pct=(c.parsed/t*100).toFixed(1);return' '+c.label+': '+state.currSymbol+fmt(cv(c.parsed))+' ('+pct+'%)';}}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:cc2.tick,font:{size:10}}},y:{grid:{color:cc2.grid},ticks:{color:cc2.tick,font:{size:10}}}}:undefined}});}
 function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const cc3=chartColors();charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:cc3.legend,font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:cc3.tick,font:{size:10}}},y:{grid:{color:cc3.grid},ticks:{color:cc3.tick,font:{size:10}}}}}});}
-function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
+var catBreakdownOpen=null;
+function toggleCatBreakdown(cat){catBreakdownOpen=(catBreakdownOpen===cat)?null:cat;renderCatBreakdown();}
+function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];const isOpen=catBreakdownOpen===cat;
+  var listHTML='';
+  if(isOpen){
+    var catTxs=txs.filter(function(t){return t.category===cat;});
+    catTxs.sort(function(a,b){var ka=a.date+'T'+(a.time||'00:00')+'_'+String(a.id).padStart(16,'0');var kb=b.date+'T'+(b.time||'00:00')+'_'+String(b.id).padStart(16,'0');return kb.localeCompare(ka);});
+    listHTML='<div style="margin-top:8px;border-top:1px solid var(--border2);padding-top:8px">'+catTxs.map(function(t){
+      var timeStr='';
+      if(t.time){var hp=t.time.split(':');var hh=parseInt(hp[0],10);var mm=hp[1];var ap=hh>=12?'PM':'AM';var h12=hh%12;if(h12===0)h12=12;timeStr=' · '+h12+':'+mm+' '+ap;}
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px"><div style="color:var(--text2);font-weight:700">'+formatDate(t.date)+timeStr+(t.notes?' · '+t.notes:'')+'</div><div style="font-weight:900;color:var(--red)">-'+state.currSymbol+fmt(cv(t.amount))+'</div></div>';
+    }).join('')+'</div>';
+  }
+  return'<div style="margin-bottom:14px;cursor:pointer" onclick="toggleCatBreakdown(\''+cat.replace(/'/g,"\\'")+'\')"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div>'+listHTML+'</div>';}).join('');}
 function renderAssetChart(){
   const ctx=document.getElementById('assetChart');
   if(!ctx) return;
@@ -11238,13 +11247,14 @@ function formatTxTime(t){if(!t)return '';try{const[h,m]=t.split(':');const hr=pa
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
 // ── Version stamp: change this string on every release to force SW update ──
-var BUILD = 'ft-build-20260607-v21';
+var BUILD = 'ft-build-20260630-v22';
 
 (function(){
   if(!('serviceWorker' in navigator)) return;
 
   var swCode = [
     "var SKIP_URLS = ['firestore','googleapis','firebase','anthropic','api.anthropic'];",
+    "var CACHE_NAME = '" + BUILD + "';",
 
     // Install: skip waiting immediately so new SW activates without delay
     "self.addEventListener('install', function(e){",
@@ -12771,16 +12781,34 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v21 LATEST -->
+      <!-- v22 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">21</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">22</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v21 — 07 Jun 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v22 — 30 Jun 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            📊 <b style="color:var(--text)">Expense Trend day-view income fix</b> — Today tab now shows income per category alongside expense (was always 0)<br>
+            🗂️ <b style="color:var(--text)">Category Breakdown is now tappable</b> — tap a category to expand its transactions for the month, newest first<br>
+            🛠️ <b style="color:var(--text)">Service worker cache fix</b> — SW referenced an undefined cache name, which could silently fail to activate and leave the app stuck on an old cached build/version
+          </div>
+        </div>
+      </div>
+
+      <!-- v21 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">21</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v21 — 07 Jun 2026</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             ⚠️ <b style="color:var(--text)">Live budget warning on Add Transaction</b> — inline banner appears as you pick a category and type an amount; shows 📋 not in budget, ⚠️ 80%+ used, or 🚨 will exceed with exact overage<br>
@@ -13040,7 +13068,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v20 — 06 Jun 2026</span>
+      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v22 — 30 Jun 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
