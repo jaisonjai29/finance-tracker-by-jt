@@ -1220,7 +1220,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- MULTI-ACCOUNT -->
     <div class="page" id="page-accounts">
-      <div class="sec-head"><div class="sec-title">🏦 Accounts</div><div style="display:flex;gap:6px"><button class="sec-btn" style="font-size:11px;background:rgba(79,142,247,0.12);color:var(--accent);border:1.5px solid rgba(79,142,247,0.3)" onclick="openMonthlyOpeningModal()">📅 Month Opening</button><button class="sec-btn" onclick="showModal('acctModal')">➕ Add</button></div></div>
+      <div class="sec-head"><div class="sec-title">🏦 Accounts</div><div style="display:flex;gap:6px"><button class="sec-btn" onclick="showModal('acctModal')">➕ Add</button></div></div>
       <div id="acctSummary" style="margin-bottom:14px"></div>
       <div class="box">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">💳 My Accounts</div>
@@ -1958,10 +1958,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div class="set-row" onclick="showPage('accounts')">
           <div class="set-row-left"><span class="set-row-icon">🏦</span><div><div class="set-row-label">Accounts</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Manage bank, cash & card accounts</div></div></div>
           <div class="set-row-right">Open ▶</div>
-        </div>
-        <div class="set-row" onclick="openMonthlyOpeningModal()">
-          <div class="set-row-left"><span class="set-row-icon">📅</span><div><div class="set-row-label">Set Month Opening Balances</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Record actual balance at start of month</div></div></div>
-          <div class="set-row-right">Set ▶</div>
         </div>
         <div class="set-row" onclick="showPage('debtcountdown')">
           <div class="set-row-left"><span class="set-row-icon">⏱️</span><div><div class="set-row-label">Debt Payoff Countdown</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Track debt-free date & prepayment impact</div></div></div>
@@ -3142,7 +3138,7 @@ function selectProfile(id){
   setActiveProfileId(id);
   _currentProfileId=id;
   // Reset state to defaults then load profile data
-  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null});
+  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''});
   loadState();
   applyTheme(state.theme);
   applyFont(state.font);
@@ -3277,7 +3273,7 @@ function saveProfile(){
   } else {
     var newId='p_'+Date.now();
     // Fresh minimal state — no copy of existing data
-    var fresh={pin:pinVal,fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null};
+    var fresh={pin:pinVal,fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''};
     // Write ONLY to the profile key — no ft_v5 write here
     try{ localStorage.setItem(getProfileStateKey(newId),JSON.stringify(fresh)); }catch(e){
       errEl.textContent='Storage full — please export a backup and clear data first';
@@ -3349,7 +3345,7 @@ function switchToProfile(id){
   saveState();
   setActiveProfileId(id);
   _currentProfileId=id;
-  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null});
+  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''});
   loadState();
   applyTheme(state.theme); applyFont(state.font); updateCurrSymbols();
   initApp(); renderProfilesList();
@@ -3364,12 +3360,11 @@ let state={
   pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',
   transactions:[],goals:[],assets:[],liabilities:[],
   budgets:{},monthlyBudgets:{},bills:[],accounts:[],recurring:[],
-  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',monthlyOpenings:{},
+  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',
   familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
   driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',
-  trackerOpeningBalance:null,
   customExpCats:{},
   customIncomeCats:[],
   customPlatforms:[],
@@ -3435,7 +3430,6 @@ function loadState(){
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
   if(state.allocTargetsEnabled===undefined) state.allocTargetsEnabled=false;
   if(!state.billsResetMonth) state.billsResetMonth='';
-  if(!state.monthlyOpenings||typeof state.monthlyOpenings!=='object') state.monthlyOpenings={};
   if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
   if(!state.customCatEmojis) state.customCatEmojis={};
   if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
@@ -3854,7 +3848,6 @@ function initApp(){
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
   updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();applyAllocToggleUI();
-  checkMonthlyOpeningPrompt();
   applyAmountsHide();
   _clearAutoHideTimer();
   if(state.autoHideDelay>0&&!state.amountsHidden) _startAutoHideTimer();
@@ -4250,22 +4243,40 @@ function getTransferNetForAccountInMonth(acctId, m, y){
   return net;
 }
 
+// ── Net of an account's transactions + transfers dated relative to a given month/year.
+// inclusive=true  → sums everything dated ON OR AFTER (month,year)  [this month onward]
+// inclusive=false → sums everything dated STRICTLY AFTER (month,year)
+// Anchoring off the account's live balance (rather than summing everything from account
+// creation forward) means this stays correct even if an opening balance was ever hand-edited,
+// and it works identically whether the viewed month is in the past, present, or future.
+function acctNetSince(acctId, month, year, inclusive){
+  var net=0;
+  state.transactions.forEach(function(t){
+    if(String(t.account)!==String(acctId)) return;
+    var d=new Date(t.date); var dY=d.getFullYear(), dM=d.getMonth();
+    var after=inclusive?(dY>year||(dY===year&&dM>=month)):(dY>year||(dY===year&&dM>month));
+    if(!after) return;
+    net+=(t.type==='income'?t.amount:-t.amount);
+  });
+  (state.transfers||[]).forEach(function(tr){
+    var d=new Date(tr.date); var dY=d.getFullYear(), dM=d.getMonth();
+    var after=inclusive?(dY>year||(dY===year&&dM>=month)):(dY>year||(dY===year&&dM>month));
+    if(!after) return;
+    if(String(tr.to)===String(acctId))   net+=tr.amount;
+    if(String(tr.from)===String(acctId)) net-=tr.amount;
+  });
+  return net;
+}
+
 function getCarryForward(month, year){
-  // Carry = tracker base + sum of each account's (opening + prior income - prior expense + prior transfer net)
-  // Transfers cancel out globally, but are needed for per-account accuracy
-  var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
-  var carry=base;
+  // Carry into (month,year) = each account's live balance, minus everything dated this
+  // month or later. This is always exactly right, however many months forward or back
+  // the person navigates, because it's anchored to the live balance rather than replayed
+  // forward from the account's original opening balance.
+  var carry=0;
   state.accounts.forEach(function(a){
-    var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
-    var txPrev=state.transactions.filter(function(t){
-      if(String(t.account)!==String(a.id)) return false;
-      var d=new Date(t.date); var dY=d.getFullYear(),dM=d.getMonth();
-      return dY<year||(dY===year&&dM<month);
-    });
-    var inc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-    var exp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    // Transfers cancel across accounts so don't affect total carry — per-account only
-    carry+=opening+inc-exp;
+    if(typeof a.balance!=='number') return;
+    carry+=a.balance-acctNetSince(a.id, month, year, true);
   });
   return carry;
 }
@@ -4290,7 +4301,6 @@ function showCarryBreakdown(){
   var month=state.currentMonth, year=state.currentYear;
   var sym=state.currSymbol;
   var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
   var accounts=state.accounts||[];
   var transfers=state.transfers||[];
 
@@ -4323,19 +4333,6 @@ function showCarryBreakdown(){
     });
     return net;
   }
-
-  // ── Global carry (transfers cancel globally, so only account opening + tx net matters) ──
-  var globalCarry=base;
-  accounts.forEach(function(a){
-    var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
-    var txPrev=state.transactions.filter(function(t){
-      if(String(t.account)!==String(a.id)) return false;
-      var d=new Date(t.date); return d.getFullYear()<year||(d.getFullYear()===year&&d.getMonth()<month);
-    });
-    var inc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-    var exp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    globalCarry+=opening+inc-exp;
-  });
 
   // ── HTML ──
   var html='';
@@ -4391,6 +4388,11 @@ function showCarryBreakdown(){
       if(String(tr.from)===String(a.id)) trTotal-=tr.amount;
     });
     var closing=opening+inc-exp+trTotal;
+    // Anchor to the account's live balance so this always reconciles exactly with the Accounts
+    // page and History, no matter which month (past, current, or future) is being viewed.
+    if(typeof a.balance==='number'){
+      closing=a.balance-acctNetSince(a.id, month, year, true);
+    }
     totalOpen+=opening; totalInc2+=inc; totalExp2+=exp; totalTr2+=trTotal; totalClose+=closing;
     var ac=a.color||'var(--accent)';
     html+='<tr>'
@@ -4458,6 +4460,13 @@ function showCarryBreakdown(){
     var curExp=txCur.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
     var curTr=trNet(a.id, month, year);
     var curClose=curOpen+curInc-curExp+curTr;
+    // Anchor Open/Close to the account's live balance so this reconciles exactly with what's
+    // shown on the Accounts page and after each transaction in History — whether the month
+    // being viewed is in the past, the real current month, or a future month like next month.
+    if(typeof a.balance==='number'){
+      curClose=a.balance-acctNetSince(a.id, month, year, false);
+      curOpen=curClose-curInc+curExp-curTr;
+    }
     curTotalOpen+=curOpen; curTotalInc+=curInc; curTotalExp+=curExp; curTotalTr+=curTr; curTotalClose+=curClose;
     var ac=a.color||'var(--accent)';
     html+='<tr>'
@@ -4487,17 +4496,6 @@ function showCarryBreakdown(){
   +'</tr></tfoot></table>';
   html+='</div></div>';
 
-  if(base!==0){
-    html+='<div style="background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--accent)">🏁 Tracker Opening Balance</div>'
-      +'<div style="font-size:12px;font-weight:900;color:'+(base>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(base))+'</div>'
-    +'</div>';
-  }
-  html+='<div style="background:var(--bg2);border:2px solid '+(globalCarry>=0?'var(--green)':'var(--red)')+';border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">↩️ Carry Into '+mNames[month]+' '+year+'</div>'
-    +'<div style="font-size:9px;color:var(--text3);margin-top:2px">Σ account closings before this month (transfers cancel out)</div></div>'
-    +'<div style="font-size:18px;font-weight:900;color:'+(globalCarry>=0?'var(--green)':'var(--red)')+'">'+( globalCarry>=0?'+':'-')+sym+fmt(cv(Math.abs(globalCarry)))+'</div>'
-  +'</div>';
   html+='</div>'; // end cfPanelOverall
 
   // ══════════════════════════════════════════
@@ -4510,6 +4508,7 @@ function showCarryBreakdown(){
     accounts.forEach(function(acct){
       var ac=acct.color||'var(--accent)';
       var opening=typeof acct.openingBalance==='number'?acct.openingBalance:0;
+      var hasLiveBal=typeof acct.balance==='number';
       var runBal=opening;
       var acctMonthRows=[];
       allMonths.forEach(function(mo){
@@ -4523,9 +4522,17 @@ function showCarryBreakdown(){
         var tr=trNet(acct.id, mo.m, mo.y);
         var openBal=runBal;
         runBal=runBal+inc-exp+tr;
+        // Anchor every month's Open/Close to the account's live running balance rather than
+        // accumulating forward from the original opening balance — this way each row reconciles
+        // exactly with the Accounts page and History regardless of which month is being viewed
+        // (past, current, or a future month like next month), and however far it's navigated.
+        if(hasLiveBal){
+          runBal=acct.balance-acctNetSince(acct.id, mo.m, mo.y, false);
+          openBal=runBal-inc+exp-tr;
+        }
         acctMonthRows.push({mo:mo,isCurrent:isCurrent,inc:inc,exp:exp,tr:tr,openBal:openBal,closeBal:runBal,txCount:txs.length});
       });
-      var finalBal=runBal;
+      var finalBal=hasLiveBal?acct.balance:runBal;
 
       html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:14px">';
       html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-bottom:2px solid '+ac+'44">'
@@ -4594,15 +4601,6 @@ function showCarryBreakdown(){
     +'<button onclick="document.getElementById(\'cfEditAccountSection\').style.display=\'none\'" style="margin-top:8px;background:transparent;border:none;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;width:100%;text-align:center">✕ Cancel</button>'
   +'</div>';
 
-  html+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:4px">'
-    +'<div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:4px">🏁 Tracker Opening Balance</div>'
-    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.5">Global starting balance <b style="color:var(--text)">before using this app</b>.</div>'
-    +'<div style="display:flex;gap:8px;align-items:center">'
-      +'<input id="carryOpeningInput" type="number" placeholder="e.g. 11600" value="'+(base?cv(base):'')+'" style="flex:1;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-weight:700;font-family:var(--font);outline:none">'
-      +'<button onclick="saveCarryOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer">Save</button>'
-    +'</div>'
-    +'<div style="font-size:10px;color:var(--text3);margin-top:8px;font-weight:600">💡 Negative = deficit. Enter 0 to reset.</div>'
-  +'</div>';
 
   document.getElementById('carryBreakdownBody').innerHTML=html;
   if(state.amountsHidden) _tagAllMoneyElements();
@@ -4658,15 +4656,6 @@ function cfSaveAccountOpening(){
   cfSwitchTab('account');
 }
 
-function saveCarryOpening(){
-  var v=parseFloat(document.getElementById('carryOpeningInput').value);
-  if(isNaN(v)) v=0;
-  state.trackerOpeningBalance=v/(state.currencyRate||1);
-  saveState();
-  updateDashboard();
-  showToast('Tracker opening balance set to '+state.currSymbol+fmt(cv(state.trackerOpeningBalance)),'green');
-  showCarryBreakdown();
-}
 // ── Build per-account running balance for every transaction ──────────────────
 // Returns Map<String(txId), {balance:Number, acctColor:String}>
 // Sorts ALL transactions + transfers chronologically, then walks through them
@@ -8222,9 +8211,7 @@ function renderAccounts(){
     const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
     const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     const openBal=typeof a.openingBalance==='number'?a.openingBalance:0;
-    const today=new Date();const mobVal=getMonthlyOpening(a.id,today.getFullYear(),today.getMonth());
-    const mobNote=mobVal!=null?`<div style="margin-top:3px"><span style="font-size:9px;color:var(--accent);font-weight:700;background:rgba(79,142,247,0.1);padding:1px 6px;border-radius:6px;border:1px solid rgba(79,142,247,0.2)">📅 ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()]} opening: ${state.currSymbol}${fmt(cv(mobVal))}</span></div>`:'';
-    const openNote=(Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'')+mobNote;
+    const openNote=(Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'');
     return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div>${openNote}</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:4px"><div style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:900;background:rgba(68,138,255,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(68,138,255,0.3)" onclick="editAcct('${a.id}')">✏️ Edit</div><div style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.1);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,69,105,0.2)" onclick="deleteAcct('${a.id}')">Remove</div></div></div></div>`;
   }).join('');
   // Update history filter dropdown
@@ -9041,76 +9028,6 @@ function showBudgetChartModal(){
   showModal('budgetChartModal');
 }
 
-// ── MONTHLY OPENING BALANCE ──────────────────────────────────────────────────
-function getMonthKey(date){return `${date.getFullYear()}-${date.getMonth()}`;}
-
-function checkMonthlyOpeningPrompt(){
-  const today=new Date();
-  // Only prompt on the 1st of the month
-  if(today.getDate()!==1) return;
-  if(!state.accounts||!state.accounts.length) return;
-  const key=getMonthKey(today);
-  // Already set this month
-  if(state.monthlyOpenings[key]) return;
-  // Show modal after a short delay so app renders first
-  setTimeout(()=>showMonthlyOpeningModal(key),800);
-}
-
-function showMonthlyOpeningModal(key){
-  const today=new Date();
-  const monthName=['January','February','March','April','May','June','July','August','September','October','November','December'][today.getMonth()];
-  const fields=document.getElementById('monthlyOpeningFields');
-  if(!fields)return;
-  fields.innerHTML=state.accounts.map(a=>`
-    <div style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${a.color};flex-shrink:0"></div>
-        <div style="font-size:13px;font-weight:900;color:var(--text)">${a.name}</div>
-        <div style="font-size:10px;color:var(--text3);font-weight:700">${a.type}</div>
-      </div>
-      <div style="position:relative">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--text3)">${state.currSymbol}</span>
-        <input type="number" id="mob_${a.id}" class="field-input" style="padding-left:28px" placeholder="0"
-          value="${state.monthlyOpenings[key]?.[a.id]!=null?cv(state.monthlyOpenings[key][a.id]):''}">
-      </div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">
-        Current running balance: ${state.currSymbol}${fmt(cv(a.balance))}
-      </div>
-    </div>
-  `).join('');
-  document.getElementById('monthlyOpeningModal').dataset.key=key;
-  document.querySelector('#monthlyOpeningModal .modal-title').textContent=`📅 ${monthName} Opening Balances`;
-  showModal('monthlyOpeningModal');
-}
-
-function saveMonthlyOpenings(){
-  const key=document.getElementById('monthlyOpeningModal').dataset.key;
-  if(!key)return;
-  if(!state.monthlyOpenings[key]) state.monthlyOpenings[key]={};
-  let filled=0;
-  state.accounts.forEach(a=>{
-    const el=document.getElementById('mob_'+a.id);
-    if(el&&el.value!==''){
-      const val=parseFloat(el.value)||0;
-      state.monthlyOpenings[key][a.id]=val/(state.currencyRate||1);
-      filled++;
-    }
-  });
-  saveState();
-  closeModal('monthlyOpeningModal');
-  if(filled>0) showToast(`✅ ${filled} account opening balance${filled>1?'s':''} saved for this month`,'green');
-}
-
-function getMonthlyOpening(acctId,year,month){
-  const key=`${year}-${month}`;
-  return state.monthlyOpenings?.[key]?.[acctId]??null;
-}
-
-// Call from accounts page — manual trigger button
-function openMonthlyOpeningModal(){
-  const today=new Date();
-  showMonthlyOpeningModal(getMonthKey(today));
-}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();setExpTrendTab(expTrendTab);renderYearlySummary();renderCatBreakdown();if(state.amountsHidden) setTimeout(_tagAllMoneyElements,150);}
 
 function localDateStr(d){
@@ -13105,19 +13022,6 @@ initGoogleDrive();
     <button class="btn-go" onclick="allocWarnAdjust()" style="background:var(--accent);margin-bottom:8px">🎯 Adjust Target</button>
     <button class="btn-cancel" onclick="allocWarnForce()" style="width:100%;margin-bottom:8px">➕ Add Anyway</button>
     <button class="btn-cancel" onclick="closeModal('allocWarnModal')" style="width:100%">✕ Cancel</button>
-  </div>
-</div>
-
-<!-- MONTHLY OPENING BALANCE MODAL -->
-<div class="modal-bg" id="monthlyOpeningModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div style="font-size:28px;text-align:center;margin-bottom:6px">📅</div>
-    <div class="modal-title" style="justify-content:center;text-align:center">Month Opening Balances</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;text-align:center;margin-bottom:16px;line-height:1.6">Enter each account's actual balance at the start of this month.<br>This won't affect your transaction history.</div>
-    <div id="monthlyOpeningFields" style="margin-bottom:16px"></div>
-    <button class="btn-go" onclick="saveMonthlyOpenings()">✅ Save Opening Balances</button>
-    <button class="btn-cancel" onclick="closeModal('monthlyOpeningModal');showToast('Skipped — you can set this from Accounts page','yellow')" style="width:100%;margin-top:8px">Skip for now</button>
   </div>
 </div>
 
