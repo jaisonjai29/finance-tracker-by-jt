@@ -2631,7 +2631,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     </div>
     <div id="exportKeyError" style="display:none;color:var(--red);font-size:12px;font-weight:900;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:8px"></div>
     <button class="btn-go" id="exportKeySubmitBtn" onclick="handleExportKeySubmit()">📤 Export Backup</button>
-    <button class="btn-cancel" onclick="closeModal('exportKeyModal');document.getElementById('exportKeyInput').value='';document.getElementById('exportKeyError').style.display='none';document.getElementById('exportKeyModal').dataset.mode='';document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';">Cancel</button>
+    <button class="btn-cancel" onclick="cancelExportKeyModal()">Cancel</button>
   </div>
 </div>
 
@@ -3599,54 +3599,61 @@ function _scheduleSilentSync(){
 }
 function _silentSync(){
   if(!state.isLoggedIn) return;
+  // Never pop a password prompt from a background tick — only sync once a
+  // sync password has already been set up via a manual "Sync Now" / Load.
+  var pw=getSyncPasswordSilent();
+  if(!pw) return;
   // Refresh token if near expiry
   var _sess=localStorage.getItem('ft_gsession');
   try{var _so=JSON.parse(_sess);if(_so.expiry<Date.now()+60000)refreshToken();}catch(e){}
   var safeState=JSON.parse(JSON.stringify(state));
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
-  var payload=JSON.stringify({v:'1',updatedAt:safeState.lastSync,data:safeState});
-  var boundary='ft_b_'+Date.now();
-  var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
-  var CRLF='\r\n';
-  var body='--'+boundary+CRLF+'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
+  var innerPayload=JSON.stringify({v:'1',updatedAt:safeState.lastSync,data:safeState});
 
-  function doUpload(fileId){
-    var uploadUrl=fileId
-      ?'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=multipart'
-      :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    var uploadMethod=fileId?'PATCH':'POST';
-    return driveFetch(uploadUrl,{
-      method:uploadMethod,
-      headers:{'Content-Type':'multipart/related; boundary='+boundary},
-      body:body
-    }).then(function(r){return r.json();}).then(function(res){
-      if(res&&res.id){
-        gDriveFileId=res.id;
-        state.lastSync=safeState.lastSync;
-        var _sk=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
-        localStorage.setItem(_sk,JSON.stringify(state));
-        updateCloudSyncStatus();
-        console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
-        _saveEmergencyDriveBackup(payload);
-      } else if(res&&res.error&&(res.error.code===404||res.error.code===403)){
-        // Stale file ID — clear and retry as POST
-        gDriveFileId=null;
-        setTimeout(function(){ doUpload(null); },1500);
-      } else if(res&&res.error){
-        console.warn('[SilentSync] API error:',res.error.message);
-      }
-    });
-  }
+  packPayload(innerPayload,pw).then(function(payload){
+    var boundary='ft_b_'+Date.now();
+    var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
+    var CRLF='\r\n';
+    var body='--'+boundary+CRLF+'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
 
-  // If we don't have a file ID cached, find it first
-  if(!gDriveFileId){
-    findDriveFile().then(function(existing){
-      doUpload(existing?existing.id:null);
-    }).catch(function(e){ console.warn('[SilentSync] findDriveFile failed:',e.message); });
-  } else {
-    doUpload(gDriveFileId).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
-  }
+    function doUpload(fileId){
+      var uploadUrl=fileId
+        ?'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=multipart'
+        :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+      var uploadMethod=fileId?'PATCH':'POST';
+      return driveFetch(uploadUrl,{
+        method:uploadMethod,
+        headers:{'Content-Type':'multipart/related; boundary='+boundary},
+        body:body
+      }).then(function(r){return r.json();}).then(function(res){
+        if(res&&res.id){
+          gDriveFileId=res.id;
+          state.lastSync=safeState.lastSync;
+          var _sk=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
+          localStorage.setItem(_sk,JSON.stringify(state));
+          updateCloudSyncStatus();
+          console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
+          _saveEmergencyDriveBackup(payload);
+        } else if(res&&res.error&&(res.error.code===404||res.error.code===403)){
+          // Stale file ID — clear and retry as POST
+          gDriveFileId=null;
+          setTimeout(function(){ doUpload(null); },1500);
+        } else if(res&&res.error){
+          console.warn('[SilentSync] API error:',res.error.message);
+        }
+      });
+    }
+
+    // If we don't have a file ID cached, find it first
+    if(!gDriveFileId){
+      findDriveFile().then(function(existing){
+        doUpload(existing?existing.id:null);
+      }).catch(function(e){ console.warn('[SilentSync] findDriveFile failed:',e.message); });
+    } else {
+      doUpload(gDriveFileId).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
+    }
+  }).catch(function(e){ console.warn('[SilentSync] pack failed:',e.message); });
 }
 
 // ======== LOCK ========
@@ -9827,69 +9834,82 @@ function syncToCloud(){
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
 
-  var payload=JSON.stringify({
+  var innerPayload=JSON.stringify({
     v:'1',
     updatedAt:safeState.lastSync,
     data:safeState
   });
 
-  var timedOut=false;
-  state._syncRetried=false;
-  var timer=setTimeout(function(){
-    timedOut=true;
-    if(el) el.textContent='Timed out — retrying...';
-    showToast('⚠️ Sync timed out. Retrying once...','yellow');
-    setTimeout(function(){ if(!state._syncRetried){ state._syncRetried=true; syncToCloud(); } },3000);
-  },45000);
-
-  // SAFE UPLOAD: PATCH existing file if found, POST new if not.
-  // The file is NEVER deleted before a successful upload.
-  findDriveFile().then(function(existing){
-    var boundary='ft_bound_'+Date.now();
-    var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
-    var CRLF='\r\n';
-    var body='--'+boundary+CRLF
-      +'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF
-      +meta+CRLF
-      +'--'+boundary+CRLF
-      +'Content-Type: application/json'+CRLF+CRLF
-      +payload+CRLF
-      +'--'+boundary+'--';
-    var uploadUrl, uploadMethod;
-    if(existing && existing.id){
-      uploadUrl='https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=multipart';
-      uploadMethod='PATCH';
-    } else {
-      uploadUrl='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-      uploadMethod='POST';
-    }
-    return driveFetch(uploadUrl,{
-      method:uploadMethod,
-      headers:{'Content-Type':'multipart/related; boundary='+boundary},
-      body:body
-    }).then(function(r){ return r.json(); });
-  }).then(function(res){
-    clearTimeout(timer); if(timedOut) return;
-    if(!res||res.error){
-      var msg=(res&&res.error)?res.error.message:'Unknown error';
-      showToast('❌ Sync failed: '+msg,'red');
-      if(el) el.textContent='Sync failed';
-      console.error('Sync error:',res);
+  getSyncPassword().then(function(pw){
+    if(!pw){
+      if(el) el.textContent='Sync needs a password';
+      showToast('☁️ Sync needs an encryption password to continue.','yellow');
       return;
     }
-    if(res.id) gDriveFileId=res.id;
-    state.lastSync=safeState.lastSync;
-    state._syncRetried=false;
-    saveState();
-    updateCloudSyncStatus();
-    showToast('✅ Synced to Google Drive!','green');
-    // ── Keep a permanent emergency backup file in Drive (separate from main) ──
-    _saveEmergencyDriveBackup(payload);
+    return packPayload(innerPayload,pw).then(function(payload){
+
+      var timedOut=false;
+      state._syncRetried=false;
+      var timer=setTimeout(function(){
+        timedOut=true;
+        if(el) el.textContent='Timed out — retrying...';
+        showToast('⚠️ Sync timed out. Retrying once...','yellow');
+        setTimeout(function(){ if(!state._syncRetried){ state._syncRetried=true; syncToCloud(); } },3000);
+      },45000);
+
+      // SAFE UPLOAD: PATCH existing file if found, POST new if not.
+      // The file is NEVER deleted before a successful upload.
+      findDriveFile().then(function(existing){
+        var boundary='ft_bound_'+Date.now();
+        var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
+        var CRLF='\r\n';
+        var body='--'+boundary+CRLF
+          +'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF
+          +meta+CRLF
+          +'--'+boundary+CRLF
+          +'Content-Type: application/json'+CRLF+CRLF
+          +payload+CRLF
+          +'--'+boundary+'--';
+        var uploadUrl, uploadMethod;
+        if(existing && existing.id){
+          uploadUrl='https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=multipart';
+          uploadMethod='PATCH';
+        } else {
+          uploadUrl='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+          uploadMethod='POST';
+        }
+        return driveFetch(uploadUrl,{
+          method:uploadMethod,
+          headers:{'Content-Type':'multipart/related; boundary='+boundary},
+          body:body
+        }).then(function(r){ return r.json(); });
+      }).then(function(res){
+        clearTimeout(timer); if(timedOut) return;
+        if(!res||res.error){
+          var msg=(res&&res.error)?res.error.message:'Unknown error';
+          showToast('❌ Sync failed: '+msg,'red');
+          if(el) el.textContent='Sync failed';
+          console.error('Sync error:',res);
+          return;
+        }
+        if(res.id) gDriveFileId=res.id;
+        state.lastSync=safeState.lastSync;
+        state._syncRetried=false;
+        saveState();
+        updateCloudSyncStatus();
+        showToast('✅ Synced to Google Drive! (compressed & encrypted)','green');
+        // ── Keep a permanent emergency backup file in Drive (separate from main) ──
+        _saveEmergencyDriveBackup(payload);
+      }).catch(function(e){
+        clearTimeout(timer);
+        showToast('❌ Sync error: '+e.message,'red');
+        if(el) el.textContent='Sync failed';
+        console.error('Sync catch:',e);
+      });
+    });
   }).catch(function(e){
-    clearTimeout(timer);
-    showToast('❌ Sync error: '+e.message,'red');
+    showToast('❌ Sync setup error: '+e.message,'red');
     if(el) el.textContent='Sync failed';
-    console.error('Sync catch:',e);
   });
 }
 
@@ -9941,151 +9961,170 @@ function loadFromCloud(){
   // ── SAFETY SNAPSHOT: preserve local data before any network op ──
   var localSnapshot=JSON.parse(JSON.stringify(state));
 
-  var timedOut=false;
-  var timer=setTimeout(function(){
-    timedOut=true;
-    if(el) el.textContent='Timed out — local data safe';
-    showToast('⚠️ Load timed out. Your local data is untouched.','red');
-  },45000);
+  getSyncPassword().then(function(pw){
+    if(!pw){
+      if(el) el.textContent='Sync needs a password';
+      showToast('☁️ Sync needs an encryption password to continue.','yellow');
+      return;
+    }
 
-  findDriveFile().then(function(existing){
-    if(!existing){
-      clearTimeout(timer);
-      // ── Main file missing — try restoring from the emergency backup copy first ──
-      if(el) el.textContent='Main file missing — checking backup copy...';
-      var eq=encodeURIComponent("name='"+DRIVE_EMERGENCY_NAME+"' and trashed=false");
-      return driveFetch('https://www.googleapis.com/drive/v3/files?q='+eq+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc')
-        .then(function(r){ return r.json(); })
-        .then(function(eres){
-          var emergencyFile=eres&&eres.files&&eres.files[0]?eres.files[0]:null;
-          if(emergencyFile){
-            // ✅ Backup copy found — restore from it
-            if(el) el.textContent='Restoring from backup copy...';
-            showToast('📋 Main file missing. Restoring from backup copy...','blue');
-            return driveFetch('https://www.googleapis.com/drive/v3/files/'+emergencyFile.id+'?alt=media')
-              .then(function(r){
-                if(!r.ok) throw new Error('HTTP '+r.status+' reading backup copy');
-                return r.json();
-              }).then(function(p){
-                // Tag so success path knows to re-create the main file
-                if(p) p._restoredFromEmergency=true;
-                return p;
-              });
-          } else {
-            // No emergency backup either — nothing to restore from
-            var hasLocalData=(localSnapshot.transactions||[]).length>0
-              ||(localSnapshot.assets||[]).length>0
-              ||(localSnapshot.goals||[]).length>0;
-            if(hasLocalData){
-              if(el) el.textContent='No backup found — uploading local data...';
-              showToast('☁️ No backup found on Drive. Uploading your local data now...','yellow');
+    var timedOut=false;
+    var timer=setTimeout(function(){
+      timedOut=true;
+      if(el) el.textContent='Timed out — local data safe';
+      showToast('⚠️ Load timed out. Your local data is untouched.','red');
+    },45000);
+
+    findDriveFile().then(function(existing){
+      if(!existing){
+        clearTimeout(timer);
+        // ── Main file missing — try restoring from the emergency backup copy first ──
+        if(el) el.textContent='Main file missing — checking backup copy...';
+        var eq=encodeURIComponent("name='"+DRIVE_EMERGENCY_NAME+"' and trashed=false");
+        return driveFetch('https://www.googleapis.com/drive/v3/files?q='+eq+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc')
+          .then(function(r){ return r.json(); })
+          .then(function(eres){
+            var emergencyFile=eres&&eres.files&&eres.files[0]?eres.files[0]:null;
+            if(emergencyFile){
+              // ✅ Backup copy found — restore from it
+              if(el) el.textContent='Restoring from backup copy...';
+              showToast('📋 Main file missing. Restoring from backup copy...','blue');
+              return driveFetch('https://www.googleapis.com/drive/v3/files/'+emergencyFile.id+'?alt=media')
+                .then(function(r){
+                  if(!r.ok) throw new Error('HTTP '+r.status+' reading backup copy');
+                  return r.json();
+                }).then(function(p){
+                  // Tag so success path knows to re-create the main file
+                  if(p) p._restoredFromEmergency=true;
+                  return p;
+                });
             } else {
-              if(el) el.textContent='No backup found';
-              showToast('No Drive backup found. Add data and it will sync automatically.','yellow');
+              // No emergency backup either — nothing to restore from
+              var hasLocalData=(localSnapshot.transactions||[]).length>0
+                ||(localSnapshot.assets||[]).length>0
+                ||(localSnapshot.goals||[]).length>0;
+              if(hasLocalData){
+                if(el) el.textContent='No backup found — uploading local data...';
+                showToast('☁️ No backup found on Drive. Uploading your local data now...','yellow');
+              } else {
+                if(el) el.textContent='No backup found';
+                showToast('No Drive backup found. Add data and it will sync automatically.','yellow');
+              }
+              setTimeout(function(){ syncToCloud(); }, 500);
+              return null; // nothing to restore
             }
-            setTimeout(function(){ syncToCloud(); }, 500);
-            return null; // nothing to restore
-          }
+          });
+      }
+      return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media')
+        .then(function(r){
+          if(!r.ok) throw new Error('HTTP '+r.status+' fetching backup');
+          return r.json();
         });
-    }
-    return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media')
-      .then(function(r){
-        if(!r.ok) throw new Error('HTTP '+r.status+' fetching backup');
-        return r.json();
-      });
-  }).then(function(payload){
-    if(!payload) return; // no-backup path already handled above
-    clearTimeout(timer);
-    if(timedOut) return;
-
-    if(payload.error){
-      // ── STRICT: API error — restore snapshot, never apply bad data ──
-      showToast('❌ Drive error: '+payload.error.message+'. Local data safe.','red');
-      if(el) el.textContent='Load failed — local data safe';
-      return;
-    }
-
-    // Parse imported data
-    var imported;
-    try{
-      imported=payload.data||payload;
-      if(typeof imported==='string') imported=JSON.parse(imported);
-    }catch(e){
-      showToast('❌ Backup file corrupted. Local data safe.','red');
-      if(el) el.textContent='Corrupt backup — local data safe';
-      return;
-    }
-
-    // ── STRICT SAFETY: Validate Drive data has meaningful content ──
-    var driveTxCount=(imported.transactions||[]).length;
-    var localTxCount=(localSnapshot.transactions||[]).length;
-    // If Drive has zero transactions but local has data → refuse to apply, push local instead
-    if(driveTxCount===0 && localTxCount>0){
+    }).then(function(rawPayload){
+      if(!rawPayload) return; // no-backup path already handled above
       clearTimeout(timer);
-      if(el) el.textContent='Drive backup empty — keeping local data';
-      showToast('⚠️ Drive backup has no transactions. Keeping your local data & re-uploading...','yellow');
-      setTimeout(function(){ syncToCloud(); }, 800);
-      return;
-    }
+      if(timedOut) return;
 
-    // ── MERGE: always union of both sides, never discard either ──
-    var localTime=localSnapshot.lastSync?new Date(localSnapshot.lastSync).getTime():0;
-    var driveTime=payload.updatedAt?new Date(payload.updatedAt).getTime():0;
-    var allTx={};
-    (localSnapshot.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
-    (imported.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
-    var mergedTx=Object.values(allTx).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+      if(rawPayload.error){
+        // ── STRICT: API error — restore snapshot, never apply bad data ──
+        showToast('❌ Drive error: '+rawPayload.error.message+'. Local data safe.','red');
+        if(el) el.textContent='Load failed — local data safe';
+        return;
+      }
 
-    // For all arrays: take the side with more data (never shrink)
-    var base=driveTime>=localTime?imported:localSnapshot;
-    var keep={
-      isLoggedIn:localSnapshot.isLoggedIn, userName:localSnapshot.userName,
-      userEmail:localSnapshot.userEmail, lastSync:new Date().toISOString(),
-      gClientId:localSnapshot.gClientId, localProfilePhoto:localSnapshot.localProfilePhoto,
-      pin:localSnapshot.pin, fpEnabled:localSnapshot.fpEnabled,
-      transactions:mergedTx
-    };
-    Object.assign(state, base, keep);
-    ['liabilities','bills','accounts','recurring','assets','goals'].forEach(function(k){
-      var localArr=localSnapshot[k]||[];
-      var driveArr=imported[k]||[];
-      state[k]=driveArr.length>=localArr.length?driveArr:localArr;
+      var wasRestoredFromEmergency=!!rawPayload._restoredFromEmergency;
+
+      // Decrypt + decompress (transparently handles legacy uncompressed shapes too)
+      return unpackPayload(rawPayload,pw).then(function(payload){
+        // Parse imported data
+        var imported;
+        try{
+          imported=payload.data||payload;
+          if(typeof imported==='string') imported=JSON.parse(imported);
+        }catch(e){
+          showToast('❌ Backup file corrupted. Local data safe.','red');
+          if(el) el.textContent='Corrupt backup — local data safe';
+          return;
+        }
+
+        // ── STRICT SAFETY: Validate Drive data has meaningful content ──
+        var driveTxCount=(imported.transactions||[]).length;
+        var localTxCount=(localSnapshot.transactions||[]).length;
+        // If Drive has zero transactions but local has data → refuse to apply, push local instead
+        if(driveTxCount===0 && localTxCount>0){
+          clearTimeout(timer);
+          if(el) el.textContent='Drive backup empty — keeping local data';
+          showToast('⚠️ Drive backup has no transactions. Keeping your local data & re-uploading...','yellow');
+          setTimeout(function(){ syncToCloud(); }, 800);
+          return;
+        }
+
+        // ── MERGE: always union of both sides, never discard either ──
+        var localTime=localSnapshot.lastSync?new Date(localSnapshot.lastSync).getTime():0;
+        var driveTime=payload.updatedAt?new Date(payload.updatedAt).getTime():0;
+        var allTx={};
+        (localSnapshot.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
+        (imported.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
+        var mergedTx=Object.values(allTx).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+
+        // For all arrays: take the side with more data (never shrink)
+        var base=driveTime>=localTime?imported:localSnapshot;
+        var keep={
+          isLoggedIn:localSnapshot.isLoggedIn, userName:localSnapshot.userName,
+          userEmail:localSnapshot.userEmail, lastSync:new Date().toISOString(),
+          gClientId:localSnapshot.gClientId, localProfilePhoto:localSnapshot.localProfilePhoto,
+          pin:localSnapshot.pin, fpEnabled:localSnapshot.fpEnabled,
+          transactions:mergedTx
+        };
+        Object.assign(state, base, keep);
+        ['liabilities','bills','accounts','recurring','assets','goals'].forEach(function(k){
+          var localArr=localSnapshot[k]||[];
+          var driveArr=imported[k]||[];
+          state[k]=driveArr.length>=localArr.length?driveArr:localArr;
+        });
+        if(!state.budgets) state.budgets={};
+
+        saveState();
+        applyTheme(state.theme);
+        applyFont(state.font);
+        updateCurrSymbols();
+        initApp();
+
+        var added=mergedTx.length-driveTxCount;
+        var msg;
+        if(wasRestoredFromEmergency){
+          msg='✅ Restored from backup copy! '+state.transactions.length+' transactions recovered. Re-creating main file...';
+        } else {
+          msg=added>0
+            ?'✅ Merged! '+added+' local entries kept + Drive data restored. Total: '+mergedTx.length+' transactions.'
+            :'✅ Loaded from Drive! '+state.transactions.length+' transactions restored.';
+        }
+        showToast(msg,'green');
+        if(el) el.textContent='Last sync: '+new Date().toLocaleString();
+        if(el2) el2.textContent='Last sync: '+new Date().toLocaleString();
+        // If we restored from emergency backup, re-create the main file now
+        if(wasRestoredFromEmergency){
+          setTimeout(function(){ syncToCloud(); }, 1000);
+        }
+        // Start auto-sync now that we're loaded
+        startAutoSync();
+      }).catch(function(e){
+        clearTimeout(timer);
+        // ── Wrong password or corrupted payload — restore snapshot, never apply bad data ──
+        Object.assign(state, localSnapshot);
+        showToast('❌ Wrong sync password or corrupted backup. Local data safe.','red');
+        if(el) el.textContent='Decrypt failed — local data safe';
+        console.error('loadFromCloud unpack error:',e);
+      });
+
+    }).catch(function(e){
+      clearTimeout(timer);
+      // ── STRICT: On any network/parse error — restore snapshot, never lose data ──
+      Object.assign(state, localSnapshot);
+      showToast('❌ Load error: '+e.message+'. Local data restored safely.','red');
+      if(el) el.textContent='Error — local data safe';
+      console.error('loadFromCloud error:',e);
     });
-    if(!state.budgets) state.budgets={};
-
-    saveState();
-    applyTheme(state.theme);
-    applyFont(state.font);
-    updateCurrSymbols();
-    initApp();
-
-    var added=mergedTx.length-driveTxCount;
-    var restoredFromEmergency=!!(payload&&payload._restoredFromEmergency);
-    var msg;
-    if(restoredFromEmergency){
-      msg='✅ Restored from backup copy! '+state.transactions.length+' transactions recovered. Re-creating main file...';
-    } else {
-      msg=added>0
-        ?'✅ Merged! '+added+' local entries kept + Drive data restored. Total: '+mergedTx.length+' transactions.'
-        :'✅ Loaded from Drive! '+state.transactions.length+' transactions restored.';
-    }
-    showToast(msg,'green');
-    if(el) el.textContent='Last sync: '+new Date().toLocaleString();
-    if(el2) el2.textContent='Last sync: '+new Date().toLocaleString();
-    // If we restored from emergency backup, re-create the main file now
-    if(restoredFromEmergency){
-      setTimeout(function(){ syncToCloud(); }, 1000);
-    }
-    // Start auto-sync now that we're loaded
-    startAutoSync();
-
-  }).catch(function(e){
-    clearTimeout(timer);
-    // ── STRICT: On any network/parse error — restore snapshot, never lose data ──
-    Object.assign(state, localSnapshot);
-    showToast('❌ Load error: '+e.message+'. Local data restored safely.','red');
-    if(el) el.textContent='Error — local data safe';
-    console.error('loadFromCloud error:',e);
   });
 }
 
@@ -10141,13 +10180,104 @@ function xorDecrypt(enc, key){
   return new TextDecoder().decode(out);
 }
 
+// ── Gzip compression (native CompressionStream/DecompressionStream) + safe base64 ──
+// Chunked base64 avoids "Maximum call stack size exceeded" on multi-MB buffers.
+function bufferToBase64Safe(buf){
+  const bytes=(buf instanceof Uint8Array)?buf:new Uint8Array(buf);
+  const chunkSize=0x8000;
+  let binary='';
+  for(let i=0;i<bytes.length;i+=chunkSize){
+    binary+=String.fromCharCode.apply(null, bytes.subarray(i,i+chunkSize));
+  }
+  return btoa(binary);
+}
+function base64ToBufferSafe(b64){
+  const bin=atob(b64);
+  const buf=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+  return buf;
+}
+async function gzipCompressStr(str){
+  const stream=new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+  const buf=await new Response(stream).arrayBuffer();
+  return bufferToBase64Safe(buf);
+}
+async function gzipDecompressStr(b64){
+  const bytes=base64ToBufferSafe(b64);
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const buf=await new Response(stream).arrayBuffer();
+  return new TextDecoder().decode(buf);
+}
+
+// ── Unified pack/unpack: wraps any raw JSON string into a compressed (+ optionally
+// encrypted) transport payload. Used identically by Drive sync (auto + manual) and
+// file export/import, so every backup path shares one on-disk/on-Drive format. ──
+async function packPayload(rawJsonString, password){
+  const compressed=await gzipCompressStr(rawJsonString);
+  const finalPayload=password?xorEncrypt(compressed,password):compressed;
+  return JSON.stringify({v:2,compressed:true,encrypted:!!password,packedAt:new Date().toISOString(),payload:finalPayload});
+}
+// Reverses packPayload. Transparently falls back to legacy (pre-compression) shapes
+// so old Drive files / old exported files still restore correctly.
+async function unpackPayload(wrapperStringOrObj, password){
+  const wrapper=typeof wrapperStringOrObj==='string'?JSON.parse(wrapperStringOrObj):wrapperStringOrObj;
+  if(wrapper && wrapper.v===2 && wrapper.compressed){
+    let data=wrapper.payload;
+    if(wrapper.encrypted) data=xorDecrypt(data,password||'');
+    data=await gzipDecompressStr(data);
+    return JSON.parse(data);
+  }
+  return wrapper; // legacy plain/unencrypted shape — caller handles as before
+}
+
+// ── Sync password: prompted once, cached in memory + locally (obfuscated) so
+// silent auto-sync can reuse it without asking again on every sync. ──
+var _syncPasswordCache=null;
+var _pendingSyncPasswordResolve=null;
+function getSyncPasswordSilent(){
+  if(_syncPasswordCache) return _syncPasswordCache;
+  const stored=localStorage.getItem('ft_sync_pw_v1');
+  if(stored){
+    try{ _syncPasswordCache=xorDecrypt(stored,'ft_device_local_v1'); return _syncPasswordCache; }catch(e){}
+  }
+  return null;
+}
+function getSyncPassword(){
+  const cached=getSyncPasswordSilent();
+  if(cached) return Promise.resolve(cached);
+  return new Promise(function(resolve){
+    _pendingSyncPasswordResolve=resolve;
+    const modal=document.getElementById('exportKeyModal');
+    modal.dataset.mode='syncSetup';
+    document.getElementById('exportKeyModalTitle').textContent='🔐 Set Sync Password';
+    document.querySelector('#exportKeyModal .btn-go').textContent='☁️ Enable Encrypted Sync';
+    showModal('exportKeyModal');
+  });
+}
+function cancelExportKeyModal(){
+  const modal=document.getElementById('exportKeyModal');
+  const mode=modal.dataset.mode||'';
+  closeModal('exportKeyModal');
+  document.getElementById('exportKeyInput').value='';
+  document.getElementById('exportKeyError').style.display='none';
+  modal.dataset.mode='';
+  document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';
+  document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';
+  if(mode==='syncSetup' && _pendingSyncPasswordResolve){
+    const resolve=_pendingSyncPasswordResolve; _pendingSyncPasswordResolve=null;
+    resolve(null);
+  }
+}
+
+function formatBytes(bytes){
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(2)+' MB';
+}
 function getBackupSizeStr(){
   try{
     const raw=buildBackupPayload();
-    const bytes=new TextEncoder().encode(raw).length;
-    if(bytes<1024) return bytes+' B';
-    if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
-    return (bytes/(1024*1024)).toFixed(2)+' MB';
+    return formatBytes(new TextEncoder().encode(raw).length);
   }catch(e){return '—';}
 }
 function buildBackupPayload(){
@@ -10176,10 +10306,13 @@ function triggerDownload(blob, filename){
 }
 function exportData(){
   showModal('exportKeyModal');
-  setTimeout(function(){
-    var chip=document.getElementById('exportFileSizeChip');
-    if(chip) chip.textContent=getBackupSizeStr();
-  },50);
+  var chip=document.getElementById('exportFileSizeChip');
+  if(chip) chip.textContent=getBackupSizeStr()+' (uncompressed)';
+  try{
+    packPayload(buildBackupPayload(),null).then(function(json){
+      if(chip) chip.textContent=formatBytes(new TextEncoder().encode(json).length)+' compressed';
+    }).catch(function(){});
+  }catch(e){}
 }
 function handleExportKeySubmit(){
   const modal=document.getElementById('exportKeyModal');
@@ -10197,11 +10330,31 @@ function handleExportKeySubmit(){
     document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';
     document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';
     _doVerifyWithKey(key);
+  } else if(mode==='syncSetup'){
+    const hasNum=/[0-9]/.test(key);
+    const hasSpecial=/[^a-zA-Z0-9]/.test(key);
+    const hasUpper=/[A-Z]/.test(key);
+    const hasLower=/[a-z]/.test(key);
+    if(key.length<6){errEl.textContent='Min 6 characters required';errEl.style.display='block';return;}
+    if(!hasNum){errEl.textContent='Must include at least one number (0-9)';errEl.style.display='block';return;}
+    if(!hasSpecial){errEl.textContent='Must include at least one special character (!@#$% etc.)';errEl.style.display='block';return;}
+    if(!hasUpper||!hasLower){errEl.textContent='Must include both UPPER and lower case letters';errEl.style.display='block';return;}
+    errEl.style.display='none';
+    closeModal('exportKeyModal');
+    _syncPasswordCache=key;
+    try{ localStorage.setItem('ft_sync_pw_v1', xorEncrypt(key,'ft_device_local_v1')); }catch(e){}
+    keyEl.value='';
+    modal.dataset.mode='';
+    document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';
+    document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';
+    showToast('✅ Sync password set! Your Drive backups are now encrypted.','green');
+    const resolve=_pendingSyncPasswordResolve; _pendingSyncPasswordResolve=null;
+    if(resolve) resolve(key);
   } else {
     doExportWithKey();
   }
 }
-function doExportWithKey(){
+async function doExportWithKey(){
   const keyEl=document.getElementById('exportKeyInput');
   const key=(keyEl?.value||'').trim();
   const errEl=document.getElementById('exportKeyError');
@@ -10219,9 +10372,7 @@ function doExportWithKey(){
   closeModal('exportKeyModal');
   try{
     const payload=buildBackupPayload();
-    const encrypted=xorEncrypt(payload,key);
-    const wrapper={ft_encrypted:true,version:'ft-v5',date:new Date().toISOString(),payload:encrypted};
-    const json=JSON.stringify(wrapper,null,2);
+    const json=await packPayload(payload,key); // gzip-compressed + encrypted
     const blob=new Blob([json],{type:'application/json'});
     const filename='finance-tracker-backup-'+new Date().toISOString().split('T')[0]+'.json';
     const ok=triggerDownload(blob,filename);
@@ -10243,12 +10394,11 @@ function verifyBackup(){
   document.getElementById('exportKeyInput').value='';
   showModal('exportKeyModal');
 }
-function _doVerifyWithKey(key){
+async function _doVerifyWithKey(key){
   try{
     const payload=buildBackupPayload();
-    const encrypted=xorEncrypt(payload,key);
-    const decrypted=xorDecrypt(encrypted,key);
-    const parsed=JSON.parse(decrypted);
+    const packed=await packPayload(payload,key);
+    const parsed=await unpackPayload(packed,key);
     const ok=parsed.data&&
       parsed.data.transactions.length===state.transactions.length&&
       parsed.data.assets.length===state.assets.length&&
@@ -10270,11 +10420,23 @@ function handleImport(event){
   const file=event.target.files[0];
   if(!file)return;
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       const raw=JSON.parse(e.target.result);
-      if(raw.ft_encrypted){
-        // Stash raw and show password modal
+      if(raw && raw.v===2 && raw.compressed){
+        // New gzip-compressed format
+        if(raw.encrypted){
+          _pendingImportData=raw;
+          document.getElementById('importKeyInput').value='';
+          document.getElementById('importKeyError').style.display='none';
+          document.getElementById('importKeyModal').classList.add('on');
+        } else {
+          const wrapper=await unpackPayload(raw,null);
+          const imported=wrapper.data||wrapper;
+          _applyImport(imported);
+        }
+      } else if(raw.ft_encrypted){
+        // Legacy (pre-compression) encrypted export
         _pendingImportData=raw;
         document.getElementById('importKeyInput').value='';
         document.getElementById('importKeyError').style.display='none';
@@ -10290,15 +10452,21 @@ function handleImport(event){
   reader.readAsText(file);
 }
 
-function submitImportKey(){
+async function submitImportKey(){
   const key=document.getElementById('importKeyInput').value;
   const errEl=document.getElementById('importKeyError');
   if(!key){errEl.textContent='Please enter the backup password';errEl.style.display='block';return;}
   if(!_pendingImportData){closeModal('importKeyModal');return;}
   try{
-    const decrypted=xorDecrypt(_pendingImportData.payload,key);
-    const wrapper=JSON.parse(decrypted);
-    const imported=wrapper.data||wrapper;
+    let imported;
+    if(_pendingImportData.v===2 && _pendingImportData.compressed){
+      const wrapper=await unpackPayload(_pendingImportData,key);
+      imported=wrapper.data||wrapper;
+    } else {
+      const decrypted=xorDecrypt(_pendingImportData.payload,key);
+      const wrapper=JSON.parse(decrypted);
+      imported=wrapper.data||wrapper;
+    }
     if(typeof imported!=='object'||Array.isArray(imported)){throw new Error('bad format');}
     closeModal('importKeyModal');
     document.getElementById('importKeyInput').value='';
