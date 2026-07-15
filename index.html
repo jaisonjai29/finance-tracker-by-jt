@@ -2612,7 +2612,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="modal-handle"></div>
     <div class="modal-title" id="exportKeyModalTitle">🔐 Set Backup Password</div>
     <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:10px;padding:9px 13px;margin-bottom:12px">
-      <span style="font-size:11px;font-weight:700;color:var(--text3)">📦 Estimated backup size</span>
+      <span id="exportFileSizeLabel" style="font-size:11px;font-weight:700;color:var(--text3)">📦 Estimated backup size</span>
       <span id="exportFileSizeChip" style="font-size:11px;font-weight:900;color:var(--accent);background:rgba(124,92,252,0.12);border:1px solid rgba(124,92,252,0.25);border-radius:20px;padding:3px 10px">calculating…</span>
     </div>
     <div style="background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.2);border-radius:12px;padding:12px;margin-bottom:14px">
@@ -10280,6 +10280,18 @@ function getBackupSizeStr(){
     return formatBytes(new TextEncoder().encode(raw).length);
   }catch(e){return '—';}
 }
+// Builds the exact same wrapper backupToDrive() writes to Drive/localStorage,
+// so the size shown in Settings matches the real uploaded file byte-for-byte
+// (gzip compression + encryption + wrapper overhead included, not a raw guess).
+async function getDriveBackupSizeStr(){
+  try{
+    const payload=buildBackupPayload();
+    const packed=await packPayload(payload,state.drivePassword);
+    const wrapper=JSON.parse(packed);
+    wrapper.email=state.driveEmail;
+    return formatBytes(new TextEncoder().encode(JSON.stringify(wrapper)).length);
+  }catch(e){return '—';}
+}
 function buildBackupPayload(){
   const payload={
     version:'ft-v5',
@@ -10306,6 +10318,8 @@ function triggerDownload(blob, filename){
 }
 function exportData(){
   showModal('exportKeyModal');
+  var label=document.getElementById('exportFileSizeLabel');
+  if(label) label.textContent='📦 Estimated backup size';
   var chip=document.getElementById('exportFileSizeChip');
   if(chip) chip.textContent=getBackupSizeStr()+' (uncompressed)';
   try{
@@ -10392,6 +10406,10 @@ function verifyBackup(){
   document.getElementById('exportKeyModalTitle').textContent='🔍 Verify Backup';
   document.getElementById('exportKeyError').style.display='none';
   document.getElementById('exportKeyInput').value='';
+  const label=document.getElementById('exportFileSizeLabel');
+  const chip=document.getElementById('exportFileSizeChip');
+  if(label) label.textContent='📊 Current data size';
+  if(chip) chip.textContent=getBackupSizeStr();
   showModal('exportKeyModal');
 }
 async function _doVerifyWithKey(key){
@@ -10543,32 +10561,40 @@ function disconnectDrive(){
   showToast('Drive disconnected.','yellow');
 }
 
-function backupToDrive(){
-  // Simulate Drive backup: encrypt and offer download + store to localStorage
+async function backupToDrive(){
+  // Simulate Drive backup: compress+encrypt and offer download + store to localStorage
   try{
     const payload=buildBackupPayload();
-    const encrypted=xorEncrypt(payload,state.drivePassword);
-    const wrapper={ft_encrypted:true,version:'ft-v5',date:new Date().toISOString(),email:state.driveEmail,payload:encrypted};
+    const packed=await packPayload(payload,state.drivePassword); // gzip + optional encryption, same pipeline as local export
+    const wrapper=JSON.parse(packed);
+    wrapper.email=state.driveEmail; // keep for display purposes only
+    const finalStr=JSON.stringify(wrapper);
     // Store in localStorage as "cloud" backup
-    localStorage.setItem('ft_drive_backup',JSON.stringify(wrapper));
+    localStorage.setItem('ft_drive_backup',finalStr);
     state.lastSync=new Date().toISOString();
     saveState();
-    // Also offer download
-    const blob=new Blob([JSON.stringify(wrapper,null,2)],{type:'application/json'});
+    // Also offer download (compact — no need to pretty-print a compressed blob)
+    const blob=new Blob([finalStr],{type:'application/json'});
     triggerDownload(blob,'ft-drive-backup-'+new Date().toISOString().split('T')[0]+'.json');
     updateDriveUI();
-    showToast('✅ Backed up! Encrypted file downloaded. Upload to your Google Drive folder.','green');
+    showToast('✅ Backed up! Compressed & encrypted file downloaded. Upload to your Google Drive folder.','green');
   }catch(e){showToast('❌ Backup failed: '+e.message,'red');}
 }
 
-function restoreFromDrive(){
+async function restoreFromDrive(){
   // Try to restore from localStorage backup first
   const stored=localStorage.getItem('ft_drive_backup');
   if(stored){
     try{
       const wrapper=JSON.parse(stored);
-      const decrypted=xorDecrypt(wrapper.payload,state.drivePassword);
-      const parsed=JSON.parse(decrypted);
+      let parsed;
+      if(wrapper && wrapper.v===2 && wrapper.compressed){
+        parsed=await unpackPayload(wrapper,state.drivePassword);
+      }else{
+        // Legacy uncompressed Drive backups (pre-gzip) — decode the old way
+        const decrypted=xorDecrypt(wrapper.payload,state.drivePassword);
+        parsed=JSON.parse(decrypted);
+      }
       const imported=parsed.data||parsed;
       Object.assign(state,imported);
       if(!state.liabilities)state.liabilities=[];if(!state.bills)state.bills=[];if(!state.accounts)state.accounts=[];if(!state.recurring)state.recurring=[];if(!state.budgets)state.budgets={};
@@ -10604,7 +10630,10 @@ function updateDriveUI(){
   if(conn&&unconn){conn.style.display=connected?'block':'none';unconn.style.display=connected?'none':'block';}
   if(emailDisp)emailDisp.textContent=state.driveEmail||'';
   var driveSizeChip=document.getElementById('driveFileSizeChip');
-  if(driveSizeChip&&connected) driveSizeChip.textContent=getBackupSizeStr();
+  if(driveSizeChip&&connected){
+    driveSizeChip.textContent='calculating…';
+    getDriveBackupSizeStr().then(function(str){ driveSizeChip.textContent=str; });
+  }
 }
 
 // ======== INSTALL APP (PWA) ========
