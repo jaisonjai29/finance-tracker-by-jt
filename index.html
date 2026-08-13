@@ -1497,6 +1497,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="page" id="page-debtcountdown">
       <div class="sec-head"><div class="sec-title">⏱️ Debt Payoff</div></div>
       <div id="debtCountdownList"></div>
+
+      <!-- FLEXIBLE INTEREST LOAN CALCULATOR -->
+      <div class="sec-head" style="margin-top:20px"><div class="sec-title">🧮 Flexible Interest Loans</div><button class="sec-btn" onclick="openFlexLoanModal()">➕ Add</button></div>
+      <div style="font-size:12px;color:var(--text3);font-weight:500;line-height:1.5;margin-bottom:12px">For loans with no fixed EMI — informal loans, family/friend loans. Log each actual payment date & amount; interest accrues daily on the outstanding balance.</div>
+      <div id="flexLoanList"></div>
     </div>
 
     <!-- RETIREMENT CALCULATOR -->
@@ -2162,7 +2167,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="field-label">👤 For</div>
       <div class="chips" id="memberChips" style="gap:6px"></div>
     </div>
-    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
+    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Debt <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding / logs a payment)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
     <div class="field" id="platformField">
       <div class="field-label">🛒 Platform / Where bought</div>
@@ -2271,6 +2276,45 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="field"><div class="field-label">💳 Monthly EMI <span style="font-size:10px;color:var(--text3)">(auto-filled or enter manually)</span></div><input type="number" class="field-input" id="liabEMI" placeholder="Auto-calculated" inputmode="numeric"></div>
     <button class="btn-go" onclick="saveLiab()">✅ Save Loan</button>
     <button class="btn-cancel" onclick="closeModal('liabModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- FLEXIBLE LOAN CALCULATOR MODAL -->
+<div class="modal-bg" id="flexLoanModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🧮 Add Flexible Loan</div>
+    <div style="font-size:11px;color:var(--text3);font-weight:500;line-height:1.5;margin-bottom:14px">No fixed tenure or EMI. Add the actual payment date and amount each time a payment is made — a month with no payment can be skipped.</div>
+    <div class="field"><div class="field-label">📝 Loan Name</div><input type="text" class="field-input" id="flexName" placeholder="e.g. Loan from Ramesh"></div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">💰 Principal</div><input type="number" class="field-input" id="flexPrincipal" placeholder="1,80,000" min="0" step="0.01" inputmode="decimal" oninput="calcFlexPreview()"></div>
+      <div class="field"><div class="field-label">💹 Interest % p.a.</div><input type="number" class="field-input" id="flexRate" placeholder="8.75" min="0" step="0.01" inputmode="decimal" oninput="calcFlexPreview()"></div>
+    </div>
+    <div class="field"><div class="field-label">📅 Loan Start Date</div><input type="date" class="field-input" id="flexStart" oninput="calcFlexPreview()"></div>
+
+    <div class="field-label" style="margin:16px 0 8px">💳 Payments</div>
+    <div id="flexPaymentRows"></div>
+    <button class="sec-btn" style="width:100%;margin-bottom:14px;justify-content:center;display:flex" onclick="addFlexPaymentRow()">＋ Add Payment</button>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+      <div class="stat-box sb" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Interest</div><div class="stat-val" style="font-size:13px" id="flexSInterest">₹0</div></div>
+      <div class="stat-box sr" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Paid</div><div class="stat-val" style="font-size:13px" id="flexSPaid">₹0</div></div>
+      <div class="stat-box sy" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Balance</div><div class="stat-val" style="font-size:13px" id="flexSBalance">₹0</div></div>
+      <div class="stat-box" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Payments</div><div class="stat-val" style="font-size:13px" id="flexSCount">0</div></div>
+    </div>
+
+    <div id="flexScheduleWrap" style="display:none;margin-bottom:14px">
+      <div class="field-label" style="margin-bottom:8px">📊 Schedule</div>
+      <div class="tablewrap" style="overflow-x:auto;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+        <table style="width:100%;border-collapse:collapse;min-width:520px;font-size:11px">
+          <thead><tr style="background:var(--bg3)"><th style="padding:6px;text-align:center">#</th><th style="padding:6px;text-align:left">Date</th><th style="padding:6px;text-align:right">Days</th><th style="padding:6px;text-align:right">Interest</th><th style="padding:6px;text-align:right">Payment</th><th style="padding:6px;text-align:right">Closing</th></tr></thead>
+          <tbody id="flexScheduleBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn-go" onclick="saveFlexLoan()">✅ Save Loan</button>
+    <button class="btn-cancel" onclick="closeModal('flexLoanModal')">Cancel</button>
   </div>
 </div>
 
@@ -3379,7 +3423,8 @@ let state={
   autoLockEnabled:false,
   autoLockMs:300000,
   fpCredentialId:null,
-  localProfilePhoto:''
+  localProfilePhoto:'',
+  flexLoans:[]
 };
 let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=0;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
@@ -3408,6 +3453,7 @@ function loadState(){
     console.warn('localStorage not available:',e.message);
   }
   if(!Array.isArray(state.liabilities)) state.liabilities=[];
+  if(!Array.isArray(state.flexLoans)) state.flexLoans=[];
   if(!Array.isArray(state.bills)) state.bills=[];
   if(!Array.isArray(state.accounts)) state.accounts=[];
   if(!Array.isArray(state.recurring)) state.recurring=[];
@@ -4176,10 +4222,16 @@ function saveTx(){
   state.transactions.unshift(tx);
   // Balance only moves on the real bank/cash account — never on UPI/card (those are just payment rails)
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amtINR:-amtINR);}}
-  // Auto-reduce linked liability remaining
+  // Auto-reduce linked liability remaining, or log a payment against a flexible loan
   if(liabLink&&txType==='expense'){
-    const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
-    if(l){l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');}
+    if(String(liabLink).indexOf('flex_')===0){
+      var flexId=String(liabLink).slice(5);
+      var fl2=addFlexPaymentFromTx(flexId,date,amtINR,tx.id);
+      if(fl2){renderFlexLoans();showToast('🧮 Payment logged to '+fl2.name,'green');}
+    } else {
+      const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
+      if(l){l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');}
+    }
   }
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
@@ -4920,11 +4972,15 @@ function saveEditTx(){
   const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
   // Reverse original real-account balance effect (origAmt is already in INR)
   if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
-  // Reverse original liability-link effect
+  // Reverse original liability-link effect (or remove the auto-logged flex-loan payment)
   const origLiabLink=tx.liabLink||'';
   if(origLiabLink&&origType==='expense'){
-    const l=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
-    if(l) l.remaining=Math.min(l.total||l.remaining+origAmt, l.remaining+origAmt);
+    if(String(origLiabLink).indexOf('flex_')===0){
+      removeFlexPaymentByTx(tx.id);
+    } else {
+      const l=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
+      if(l) l.remaining=Math.min(l.total||l.remaining+origAmt, l.remaining+origAmt);
+    }
   }
   // Apply all updated fields
   tx.type=editTxType;tx.amount=amtINR2;
@@ -4936,11 +4992,17 @@ function saveEditTx(){
   tx.member=member;
   // Balance moves only on the real bank/cash account
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amtINR2:-amtINR2);}
-  // Re-apply liability-link effect with new values
+  // Re-apply liability-link effect with new values (or re-log the flex-loan payment)
   const newLiabLink=tx.liabLink||'';
   if(newLiabLink&&editTxType==='expense'){
-    const l=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
-    if(l) l.remaining=Math.max(0,l.remaining-amtINR2);
+    if(String(newLiabLink).indexOf('flex_')===0){
+      var flexId2=String(newLiabLink).slice(5);
+      addFlexPaymentFromTx(flexId2,date,amtINR2,tx.id);
+      renderFlexLoans();
+    } else {
+      const l=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
+      if(l) l.remaining=Math.max(0,l.remaining-amtINR2);
+    }
   }
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
   if(curPage==='analytics')renderAnalytics();
@@ -4959,10 +5021,15 @@ function deleteFromEdit(){
   customConfirm('🗑️','Delete Transaction','This cannot be undone.',function(){
     const tx=state.transactions.find(t=>String(t.id)===String(id));
     if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
-    // Restore liability remaining if this was a liability-linked expense
+    // Restore liability remaining if this was a liability-linked expense, or remove the auto-logged flex-loan payment
     if(tx?.liabLink&&tx.type==='expense'){
-      const l=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
-      if(l) l.remaining=Math.min(l.total||l.remaining+tx.amount, l.remaining+tx.amount);
+      if(String(tx.liabLink).indexOf('flex_')===0){
+        removeFlexPaymentByTx(tx.id);
+        renderFlexLoans();
+      } else {
+        const l=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
+        if(l) l.remaining=Math.min(l.total||l.remaining+tx.amount, l.remaining+tx.amount);
+      }
     }
     state.transactions=state.transactions.filter(t=>String(t.id)!==String(id));
     saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
@@ -8266,11 +8333,17 @@ function updateTxAccountSelect(){
 function updateTxLiabSelect(){
   var sel=document.getElementById('txLiabLink');
   if(!sel) return;
-  sel.innerHTML='<option value="">-- None --</option>'+
-    state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
-      var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
-      return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
-    }).join('');
+  var liabOpts=state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
+    var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
+    return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
+  }).join('');
+  var flexOpts=(state.flexLoans||[]).map(function(fl){
+    var r=state.currencyRate||1;
+    var d=flexComputeSchedule((fl.principal||0)*r,fl.rate,fl.start,(fl.payments||[]).map(function(p){return {date:p.date,amount:(p.amount||0)*r};}));
+    if(d.balance<=0) return '';
+    return '<option value="flex_'+fl.id+'">🧮 '+escHtml(fl.name)+' ('+state.currSymbol+fmt(d.balance)+' left)</option>';
+  }).join('');
+  sel.innerHTML='<option value="">-- None --</option>'+liabOpts+flexOpts;
 }
 
 
@@ -11543,7 +11616,7 @@ showPage=function(id){
   _origShowPage(id);
   if(id==='calendar'){renderBillCalendar();}
   if(id==='transfers'){renderTransferList();populateTransferSelects();}
-  if(id==='debtcountdown'){renderDebtCountdown();populatePrepaySelect();}
+  if(id==='debtcountdown'){renderDebtCountdown();populatePrepaySelect();renderFlexLoans();}
   if(id==='retirement'){renderRetirementPage();}
   if(id==='emergency'){populateEfundDropdown();calcEmergencyFund();}
   if(id==='trends'){renderSpendingTrends();}
@@ -11859,6 +11932,224 @@ function renderDebtCountdown() {
 
 function populatePrepaySelect() {} // legacy stub
 function calcPrepay() {} // legacy stub
+
+// ============ FLEXIBLE INTEREST LOAN CALCULATOR ============
+var _flexExpanded = {};
+
+function flexComputeSchedule(principal, annualRate, startStr, payments) {
+  principal = Math.max(0, parseFloat(principal) || 0);
+  annualRate = Math.max(0, parseFloat(annualRate) || 0);
+  var out = { schedule: [], totalInterest: 0, totalPaid: 0, balance: principal };
+  if (!startStr) return out;
+  var start = new Date(startStr + 'T00:00:00');
+  var entries = (payments || []).filter(function(p) { return p.date; }).map(function(p) {
+    return { date: p.date, amount: Math.max(0, parseFloat(p.amount) || 0), txId: p.txId };
+  }).sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+  var balance = principal, previous = start, totalInterest = 0, totalPaid = 0, schedule = [];
+  entries.forEach(function(entry, i) {
+    if (balance <= 0) return;
+    var date = new Date(entry.date + 'T00:00:00');
+    if (date < previous) return;
+    var days = Math.round((date - previous) / 86400000);
+    var interest = balance * (annualRate / 100) * (days / 365);
+    var payment = Math.min(entry.amount, balance + interest);
+    var principalPaid = Math.max(0, payment - interest);
+    var closing = Math.max(0, balance - principalPaid);
+    totalInterest += interest; totalPaid += payment;
+    schedule.push({ n: i + 1, date: date, days: days, opening: balance, interest: interest, payment: payment, principalPaid: principalPaid, closing: closing, txId: entry.txId });
+    balance = closing; previous = date;
+  });
+  out.schedule = schedule; out.totalInterest = totalInterest; out.totalPaid = totalPaid; out.balance = balance;
+  return out;
+}
+
+function flexMoney(n) { return state.currSymbol + (n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+
+// Called from the transaction Add/Edit flow when a transaction is linked to a flexible loan.
+// Adds (or, on edit-save, re-adds) a payment entry tagged with the transaction's id so it can
+// be found and removed automatically if that transaction is later edited or deleted.
+function addFlexPaymentFromTx(flexId, date, amountINR, txId) {
+  var fl = (state.flexLoans || []).find(function(f) { return String(f.id) === String(flexId); });
+  if (!fl) return null;
+  if (!Array.isArray(fl.payments)) fl.payments = [];
+  fl.payments.push({ date: date, amount: amountINR, txId: txId });
+  return fl;
+}
+function removeFlexPaymentByTx(txId) {
+  (state.flexLoans || []).forEach(function(fl) {
+    if (Array.isArray(fl.payments)) fl.payments = fl.payments.filter(function(p) { return String(p.txId) !== String(txId); });
+  });
+}
+
+function renderFlexLoans() {
+  var c = document.getElementById('flexLoanList');
+  if (!c) return;
+  if (!state.flexLoans || !state.flexLoans.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-big">🧮</div><div class="empty-title">No flexible loans</div><div class="empty-desc">Track informal loans with ad-hoc, no-fixed-EMI repayments</div></div>';
+    return;
+  }
+  c.innerHTML = state.flexLoans.map(function(fl) { return flexLoanCard(fl); }).join('');
+}
+
+function toggleFlexCard(id) { _flexExpanded[id] = _flexExpanded[id] ? null : 'on'; renderFlexLoans(); }
+
+function flexLoanCard(fl) {
+  var r5 = state.currencyRate || 1;
+  var principalDisp = (fl.principal || 0) * r5;
+  var paymentsDisp = (fl.payments || []).map(function(p) { return { date: p.date, amount: (p.amount || 0) * r5, txId: p.txId }; });
+  var d = flexComputeSchedule(principalDisp, fl.rate, fl.start, paymentsDisp);
+  var pct = principalDisp > 0 ? Math.max(0, Math.min(100, Math.round((principalDisp - d.balance) / principalDisp * 100))) : 0;
+  var open = !!_flexExpanded[fl.id];
+  var html = '<div class="dp-card">';
+  html += '<div class="dp-card-header" onclick="toggleFlexCard(' + fl.id + ')">'
+    + '<div style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:rgba(124,92,252,0.13);border:1px solid rgba(124,92,252,0.3)">🧮</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:900;color:var(--text)">' + escHtml(fl.name) + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3)">' + (fl.rate ? fl.rate + '% p.a. · ' : '') + 'from ' + formatDate(fl.start) + '</div></div>'
+    + '<div style="text-align:right;flex-shrink:0"><div style="font-size:14px;font-weight:900;color:var(--red)">' + flexMoney(d.balance) + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3)">balance</div></div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-left:6px">' + (open ? '▲' : '▼') + '</div></div>';
+  html += '<div style="padding:0 14px 10px"><div style="background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:4px"><div style="height:6px;width:' + pct + '%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px"></div></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text3)"><span>' + pct + '% paid</span></div></div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 14px 12px">'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--accent)">' + flexMoney(d.balance) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Balance</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--red)">' + flexMoney(d.totalInterest) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Interest</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--green)">' + flexMoney(d.totalPaid) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Paid</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--text)">' + ((fl.payments || []).length) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Payments</div></div>'
+    + '</div>';
+  if (open) {
+    html += '<div class="dp-card-body">';
+    if (d.schedule.length) {
+      html += '<div class="tablewrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:520px;font-size:11px">'
+        + '<thead><tr style="background:var(--bg3)"><th style="padding:6px;text-align:center">#</th><th style="padding:6px;text-align:left">Date</th><th style="padding:6px;text-align:right">Days</th><th style="padding:6px;text-align:right">Interest</th><th style="padding:6px;text-align:right">Payment</th><th style="padding:6px;text-align:right">Closing</th></tr></thead><tbody>'
+        + d.schedule.map(function(row) {
+            return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px;text-align:center">' + row.n + '</td><td style="padding:6px">' + row.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) + (row.txId ? ' <span title="Auto-added from a transaction" style="font-size:9px">🔗</span>' : '') + '</td><td style="padding:6px;text-align:right">' + row.days + '</td><td style="padding:6px;text-align:right">' + flexMoney(row.interest) + '</td><td style="padding:6px;text-align:right">' + flexMoney(row.payment) + '</td><td style="padding:6px;text-align:right">' + flexMoney(row.closing) + '</td></tr>';
+          }).join('')
+        + '</tbody></table></div>';
+    } else {
+      html += '<div class="empty" style="padding:16px 0"><div class="empty-desc">No payments recorded yet</div></div>';
+    }
+    html += '<div style="display:flex;gap:8px;margin-top:12px">'
+      + '<button class="btn-go" style="flex:1;margin:0" onclick="event.stopPropagation();openFlexLoanModal(' + fl.id + ')">✏️ Edit</button>'
+      + '<button class="btn-cancel" style="flex:1;margin:0;color:var(--red);border-color:rgba(255,69,105,0.3)" onclick="event.stopPropagation();deleteFlexLoan(' + fl.id + ')">🗑️ Delete</button>'
+      + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function resetFlexLoanForm() {
+  document.getElementById('flexName').value = '';
+  document.getElementById('flexPrincipal').value = '';
+  document.getElementById('flexRate').value = '';
+  document.getElementById('flexStart').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('flexPaymentRows').innerHTML = '';
+  addFlexPaymentRow();
+  document.getElementById('flexLoanModal').dataset.editId = '';
+  document.querySelector('#flexLoanModal .modal-title').textContent = '🧮 Add Flexible Loan';
+  document.querySelector('#flexLoanModal .btn-go').textContent = '✅ Save Loan';
+  calcFlexPreview();
+}
+
+function openFlexLoanModal(id) {
+  if (id === undefined || id === null) {
+    resetFlexLoanForm();
+    showModal('flexLoanModal');
+    return;
+  }
+  var fl = state.flexLoans.find(function(f) { return f.id === id; });
+  if (!fl) return;
+  var r6 = state.currencyRate || 1;
+  document.getElementById('flexName').value = fl.name;
+  document.getElementById('flexPrincipal').value = fl.principal ? parseFloat((fl.principal * r6).toFixed(2)) : '';
+  document.getElementById('flexRate').value = fl.rate || '';
+  document.getElementById('flexStart').value = fl.start || '';
+  var rowsC = document.getElementById('flexPaymentRows');
+  rowsC.innerHTML = '';
+  (fl.payments && fl.payments.length ? fl.payments : [{ date: '', amount: '' }]).forEach(function(p) {
+    addFlexPaymentRow(p.date, p.amount ? parseFloat((p.amount * r6).toFixed(2)) : '', p.txId);
+  });
+  document.getElementById('flexLoanModal').dataset.editId = id;
+  document.querySelector('#flexLoanModal .modal-title').textContent = '🧮 Edit Flexible Loan';
+  document.querySelector('#flexLoanModal .btn-go').textContent = '✅ Update Loan';
+  showModal('flexLoanModal');
+  calcFlexPreview();
+}
+
+function addFlexPaymentRow(date, amount, txId) {
+  date = date || ''; amount = (amount === undefined || amount === null) ? '' : amount;
+  var row = document.createElement('div');
+  row.className = 'flexPayRow';
+  if (txId) row.dataset.txId = txId;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px';
+  var lockedTag = txId ? ' <span title="Auto-added from a linked transaction" style="font-size:10px">🔗</span>' : '';
+  row.innerHTML = '<div class="field" style="margin-bottom:0"><div class="field-label">Date' + lockedTag + '</div><input type="date" class="field-input flexPayDate" value="' + date + '" oninput="calcFlexPreview()"></div>'
+    + '<div class="field" style="margin-bottom:0"><div class="field-label">Amount</div><input type="number" class="field-input flexPayAmt" min="0" step="0.01" inputmode="decimal" value="' + amount + '" oninput="calcFlexPreview()"></div>'
+    + '<button class="btn-cancel" style="margin:0;padding:11px 12px;color:var(--red)" onclick="this.closest(\'.flexPayRow\').remove();calcFlexPreview()">✕</button>';
+  document.getElementById('flexPaymentRows').appendChild(row);
+}
+
+function calcFlexPreview() {
+  var principal = parseFloat(document.getElementById('flexPrincipal').value) || 0;
+  var rate = parseFloat(document.getElementById('flexRate').value) || 0;
+  var start = document.getElementById('flexStart').value;
+  var payments = [].slice.call(document.querySelectorAll('#flexPaymentRows .flexPayRow')).map(function(row) {
+    return { date: row.querySelector('.flexPayDate').value, amount: row.querySelector('.flexPayAmt').value, txId: row.dataset.txId };
+  });
+  var d = flexComputeSchedule(principal, rate, start, payments);
+  var sym = state.currSymbol;
+  document.getElementById('flexSInterest').textContent = sym + d.totalInterest.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('flexSPaid').textContent = sym + d.totalPaid.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('flexSBalance').textContent = sym + d.balance.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('flexSCount').textContent = payments.filter(function(p) { return p.date; }).length;
+  var wrap = document.getElementById('flexScheduleWrap');
+  var body = document.getElementById('flexScheduleBody');
+  if (d.schedule.length) {
+    wrap.style.display = 'block';
+    body.innerHTML = d.schedule.map(function(row) {
+      return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px;text-align:center">' + row.n + '</td><td style="padding:6px">' + row.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) + (row.txId ? ' <span title="Auto-added from a transaction" style="font-size:9px">🔗</span>' : '') + '</td><td style="padding:6px;text-align:right">' + row.days + '</td><td style="padding:6px;text-align:right">' + sym + row.interest.toLocaleString('en-IN', { maximumFractionDigits: 0 }) + '</td><td style="padding:6px;text-align:right">' + sym + row.payment.toLocaleString('en-IN', { maximumFractionDigits: 0 }) + '</td><td style="padding:6px;text-align:right">' + sym + row.closing.toLocaleString('en-IN', { maximumFractionDigits: 0 }) + '</td></tr>';
+    }).join('');
+  } else {
+    wrap.style.display = 'none';
+    body.innerHTML = '';
+  }
+}
+
+function saveFlexLoan() {
+  var name = document.getElementById('flexName').value.trim();
+  var principal = parseFloat(document.getElementById('flexPrincipal').value) || 0;
+  var rate = parseFloat(document.getElementById('flexRate').value) || 0;
+  var start = document.getElementById('flexStart').value;
+  if (!name || !principal || !start) { showToast('Enter loan name, principal and start date', 'yellow'); return; }
+  var r7 = state.currencyRate || 1;
+  var payments = [].slice.call(document.querySelectorAll('#flexPaymentRows .flexPayRow')).map(function(row) {
+    var dt = row.querySelector('.flexPayDate').value;
+    var amt = parseFloat(row.querySelector('.flexPayAmt').value) || 0;
+    var p = { date: dt, amount: amt / r7 };
+    if (row.dataset.txId) p.txId = row.dataset.txId;
+    return p;
+  }).filter(function(p) { return p.date && p.amount > 0; });
+  var editId = document.getElementById('flexLoanModal').dataset.editId;
+  if (editId) {
+    var fl = state.flexLoans.find(function(f) { return f.id === parseInt(editId); });
+    if (fl) { fl.name = name; fl.principal = principal / r7; fl.rate = rate; fl.start = start; fl.payments = payments; fl.updatedAt = Date.now(); }
+  } else {
+    state.flexLoans.push({ id: Date.now(), name: name, principal: principal / r7, rate: rate, start: start, payments: payments, createdAt: Date.now() });
+  }
+  saveState();
+  closeModal('flexLoanModal');
+  renderFlexLoans();
+  showToast('Flexible loan saved!', 'green');
+}
+
+function deleteFlexLoan(id) {
+  customConfirm('🧮', 'Delete Flexible Loan', 'This cannot be undone.', function() {
+    state.flexLoans = state.flexLoans.filter(function(f) { return f.id !== id; });
+    delete _flexExpanded[id];
+    saveState();
+    renderFlexLoans();
+  });
+}
 
 function dpToggleCard(id) {
   _dpExpanded[id] = _dpExpanded[id] ? null : 'schedule';
