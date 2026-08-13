@@ -1095,7 +1095,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- LIABILITIES -->
     <div class="page" id="page-liabilities">
-      <div class="sec-head"><div class="sec-title">💸 Debts & Loans</div><button class="sec-btn" onclick="showModal('liabModal')">➕ Add</button></div>
+      <div class="sec-head"><div class="sec-title">💸 Debts & Loans</div><div style="display:flex;gap:6px"><button class="sec-btn" onclick="openFlexLoanModal()">🧮 Flexible</button><button class="sec-btn" onclick="showModal('liabModal')">➕ Add</button></div></div>
       <div class="stat-grid-3">
         <div class="stat-box sr"><span class="stat-emoji">💳</span><div class="stat-lbl">Total Debt</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="totalDebt">0</span></div></div>
         <div class="stat-box sy"><span class="stat-emoji">📅</span><div class="stat-lbl">Monthly EMI</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="totalEMI">0</span></div></div>
@@ -3110,7 +3110,7 @@ function applyTranslations(){
   renderHistory();
   renderLiabilities();
 }
-const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#e879f9'}};
+const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Flexible':{emoji:'🧮',desc:'Informal loan, ad-hoc repayments',color:'#06b6d4'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#e879f9'}};
 const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI':{emoji:'🔷',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💰',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
 // ======== MULTI-USER PROFILE SYSTEM ========
@@ -3423,8 +3423,7 @@ let state={
   autoLockEnabled:false,
   autoLockMs:300000,
   fpCredentialId:null,
-  localProfilePhoto:'',
-  flexLoans:[]
+  localProfilePhoto:''
 };
 let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=0;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
@@ -3453,7 +3452,22 @@ function loadState(){
     console.warn('localStorage not available:',e.message);
   }
   if(!Array.isArray(state.liabilities)) state.liabilities=[];
-  if(!Array.isArray(state.flexLoans)) state.flexLoans=[];
+  // One-time migration: fold legacy standalone Flexible Loans into liabilities so they
+  // show up on the Debts page and stop causing duplicate entries in the debt-link dropdown.
+  if(Array.isArray(state.flexLoans) && state.flexLoans.length){
+    state.flexLoans.forEach(function(fl){
+      var sched=flexComputeSchedule(fl.principal||0, fl.rate||0, fl.start, fl.payments||[]);
+      state.liabilities.push({
+        id:fl.id||Date.now(), name:fl.name, type:'Flexible', flexible:true,
+        total:fl.principal||0, principal:fl.principal||0, remaining:sched.balance,
+        emi:0, rate:fl.rate||0, start:fl.start, payments:fl.payments||[],
+        color:(LIAB_TYPES['Flexible']&&LIAB_TYPES['Flexible'].color)||'#06b6d4',
+        createdAt:fl.createdAt||Date.now()
+      });
+    });
+    state.flexLoans=[];
+    try{saveState();}catch(e){}
+  }
   if(!Array.isArray(state.bills)) state.bills=[];
   if(!Array.isArray(state.accounts)) state.accounts=[];
   if(!Array.isArray(state.recurring)) state.recurring=[];
@@ -4224,13 +4238,15 @@ function saveTx(){
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amtINR:-amtINR);}}
   // Auto-reduce linked liability remaining, or log a payment against a flexible loan
   if(liabLink&&txType==='expense'){
-    if(String(liabLink).indexOf('flex_')===0){
-      var flexId=String(liabLink).slice(5);
-      var fl2=addFlexPaymentFromTx(flexId,date,amtINR,tx.id);
-      if(fl2){renderFlexLoans();showToast('🧮 Payment logged to '+fl2.name,'green');}
-    } else {
-      const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
-      if(l){l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');}
+    const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
+    if(l){
+      if(l.flexible){
+        addFlexPaymentFromTx(l.id,date,amtINR,tx.id);
+        renderFlexLoans();
+        showToast('🧮 Payment logged to '+l.name,'green');
+      } else {
+        l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');
+      }
     }
   }
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
@@ -4975,11 +4991,10 @@ function saveEditTx(){
   // Reverse original liability-link effect (or remove the auto-logged flex-loan payment)
   const origLiabLink=tx.liabLink||'';
   if(origLiabLink&&origType==='expense'){
-    if(String(origLiabLink).indexOf('flex_')===0){
-      removeFlexPaymentByTx(tx.id);
-    } else {
-      const l=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
-      if(l) l.remaining=Math.min(l.total||l.remaining+origAmt, l.remaining+origAmt);
+    const origL=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
+    if(origL){
+      if(origL.flexible){ removeFlexPaymentByTx(tx.id); }
+      else { origL.remaining=Math.min(origL.total||origL.remaining+origAmt, origL.remaining+origAmt); }
     }
   }
   // Apply all updated fields
@@ -4995,13 +5010,10 @@ function saveEditTx(){
   // Re-apply liability-link effect with new values (or re-log the flex-loan payment)
   const newLiabLink=tx.liabLink||'';
   if(newLiabLink&&editTxType==='expense'){
-    if(String(newLiabLink).indexOf('flex_')===0){
-      var flexId2=String(newLiabLink).slice(5);
-      addFlexPaymentFromTx(flexId2,date,amtINR2,tx.id);
-      renderFlexLoans();
-    } else {
-      const l=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
-      if(l) l.remaining=Math.max(0,l.remaining-amtINR2);
+    const newL=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
+    if(newL){
+      if(newL.flexible){ addFlexPaymentFromTx(newL.id,date,amtINR2,tx.id); renderFlexLoans(); }
+      else { newL.remaining=Math.max(0,newL.remaining-amtINR2); }
     }
   }
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
@@ -5023,12 +5035,10 @@ function deleteFromEdit(){
     if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
     // Restore liability remaining if this was a liability-linked expense, or remove the auto-logged flex-loan payment
     if(tx?.liabLink&&tx.type==='expense'){
-      if(String(tx.liabLink).indexOf('flex_')===0){
-        removeFlexPaymentByTx(tx.id);
-        renderFlexLoans();
-      } else {
-        const l=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
-        if(l) l.remaining=Math.min(l.total||l.remaining+tx.amount, l.remaining+tx.amount);
+      const delL=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
+      if(delL){
+        if(delL.flexible){ removeFlexPaymentByTx(tx.id); renderFlexLoans(); }
+        else { delL.remaining=Math.min(delL.total||delL.remaining+tx.amount, delL.remaining+tx.amount); }
       }
     }
     state.transactions=state.transactions.filter(t=>String(t.id)!==String(id));
@@ -8029,9 +8039,10 @@ function autoCalcEMI(){
 }
 function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){showToast('Enter loan name and outstanding amount','yellow');return;}const rate2=state.currencyRate||1;const totalINR=total/rate2;const remINR=remaining/rate2;const emiINR=emi/rate2;const editId=document.getElementById('liabModal').dataset.editId;if(editId){const l=state.liabilities.find(l=>l.id===parseInt(editId));if(l){l.name=name;l.type=type;l.total=totalINR;l.remaining=remINR;l.emi=emiINR;l.rate=rate;l.color=LIAB_TYPES[type]?.color||'#ef4444';}}else{state.liabilities.push({id:Date.now(),name,type,total:totalINR,remaining:remINR,emi:emiINR,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});}saveState();closeModal('liabModal');renderLiabilities();updateDashboard();if(curPage==='wealth')renderWealth();['liabName','liabTotal','liabRemaining','liabEMI','liabRate','liabTenure'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});var b=document.getElementById('emiAutoCalcBox');if(b)b.style.display='none';document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
 function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(cv(totalDebt));document.getElementById('totalEMI').textContent=fmt(cv(totalEMI));document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(cv(l.remaining))}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editLiab(${l.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(cv(l.total))} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(cv(l.emi))}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
-function deleteLiab(id){customConfirm('💸','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();});}
+function deleteLiab(id){customConfirm('💸','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);delete _flexExpanded[id];saveState();renderLiabilities();updateDashboard();});}
 function editLiab(id){
   const l=state.liabilities.find(l=>l.id===id);if(!l)return;
+  if(l.flexible){openFlexLoanModal(id);return;}
   document.getElementById('liabName').value=l.name;
   document.getElementById('liabType').value=l.type;
   const r4=state.currencyRate||1;
@@ -8333,17 +8344,13 @@ function updateTxAccountSelect(){
 function updateTxLiabSelect(){
   var sel=document.getElementById('txLiabLink');
   if(!sel) return;
+  // Single unified list — flexible loans now live in state.liabilities too, so there's
+  // no separate source to double up on here.
   var liabOpts=state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
     var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
-    return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
+    return '<option value="'+l.id+'">'+info.emoji+' '+escHtml(l.name)+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
   }).join('');
-  var flexOpts=(state.flexLoans||[]).map(function(fl){
-    var r=state.currencyRate||1;
-    var d=flexComputeSchedule((fl.principal||0)*r,fl.rate,fl.start,(fl.payments||[]).map(function(p){return {date:p.date,amount:(p.amount||0)*r};}));
-    if(d.balance<=0) return '';
-    return '<option value="flex_'+fl.id+'">🧮 '+escHtml(fl.name)+' ('+state.currSymbol+fmt(d.balance)+' left)</option>';
-  }).join('');
-  sel.innerHTML='<option value="">-- None --</option>'+liabOpts+flexOpts;
+  sel.innerHTML='<option value="">-- None --</option>'+liabOpts;
 }
 
 
@@ -11923,11 +11930,13 @@ var _dpExpanded = {}; // loanId -> active sub-tab ('schedule'|'suggestions')
 function renderDebtCountdown() {
   var c = document.getElementById('debtCountdownList');
   if (!c) return;
-  if (!state.liabilities || !state.liabilities.length) {
+  // Flexible (no-fixed-EMI) loans get their own card style below — exclude from EMI amortization cards.
+  var fixedLoans = (state.liabilities || []).filter(function(l) { return !l.flexible; });
+  if (!fixedLoans.length) {
     c.innerHTML = '<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div>';
     return;
   }
-  c.innerHTML = state.liabilities.map(function(l) { return dpBuildCard(l); }).join('');
+  c.innerHTML = fixedLoans.map(function(l) { return dpBuildCard(l); }).join('');
 }
 
 function populatePrepaySelect() {} // legacy stub
@@ -11969,26 +11978,31 @@ function flexMoney(n) { return state.currSymbol + (n || 0).toLocaleString('en-IN
 // Adds (or, on edit-save, re-adds) a payment entry tagged with the transaction's id so it can
 // be found and removed automatically if that transaction is later edited or deleted.
 function addFlexPaymentFromTx(flexId, date, amountINR, txId) {
-  var fl = (state.flexLoans || []).find(function(f) { return String(f.id) === String(flexId); });
+  var fl = (state.liabilities || []).find(function(f) { return String(f.id) === String(flexId) && f.flexible; });
   if (!fl) return null;
   if (!Array.isArray(fl.payments)) fl.payments = [];
   fl.payments.push({ date: date, amount: amountINR, txId: txId });
+  fl.remaining = flexComputeSchedule(fl.principal, fl.rate, fl.start, fl.payments).balance;
   return fl;
 }
 function removeFlexPaymentByTx(txId) {
-  (state.flexLoans || []).forEach(function(fl) {
-    if (Array.isArray(fl.payments)) fl.payments = fl.payments.filter(function(p) { return String(p.txId) !== String(txId); });
+  (state.liabilities || []).forEach(function(fl) {
+    if (fl.flexible && Array.isArray(fl.payments)) {
+      fl.payments = fl.payments.filter(function(p) { return String(p.txId) !== String(txId); });
+      fl.remaining = flexComputeSchedule(fl.principal, fl.rate, fl.start, fl.payments).balance;
+    }
   });
 }
 
 function renderFlexLoans() {
   var c = document.getElementById('flexLoanList');
   if (!c) return;
-  if (!state.flexLoans || !state.flexLoans.length) {
+  var flexList = (state.liabilities || []).filter(function(l) { return l.flexible; });
+  if (!flexList.length) {
     c.innerHTML = '<div class="empty"><div class="empty-big">🧮</div><div class="empty-title">No flexible loans</div><div class="empty-desc">Track informal loans with ad-hoc, no-fixed-EMI repayments</div></div>';
     return;
   }
-  c.innerHTML = state.flexLoans.map(function(fl) { return flexLoanCard(fl); }).join('');
+  c.innerHTML = flexList.map(function(fl) { return flexLoanCard(fl); }).join('');
 }
 
 function toggleFlexCard(id) { _flexExpanded[id] = _flexExpanded[id] ? null : 'on'; renderFlexLoans(); }
@@ -12057,7 +12071,7 @@ function openFlexLoanModal(id) {
     showModal('flexLoanModal');
     return;
   }
-  var fl = state.flexLoans.find(function(f) { return f.id === id; });
+  var fl = state.liabilities.find(function(f) { return f.id === id && f.flexible; });
   if (!fl) return;
   var r6 = state.currencyRate || 1;
   document.getElementById('flexName').value = fl.name;
@@ -12130,24 +12144,39 @@ function saveFlexLoan() {
     return p;
   }).filter(function(p) { return p.date && p.amount > 0; });
   var editId = document.getElementById('flexLoanModal').dataset.editId;
+  var principalINR = principal / r7;
   if (editId) {
-    var fl = state.flexLoans.find(function(f) { return f.id === parseInt(editId); });
-    if (fl) { fl.name = name; fl.principal = principal / r7; fl.rate = rate; fl.start = start; fl.payments = payments; fl.updatedAt = Date.now(); }
+    var fl = state.liabilities.find(function(f) { return f.id === parseInt(editId) && f.flexible; });
+    if (fl) {
+      fl.name = name; fl.principal = principalINR; fl.total = principalINR; fl.rate = rate; fl.start = start; fl.payments = payments; fl.updatedAt = Date.now();
+      fl.remaining = flexComputeSchedule(fl.principal, fl.rate, fl.start, fl.payments).balance;
+    }
   } else {
-    state.flexLoans.push({ id: Date.now(), name: name, principal: principal / r7, rate: rate, start: start, payments: payments, createdAt: Date.now() });
+    var newFl = {
+      id: Date.now(), name: name, type: 'Flexible', flexible: true,
+      principal: principalINR, total: principalINR, rate: rate, start: start, payments: payments,
+      emi: 0, color: (LIAB_TYPES['Flexible'] && LIAB_TYPES['Flexible'].color) || '#06b6d4',
+      createdAt: Date.now()
+    };
+    newFl.remaining = flexComputeSchedule(newFl.principal, newFl.rate, newFl.start, newFl.payments).balance;
+    state.liabilities.push(newFl);
   }
   saveState();
   closeModal('flexLoanModal');
   renderFlexLoans();
+  renderLiabilities();
+  updateDashboard();
   showToast('Flexible loan saved!', 'green');
 }
 
 function deleteFlexLoan(id) {
   customConfirm('🧮', 'Delete Flexible Loan', 'This cannot be undone.', function() {
-    state.flexLoans = state.flexLoans.filter(function(f) { return f.id !== id; });
+    state.liabilities = state.liabilities.filter(function(f) { return f.id !== id; });
     delete _flexExpanded[id];
     saveState();
     renderFlexLoans();
+    renderLiabilities();
+    updateDashboard();
   });
 }
 
