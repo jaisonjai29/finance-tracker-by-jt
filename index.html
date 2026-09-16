@@ -1874,6 +1874,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
       <div class="set-sec">
         <div class="set-sec-title">💾 Backup & Sync</div>
+        <!-- Data size -->
+        <div class="set-row" style="cursor:default">
+          <div class="set-row-left"><span class="set-row-icon">📦</span><div><div class="set-row-label">Data Size</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="dataSizeDetail">Calculating…</div></div></div>
+          <div class="set-row-right" id="dataSizeText">—</div>
+        </div>
         <!-- Export -->
         <div class="set-row" onclick="exportData()">
           <div class="set-row-left"><span class="set-row-icon">📤</span><div><div class="set-row-label">Export Backup</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Download encrypted JSON to your device</div></div></div>
@@ -2152,7 +2157,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="type-btn on inc" id="typeInc" onclick="setTxType('income')">📥 Income</div>
       <div class="type-btn exp" id="typeExp" onclick="setTxType('expense')">📤 Expense</div>
     </div>
-    <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="txAmt" placeholder="0.00" inputmode="decimal" oninput="checkTxBudgetWarning()"></div>
+    <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="txAmt" placeholder="0.00" inputmode="decimal" oninput="checkTxBudgetWarning();updateSplitRemaining()"></div>
     <div style="display:flex;gap:8px"><div class="field" style="flex:1"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="txDate"></div><div class="field" style="flex:0 0 120px"><div class="field-label">⏰ Time</div><input type="time" class="field-input" id="txTime"></div></div>
     <div class="field">
       <div class="field-label" id="catSelectLabel">📂 Income Source</div>
@@ -2163,6 +2168,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div id="txBudgetWarning" style="display:none;border-radius:11px;padding:9px 13px;margin-bottom:8px;font-size:12px;font-weight:800;align-items:center;gap:8px"></div>
     <div class="chips" id="catChips" style="display:none"></div>
     <div class="field" id="txAccountField"><div class="field-label">🏦 Deposit to Account</div><select class="field-input" id="txAccount"><option value="">-- Select Account --</option></select></div>
+    <div class="field" id="txSplitToggleField">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">🔀 Split Across Accounts</div>
+          <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:2px">Pay part of this from each account</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div id="splitToggleNo" onclick="setSplitToggle(false)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;background:var(--accent);color:var(--accent-text);transition:all .2s">No</div>
+          <div id="splitToggleYes" onclick="setSplitToggle(true)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;background:var(--bg3);color:var(--text3);transition:all .2s">Yes</div>
+        </div>
+      </div>
+    </div>
+    <div class="field" id="txSplitContainer" style="display:none">
+      <div class="field-label">🔀 Split Between Accounts</div>
+      <div id="splitRows"></div>
+      <div onclick="addSplitRow()" style="text-align:center;padding:8px;border:2px dashed var(--border);border-radius:10px;font-size:12px;font-weight:800;color:var(--accent);cursor:pointer;margin-top:4px">+ Add Split</div>
+      <div id="splitRemainingIndicator" style="text-align:center;font-size:12px;font-weight:800;margin-top:8px;padding:6px;border-radius:8px"></div>
+    </div>
     <div class="field">
       <div class="field-label">👤 For</div>
       <div class="chips" id="memberChips" style="gap:6px"></div>
@@ -3620,6 +3643,30 @@ function saveState(){
   }
   // Debounced silent sync — fires 4s after last saveState call
   _scheduleSilentSync();
+  updateDataSizeDisplay();
+}
+// ── Data size tracking: recomputed on every save (i.e. every add/edit/delete) ──
+function formatDataBytes(b){
+  if(b<1024)return b+' B';
+  if(b<1024*1024)return (b/1024).toFixed(1)+' KB';
+  return (b/1024/1024).toFixed(2)+' MB';
+}
+function updateDataSizeDisplay(){
+  var elText=document.getElementById('dataSizeText');
+  var elDetail=document.getElementById('dataSizeDetail');
+  if(!elText&&!elDetail)return; // settings page not in DOM state we care about — skip work
+  try{
+    var storeKey=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
+    var raw=localStorage.getItem(storeKey)||JSON.stringify(state);
+    var bytes=new Blob([raw]).size;
+    if(elText)elText.textContent=formatDataBytes(bytes);
+    if(elDetail){
+      var txCount=(state.transactions||[]).length;
+      elDetail.textContent=txCount+' transaction'+(txCount===1?'':'s')+' stored locally';
+    }
+  }catch(e){
+    if(elText)elText.textContent='—';
+  }
 }
 // Restore from local emergency or previous backup if main state is corrupted/empty
 function restoreFromLocalBackup(){
@@ -3972,6 +4019,7 @@ function showPage(id){
   // alloc targets now on wealth page
   if(id==='settings'){
     renderProfilesList();
+    updateDataSizeDisplay();
     // Restore active currency button to match saved state
     document.querySelectorAll('#currGrid .curr-btn').forEach(function(b){
       var matches=b.getAttribute('onclick')&&b.getAttribute('onclick').indexOf("'"+state.currency+"'")>-1;
@@ -4033,7 +4081,7 @@ function showModal(id){
     var panel=modalBg.querySelector('.modal');
     if(panel)panel.scrollTop=0;
   },10);
-  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';}
+  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);resetSplitRows();setSplitToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
@@ -4219,6 +4267,115 @@ function getSelCatFromSelect(){
   return sel?sel.value:'Other';
 }
 function getSelCat(){return getSelCatFromSelect();}
+// ── Split-across-accounts (Add Transaction only — does not touch edit flow) ──
+var txSplitMode=false;
+var splitRowCount=0;
+function setSplitToggle(val){
+  txSplitMode=val;
+  var no=document.getElementById('splitToggleNo');
+  var yes=document.getElementById('splitToggleYes');
+  if(no&&yes){
+    if(val){yes.style.background='var(--accent)';yes.style.color='var(--accent-text)';no.style.background='var(--bg3)';no.style.color='var(--text3)';}
+    else{no.style.background='var(--accent)';no.style.color='var(--accent-text)';yes.style.background='var(--bg3)';yes.style.color='var(--text3)';}
+  }
+  var acctField=document.getElementById('txAccountField');
+  var splitContainer=document.getElementById('txSplitContainer');
+  if(acctField)acctField.style.display=val?'none':'';
+  if(splitContainer)splitContainer.style.display=val?'':'none';
+  if(val){
+    var rows=document.getElementById('splitRows');
+    if(rows&&rows.children.length===0){addSplitRow();addSplitRow();}
+    updateSplitRemaining();
+  }
+}
+function buildSplitAccountOptionsHtml(selectedId){
+  if(!state.accounts.length)return '<option value="">-- No accounts --</option>';
+  var html='<option value="">-- Select Account --</option>';
+  state.accounts.forEach(function(a){
+    var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
+    html+='<option value="'+a.id+'"'+(String(a.id)===String(selectedId)?' selected':'')+'>'+info.emoji+' '+a.name+'</option>';
+  });
+  return html;
+}
+function addSplitRow(){
+  splitRowCount++;
+  var rid='sr'+splitRowCount+'_'+Date.now();
+  var rows=document.getElementById('splitRows');
+  if(!rows)return;
+  var row=document.createElement('div');
+  row.className='split-row';
+  row.dataset.rowId=rid;
+  row.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+  row.innerHTML=
+    '<select class="field-input split-acct" style="flex:1.3;padding:8px 10px;font-size:12px" onchange="updateSplitRemaining()">'+buildSplitAccountOptionsHtml('')+'</select>'+
+    '<input type="number" class="field-input split-amt" placeholder="0.00" inputmode="decimal" style="flex:1;padding:8px 10px;font-size:12px" oninput="updateSplitRemaining()">'+
+    '<div onclick="removeSplitRow(\''+rid+'\')" style="flex:0 0 28px;text-align:center;color:#ef4444;font-weight:900;cursor:pointer;font-size:16px">✕</div>';
+  rows.appendChild(row);
+  updateSplitRemaining();
+}
+function removeSplitRow(rid){
+  var rows=document.getElementById('splitRows');
+  if(!rows)return;
+  var row=rows.querySelector('[data-row-id="'+rid+'"]');
+  if(row&&rows.children.length>2)row.remove();
+  updateSplitRemaining();
+}
+function resetSplitRows(){
+  var rows=document.getElementById('splitRows');
+  if(rows)rows.innerHTML='';
+  splitRowCount=0;
+}
+function getSplitRowsData(){
+  var out=[];
+  document.querySelectorAll('#splitRows .split-row').forEach(function(row){
+    var acct=row.querySelector('.split-acct').value;
+    var amt=parseFloat(row.querySelector('.split-amt').value);
+    if(acct&&amt>0)out.push({account:acct,amount:amt});
+  });
+  return out;
+}
+function updateSplitRemaining(){
+  var ind=document.getElementById('splitRemainingIndicator');
+  if(!ind)return;
+  var total=parseFloat(document.getElementById('txAmt').value)||0;
+  var splits=getSplitRowsData();
+  var sum=splits.reduce(function(s,r){return s+r.amount;},0);
+  var remaining=Math.round((total-sum)*100)/100;
+  if(!total){ind.textContent='Enter total amount above first';ind.style.background='var(--bg3)';ind.style.color='var(--text3)';}
+  else if(Math.abs(remaining)<0.01){ind.textContent='✅ Fully split — '+state.currSymbol+fmt(sum);ind.style.background='rgba(34,197,94,0.15)';ind.style.color='#22c55e';}
+  else if(remaining>0){ind.textContent='Remaining to split: '+state.currSymbol+fmt(remaining);ind.style.background='rgba(234,179,8,0.15)';ind.style.color='#eab308';}
+  else{ind.textContent='Over by '+state.currSymbol+fmt(Math.abs(remaining));ind.style.background='rgba(239,68,68,0.15)';ind.style.color='#ef4444';}
+}
+function saveSplitTx(splits,totalDisplay,date,time,notes,cat,platform,payMethod,liabLink){
+  var rate=state.currencyRate||1;
+  var member=getSelMember();
+  var groupId='sp'+Date.now();
+  var totalINR=totalDisplay/rate;
+  splits.forEach(function(s,i){
+    var amtINR=s.amount/rate;
+    var splitNote=(notes?notes+' — ':'')+'Split '+(i+1)+'/'+splits.length+' of '+state.currSymbol+fmt(totalDisplay);
+    var tx={id:Date.now()+i,type:txType,amount:amtINR,date:date,time:time,notes:splitNote,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:s.account,liabLink:'',member:member,platform:platform,payMethod:payMethod,splitGroup:groupId,splitIndex:i+1,splitTotal:splits.length};
+    state.transactions.unshift(tx);
+    var a=state.accounts.find(function(a){return String(a.id)===String(s.account);});
+    if(a)a.balance+=(txType==='income'?amtINR:-amtINR);
+  });
+  if(liabLink&&txType==='expense'){
+    var l=state.liabilities.find(function(l){return String(l.id)===String(liabLink);});
+    if(l){
+      if(l.flexible){addFlexPaymentFromTx(l.id,date,totalINR,groupId);renderFlexLoans();showToast('🧮 Payment logged to '+l.name,'green');}
+      else{l.remaining=Math.max(0,l.remaining-totalINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(totalINR)),'green');}
+    }
+  }
+  saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
+  if(curPage==='analytics')renderAnalytics();
+  if(txType==='expense'&&cat&&state.budgets[cat]){
+    var monthSpent=getMonthTxs().filter(function(t){return t.type==='expense'&&t.category===cat;}).reduce(function(s,t){return s+t.amount;},0);
+    var limit=state.budgets[cat];
+    if(monthSpent>limit){showToast('⚠️ '+cat+' budget exceeded by '+state.currSymbol+fmt(cv(monthSpent-limit))+'!','red');}
+    else{var pct=Math.round(monthSpent/limit*100);if(pct>=80&&pct<100)showToast('⚠️ '+cat+' budget '+pct+'% used','yellow');}
+  }
+  showToast('✅ Split into '+splits.length+' transactions','green');
+}
 function saveTx(){
   const amt=parseFloat(document.getElementById('txAmt').value);
   const date=document.getElementById('txDate').value;
@@ -4230,6 +4387,14 @@ function saveTx(){
   const platform=txType==='expense'?(document.getElementById('txPlatform')?.value||''):'';
   const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
+  if(txSplitMode){
+    const splits=getSplitRowsData();
+    if(splits.length<2){showToast('Add at least 2 splits, or turn Split off','yellow');return;}
+    const splitSum=splits.reduce((s,r)=>s+r.amount,0);
+    if(Math.abs(splitSum-amt)>0.01){showToast('Split amounts must add up to '+state.currSymbol+fmt(amt),'yellow');return;}
+    saveSplitTx(splits,amt,date,time,notes,cat,platform,payMethod,liabLink);
+    return;
+  }
   const amtINR=amt/(state.currencyRate||1);
   const member=getSelMember();
   const tx={id:Date.now(),type:txType,amount:amtINR,date,time,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
@@ -4300,7 +4465,7 @@ function resetTxForm(){
   var pm=document.getElementById('txPayMethod');if(pm)pm.value='';
   var ll=document.getElementById('txLiabLink');if(ll)ll.value='';
 
-  setTxType('income');setRecurToggle(false);
+  setTxType('income');setRecurToggle(false);resetSplitRows();setSplitToggle(false);
 }
 function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx.date);return d.getMonth()===state.currentMonth&&d.getFullYear()===state.currentYear;});}
 
@@ -4804,6 +4969,58 @@ function txHTML(tx, balInfo){
   }
   // Title = category; subtitle = date + ℹ
   return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.category}</div><div class="tx-meta">${formatDate(tx.date)}${tx.time?'<span style="font-size:10px;color:var(--text3);margin-left:4px">· '+formatTxTime(tx.time)+'</span>':''}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
+}
+// ── Split-across-accounts: renders the whole group as ONE row in History ──
+function splitGroupTxHTML(tx){
+  const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
+  const col=tx.type==='income'?'var(--green)':'var(--red)';
+  const badges=['<span class="tx-badge" style="background:rgba(124,92,252,0.12);color:var(--accent);border:1px solid rgba(124,92,252,0.3)">🔀 Split · '+tx.splitParts.length+' accounts</span>'];
+  const member=tx.member&&tx.member!=='Self'?tx.member:null;
+  if(member)badges.push(`<span class="tx-badge" style="background:rgba(29,233,182,0.12);color:var(--teal);border:1px solid rgba(29,233,182,0.3)">👤 ${member}</span>`);
+  const badgeRow=`<div class="tx-badges">${badges.join('')}</div>`;
+  const emojiHtml=tx.emoji&&tx.emoji.startsWith('data:')?`<img src="${tx.emoji}" style="width:26px;height:26px;border-radius:6px;object-fit:cover">`:(tx.emoji||'🌀');
+  return`<div class="tx" onclick="showSplitBreakdown('${tx.splitGroup}')"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.category}</div><div class="tx-meta">${formatDate(tx.date)}${tx.time?'<span style="font-size:10px;color:var(--text3);margin-left:4px">· '+formatTxTime(tx.time)+'</span>':''}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div></div></div>`;
+}
+function showSplitBreakdown(groupId){
+  var parts=state.transactions.filter(function(t){return t.splitGroup===groupId;}).sort(function(a,b){return (a.splitIndex||0)-(b.splitIndex||0);});
+  if(!parts.length)return;
+  var total=parts.reduce(function(s,t){return s+t.amount;},0);
+  var rowsHtml=parts.map(function(t){
+    var a=state.accounts.find(function(a){return String(a.id)===String(t.account);});
+    var info=a?(ACCT_TYPES[a.type]||{emoji:'🏦'}):{emoji:'🏦'};
+    var name=a?a.name:'Unknown account';
+    var color=(a&&a.color)||'#7c5cfc';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:700;color:var(--text)">'+info.emoji+' '+name+'</span><span style="font-size:13px;font-weight:900;color:'+color+'">'+state.currSymbol+fmt(cv(t.amount))+'</span></div>';
+  }).join('');
+  var m=document.getElementById('splitBreakdownModal');
+  if(!m){
+    m=document.createElement('div');
+    m.className='modal-bg';m.id='splitBreakdownModal';m.style.zIndex='9000';
+    m.addEventListener('click',function(e){if(e.target===m)closeModal('splitBreakdownModal');});
+    document.body.appendChild(m);
+  }
+  m.innerHTML='<div class="modal" style="max-width:360px"><div class="modal-handle"></div>'
+    +'<div class="modal-title" style="font-size:15px;margin-bottom:4px">🔀 Split Transaction</div>'
+    +'<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:10px">'+parts[0].category+' · '+formatDate(parts[0].date)+'</div>'
+    +'<div>'+rowsHtml+'</div>'
+    +'<div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px"><span style="font-size:13px;font-weight:900;color:var(--text)">Total</span><span style="font-size:14px;font-weight:900;color:var(--text)">'+state.currSymbol+fmt(cv(total))+'</span></div>'
+    +'<button class="btn-cancel" style="margin-top:14px;color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteSplitGroup(\''+groupId+'\')">🗑️ Delete This Transaction</button>'
+    +'<button class="btn-cancel" onclick="closeModal(\'splitBreakdownModal\')" style="margin-top:8px">✕ Close</button></div>';
+  m.classList.add('on');
+}
+function deleteSplitGroup(groupId){
+  var parts=state.transactions.filter(function(t){return t.splitGroup===groupId;});
+  if(!parts.length)return;
+  customConfirm('🗑️','Delete Split Transaction','This removes all '+parts.length+' linked entries and reverses account balances. This cannot be undone.',function(){
+    parts.forEach(function(t){
+      var a=state.accounts.find(function(a){return String(a.id)===String(t.account);});
+      if(a)a.balance-=(t.type==='income'?t.amount:-t.amount);
+    });
+    state.transactions=state.transactions.filter(function(t){return t.splitGroup!==groupId;});
+    saveState();closeModal('splitBreakdownModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
+    if(curPage==='analytics')renderAnalytics();
+    showToast('Split transaction deleted','green');
+  });
 }
 function showTxDescInfo(cat,_unused,date,notes,platform,payMethod){
   var m=document.getElementById('txDescInfoModal');
@@ -5320,7 +5537,24 @@ function renderHistory(){
   if(acctFilter)txs=txs.filter(t=>String(t.account)===String(acctFilter));
 
   // Build combined items — merge transfers for 'all' and 'transfer' filters
-  var items=txs.map(function(tx){return{date:tx.date,sortKey:tx.date+'T'+(tx.time||'00:00')+'_'+tx.id,isTx:true,data:tx};});
+  // Split transactions (shared splitGroup) collapse into a single display item
+  var items=[];
+  var _seenSplitGroups={};
+  txs.forEach(function(tx){
+    if(tx.splitGroup){
+      if(_seenSplitGroups[tx.splitGroup])return;
+      _seenSplitGroups[tx.splitGroup]=true;
+      var groupTxs=state.transactions.filter(function(t){return t.splitGroup===tx.splitGroup;});
+      var totalAmt=groupTxs.reduce(function(s,t){return s+t.amount;},0);
+      items.push({date:tx.date,sortKey:tx.date+'T'+(tx.time||'00:00')+'_'+tx.splitGroup,isTx:true,data:{
+        _isSplitGroup:true,splitGroup:tx.splitGroup,type:tx.type,amount:totalAmt,date:tx.date,time:tx.time,
+        category:tx.category,emoji:tx.emoji,member:tx.member,
+        splitParts:groupTxs.map(function(t){return{account:t.account,amount:t.amount,id:t.id};})
+      }});
+    } else {
+      items.push({date:tx.date,sortKey:tx.date+'T'+(tx.time||'00:00')+'_'+tx.id,isTx:true,data:tx});
+    }
+  });
   if(histFilt==='all'||histFilt==='transfer'){
     (state.transfers||[]).forEach(function(tr){
       if(search){
@@ -5360,7 +5594,7 @@ function renderHistory(){
     var summaryHTML=summaryParts.length?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:2px 7px;margin-left:6px;flex-shrink:0;white-space:nowrap;overflow:hidden;max-width:calc(100vw - 120px)">'+summaryParts.join('<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>')+( netStr?'<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>'+netStr:'')+'</span>':'';
     html+=`<div style="display:flex;align-items:center;gap:0;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px;overflow:hidden;white-space:nowrap">${formatDate(date)}${summaryHTML}</div><div class="box" style="padding:8px 14px">`;
     rows.forEach(function(item){
-      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=txHTML(item.data,bi);}else{html+=transferHistHTML(item.data);}
+      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=(item.data._isSplitGroup?splitGroupTxHTML(item.data):txHTML(item.data,bi));}else{html+=transferHistHTML(item.data);}
     });
     html+='</div>';
   });
