@@ -1095,7 +1095,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- LIABILITIES -->
     <div class="page" id="page-liabilities">
-      <div class="sec-head"><div class="sec-title">💸 Debts & Loans</div><button class="sec-btn" onclick="showModal('liabModal')">➕ Add</button></div>
+      <div class="sec-head"><div class="sec-title">💸 Debts & Loans</div><div style="display:flex;gap:6px"><button class="sec-btn" onclick="openFlexLoanModal()">🧮 Flexible</button><button class="sec-btn" onclick="showModal('liabModal')">➕ Add</button></div></div>
       <div class="stat-grid-3">
         <div class="stat-box sr"><span class="stat-emoji">💳</span><div class="stat-lbl">Total Debt</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="totalDebt">0</span></div></div>
         <div class="stat-box sy"><span class="stat-emoji">📅</span><div class="stat-lbl">Monthly EMI</div><div class="stat-val" style="font-size:14px"><span class="curr">₹</span><span id="totalEMI">0</span></div></div>
@@ -1220,7 +1220,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
 
     <!-- MULTI-ACCOUNT -->
     <div class="page" id="page-accounts">
-      <div class="sec-head"><div class="sec-title">🏦 Accounts</div><div style="display:flex;gap:6px"><button class="sec-btn" style="font-size:11px;background:rgba(79,142,247,0.12);color:var(--accent);border:1.5px solid rgba(79,142,247,0.3)" onclick="openMonthlyOpeningModal()">📅 Month Opening</button><button class="sec-btn" onclick="showModal('acctModal')">➕ Add</button></div></div>
+      <div class="sec-head"><div class="sec-title">🏦 Accounts</div><div style="display:flex;gap:6px"><button class="sec-btn" onclick="showModal('acctModal')">➕ Add</button></div></div>
       <div id="acctSummary" style="margin-bottom:14px"></div>
       <div class="box">
         <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">💳 My Accounts</div>
@@ -1332,7 +1332,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <div id="wealthAllocDisabled" style="text-align:center;padding:18px 0 6px;color:var(--text3);font-size:12px;font-weight:700">Toggle ON to enable allocation targets</div>
       </div>
 
-      <!-- MONTHLY BUDGET SETTINGS (moved from Settings) -->
+      <!-- MONTHLY BUDGET SETTINGS (moved from Settings) -->\
       <div class="box" id="wealthBudgetBox" style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div style="font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--yellow)">🎯 MONTHLY BUDGET</div>
@@ -1341,9 +1341,36 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
             <button class="sec-btn" id="wealthBudgetEditBtn" style="font-size:11px;padding:6px 12px" onclick="startWealthBudgetEdit()">✏️ Edit</button>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:10px;line-height:1.6">Set per-category monthly spend limits for this month.</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:10px;line-height:1.6">Monthly spend limits split into <b>Compulsory</b> (fixed) and <b>Variable</b> (flexible) expenses.</div>
         <!-- Read-only view -->
         <div id="wealthBudgetView"></div>
+        <!-- New month copy prompt -->
+        <div id="wbudgetCopyPrompt" style="display:none;margin-top:8px">
+          <div style="background:rgba(124,92,252,0.08);border:1.5px solid rgba(124,92,252,0.25);border-radius:14px;padding:14px">
+            <div style="font-size:13px;font-weight:900;margin-bottom:4px">📅 New Month Detected</div>
+            <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:14px">No budget set for <span id="wbudgetNewMonthName"></span> yet.</div>
+            <!-- Step A: Section 1 -->
+            <div id="wbCopyStepA">
+              <div style="font-size:11px;font-weight:900;color:#fb923c;letter-spacing:1px;margin-bottom:8px">🔒 SECTION 1 — COMPULSORY EXPENSES</div>
+              <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:10px">Rent, EMI, utilities, etc.</div>
+              <div style="display:flex;gap:8px">
+                <button onclick="wbudgetCopyStepA('copy')" style="flex:1;padding:10px 6px;background:rgba(52,211,153,0.12);border:1.5px solid rgba(52,211,153,0.3);border-radius:10px;font-size:11px;font-weight:900;color:var(--green);cursor:pointer">📋 Copy from last month</button>
+                <button onclick="wbudgetCopyStepA('new')" style="flex:1;padding:10px 6px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;font-size:11px;font-weight:900;color:var(--text3);cursor:pointer">✏️ Set new amounts</button>
+              </div>
+            </div>
+            <!-- Step B: Section 2 (shown after Section 1 is chosen) -->
+            <div id="wbCopyStepB" style="display:none">
+              <div id="wbCopyStepAResult" style="margin-bottom:12px"></div>
+              <div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-bottom:8px">🔄 SECTION 2 — VARIABLE EXPENSES</div>
+              <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:10px">Food, shopping, leisure, etc.</div>
+              <div style="display:flex;gap:8px">
+                <button onclick="wbudgetCopyStepB('copy')" style="flex:1;padding:10px 6px;background:rgba(52,211,153,0.12);border:1.5px solid rgba(52,211,153,0.3);border-radius:10px;font-size:11px;font-weight:900;color:var(--green);cursor:pointer">📋 Copy from last month</button>
+                <button onclick="wbudgetCopyStepB('new')" style="flex:1;padding:10px 6px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;font-size:11px;font-weight:900;color:var(--text3);cursor:pointer">✏️ Set new amounts</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn-cancel" onclick="cancelWealthBudgetEdit()" style="margin-top:8px">Cancel</button>
+        </div>
         <!-- Edit form (step-by-step) -->
         <div id="wealthBudgetEditArea" style="display:none;margin-top:12px">
           <!-- Step 1: total budget -->
@@ -1353,28 +1380,35 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
               <div class="field-label">💰 Total Budget for <span id="wbudgetMonthLabel"></span></div>
               <input type="number" class="field-input" id="wbudgetTotal" placeholder="e.g. 30000" inputmode="numeric">
             </div>
-            <button class="btn-go" onclick="wbudgetNextStep()" style="margin-top:8px">Next → Pick Categories</button>
+            <button class="btn-go" onclick="wbudgetNextStep()" style="margin-top:8px">Next → Set Categories</button>
             <button class="btn-cancel" onclick="cancelWealthBudgetEdit()">Cancel</button>
           </div>
-          <!-- Step 2: pick categories -->
+          <!-- Step 2: two-section amounts -->
           <div id="wbudgetStep2" style="display:none">
-            <div style="font-size:11px;font-weight:900;color:var(--text3);letter-spacing:1px;margin-bottom:8px">STEP 2 — CHOOSE CATEGORIES TO BUDGET</div>
-            <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:10px">Select which categories you want to set limits for:</div>
-            <div id="wbudgetCatPicker" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"></div>
-            <button class="btn-go" onclick="wbudgetGoToStep3()">Next → Set Amounts</button>
-            <button class="btn-cancel" onclick="wbudgetBackToStep1()">← Back</button>
-          </div>
-          <!-- Step 3: set amounts with % shown -->
-          <div id="wbudgetStep3" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <div style="font-size:11px;font-weight:900;color:var(--text3);letter-spacing:1px">STEP 3 — SET CATEGORY LIMITS</div>
+              <div style="font-size:11px;font-weight:900;color:var(--text3);letter-spacing:1px">STEP 2 — SET LIMITS</div>
               <div style="font-size:11px;font-weight:900;background:var(--bg3);padding:4px 10px;border-radius:8px">Total: <span id="wbudgetTotalDisp" style="color:var(--accent)"></span></div>
             </div>
-            <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:10px">Remaining unallocated: <span id="wbudgetUnalloc" style="color:var(--yellow);font-weight:900"></span></div>
-            <div id="wbudgetAmtInputs"></div>
-            <button onclick="wbudgetAddCatInline()" style="width:100%;margin:8px 0;background:rgba(124,92,252,0.10);border:1.5px dashed rgba(124,92,252,0.35);border-radius:12px;padding:10px;font-size:13px;font-weight:900;color:var(--accent);cursor:pointer">➕ Add Category</button>
+            <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:12px">Remaining unallocated: <span id="wbudgetUnalloc" style="color:var(--yellow);font-weight:900"></span></div>
+
+            <!-- Section 1: Compulsory -->
+            <div style="background:rgba(251,146,60,0.08);border:1.5px solid rgba(251,146,60,0.2);border-radius:12px;padding:12px;margin-bottom:14px">
+              <div style="font-size:11px;font-weight:900;color:#fb923c;letter-spacing:1px;margin-bottom:10px">🔒 SECTION 1 — COMPULSORY EXPENSES</div>
+              <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:10px">Fixed monthly expenses (rent, EMI, utilities, etc.)</div>
+              <div id="wbudgetCompulsoryInputs"></div>
+              <button onclick="wbudgetAddCatInlineSection('compulsory')" style="width:100%;margin-top:6px;background:rgba(251,146,60,0.10);border:1.5px dashed rgba(251,146,60,0.4);border-radius:10px;padding:8px;font-size:12px;font-weight:900;color:#fb923c;cursor:pointer">➕ Add Compulsory Expense</button>
+            </div>
+
+            <!-- Section 2: Variable -->
+            <div style="background:rgba(124,92,252,0.08);border:1.5px solid rgba(124,92,252,0.2);border-radius:12px;padding:12px;margin-bottom:14px">
+              <div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-bottom:10px">🔄 SECTION 2 — VARIABLE EXPENSES</div>
+              <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:10px">Flexible monthly expenses (food, shopping, leisure, etc.)</div>
+              <div id="wbudgetVariableInputs"></div>
+              <button onclick="wbudgetAddCatInlineSection('variable')" style="width:100%;margin-top:6px;background:rgba(124,92,252,0.10);border:1.5px dashed rgba(124,92,252,0.35);border-radius:10px;padding:8px;font-size:12px;font-weight:900;color:var(--accent);cursor:pointer">➕ Add Variable Expense</button>
+            </div>
+
             <button class="btn-go" onclick="saveWealthBudgets()" style="margin-top:4px">💾 Save Budgets</button>
-            <button class="btn-cancel" onclick="wbudgetBackToStep2()">← Back</button>
+            <button class="btn-cancel" onclick="cancelWealthBudgetEdit()">Cancel</button>
           </div>
         </div>
       </div>
@@ -1463,6 +1497,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="page" id="page-debtcountdown">
       <div class="sec-head"><div class="sec-title">⏱️ Debt Payoff</div></div>
       <div id="debtCountdownList"></div>
+
+      <!-- FLEXIBLE INTEREST LOAN CALCULATOR -->
+      <div class="sec-head" style="margin-top:20px"><div class="sec-title">🧮 Flexible Interest Loans</div><button class="sec-btn" onclick="openFlexLoanModal()">➕ Add</button></div>
+      <div style="font-size:12px;color:var(--text3);font-weight:500;line-height:1.5;margin-bottom:12px">For loans with no fixed EMI — informal loans, family/friend loans. Log each actual payment date & amount; interest accrues daily on the outstanding balance.</div>
+      <div id="flexLoanList"></div>
     </div>
 
     <!-- RETIREMENT CALCULATOR -->
@@ -1925,10 +1964,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
           <div class="set-row-left"><span class="set-row-icon">🏦</span><div><div class="set-row-label">Accounts</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Manage bank, cash & card accounts</div></div></div>
           <div class="set-row-right">Open ▶</div>
         </div>
-        <div class="set-row" onclick="openMonthlyOpeningModal()">
-          <div class="set-row-left"><span class="set-row-icon">📅</span><div><div class="set-row-label">Set Month Opening Balances</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Record actual balance at start of month</div></div></div>
-          <div class="set-row-right">Set ▶</div>
-        </div>
         <div class="set-row" onclick="showPage('debtcountdown')">
           <div class="set-row-left"><span class="set-row-icon">⏱️</span><div><div class="set-row-label">Debt Payoff Countdown</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Track debt-free date & prepayment impact</div></div></div>
           <div class="set-row-right">Open ▶</div>
@@ -2073,7 +2108,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       </select>
     </div>
     <div id="editTxBudgetWarning" style="display:none;border-radius:11px;padding:9px 13px;margin-bottom:8px;font-size:12px;font-weight:800;align-items:center;gap:8px"></div>
-    <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="editTxDate"></div>
+    <div style="display:flex;gap:8px"><div class="field" style="flex:1"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="editTxDate"></div><div class="field" style="flex:0 0 120px"><div class="field-label">⏰ Time</div><input type="time" class="field-input" id="editTxTime"></div></div>
     <div class="field" id="editTxAccountField"><div class="field-label" id="editTxAccountLabel">🏦 Deduct from Account</div><select class="field-input" id="editTxAccount"><option value="">-- No Account --</option></select></div>
     <div class="field">
       <div class="field-label">👤 For</div>
@@ -2118,7 +2153,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="type-btn exp" id="typeExp" onclick="setTxType('expense')">📤 Expense</div>
     </div>
     <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="txAmt" placeholder="0.00" inputmode="decimal" oninput="checkTxBudgetWarning()"></div>
-    <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="txDate"></div>
+    <div style="display:flex;gap:8px"><div class="field" style="flex:1"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="txDate"></div><div class="field" style="flex:0 0 120px"><div class="field-label">⏰ Time</div><input type="time" class="field-input" id="txTime"></div></div>
     <div class="field">
       <div class="field-label" id="catSelectLabel">📂 Income Source</div>
       <select class="field-input" id="txCatSelect" onchange="onCatSelectChange(this)">
@@ -2132,26 +2167,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="field-label">👤 For</div>
       <div class="chips" id="memberChips" style="gap:6px"></div>
     </div>
-    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Liability <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
+    <div class="field" id="liabLinkField" style="display:none"><div class="field-label">🏧 Link to Debt <span style="font-size:10px;color:var(--text3)">(auto-reduces outstanding / logs a payment)</span></div><select class="field-input" id="txLiabLink"><option value="">-- None --</option></select></div>
     <div class="field"><div class="field-label">📌 Notes <span style="font-size:10px;color:var(--text3);font-weight:600">(optional)</span></div><input type="text" class="field-input" id="txNotes" placeholder="e.g. Monthly rent, groceries for week…"></div>
-    <!-- Extra details: platform & pay method — collapsed by default -->
-    <div onclick="toggleTxExtra()" style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer">
-      <span style="font-size:12px;font-weight:700;color:var(--text2)">➕ More details <span style="font-size:10px;color:var(--text3)">(platform, pay method)</span></span>
-      <span id="txExtraArrow" style="font-size:12px;color:var(--text3);transition:transform .2s">▼</span>
+    <div class="field" id="platformField">
+      <div class="field-label">🛒 Platform / Where bought</div>
+      <select class="field-input" id="txPlatform">
+        <option value="">-- Select Platform --</option>
+      </select>
     </div>
-    <div id="txExtraFields" style="display:none">
-      <div class="field" id="platformField">
-        <div class="field-label">🛒 Platform / Where bought</div>
-        <select class="field-input" id="txPlatform">
-          <option value="">-- Select Platform --</option>
-        </select>
-      </div>
-      <div class="field" id="txPayMethodField">
-        <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
-        <select class="field-input" id="txPayMethod">
-          <option value="">-- Select Method --</option>
-        </select>
-      </div>
+    <div class="field" id="txPayMethodField">
+      <div class="field-label">💳 Pay via <span style="font-size:10px;color:var(--text3);font-weight:600">(payment method used)</span></div>
+      <select class="field-input" id="txPayMethod">
+        <option value="">-- Select Method --</option>
+      </select>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;margin-bottom:12px">
       <div>
@@ -2248,6 +2276,45 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="field"><div class="field-label">💳 Monthly EMI <span style="font-size:10px;color:var(--text3)">(auto-filled or enter manually)</span></div><input type="number" class="field-input" id="liabEMI" placeholder="Auto-calculated" inputmode="numeric"></div>
     <button class="btn-go" onclick="saveLiab()">✅ Save Loan</button>
     <button class="btn-cancel" onclick="closeModal('liabModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- FLEXIBLE LOAN CALCULATOR MODAL -->
+<div class="modal-bg" id="flexLoanModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🧮 Add Flexible Loan</div>
+    <div style="font-size:11px;color:var(--text3);font-weight:500;line-height:1.5;margin-bottom:14px">No fixed tenure or EMI. Add the actual payment date and amount each time a payment is made — a month with no payment can be skipped.</div>
+    <div class="field"><div class="field-label">📝 Loan Name</div><input type="text" class="field-input" id="flexName" placeholder="e.g. Loan from Ramesh"></div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">💰 Principal</div><input type="number" class="field-input" id="flexPrincipal" placeholder="1,80,000" min="0" step="0.01" inputmode="decimal" oninput="calcFlexPreview()"></div>
+      <div class="field"><div class="field-label">💹 Interest % p.a.</div><input type="number" class="field-input" id="flexRate" placeholder="8.75" min="0" step="0.01" inputmode="decimal" oninput="calcFlexPreview()"></div>
+    </div>
+    <div class="field"><div class="field-label">📅 Loan Start Date</div><input type="date" class="field-input" id="flexStart" oninput="calcFlexPreview()"></div>
+
+    <div class="field-label" style="margin:16px 0 8px">💳 Payments</div>
+    <div id="flexPaymentRows"></div>
+    <button class="sec-btn" style="width:100%;margin-bottom:14px;justify-content:center;display:flex" onclick="addFlexPaymentRow()">＋ Add Payment</button>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+      <div class="stat-box sb" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Interest</div><div class="stat-val" style="font-size:13px" id="flexSInterest">₹0</div></div>
+      <div class="stat-box sr" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Paid</div><div class="stat-val" style="font-size:13px" id="flexSPaid">₹0</div></div>
+      <div class="stat-box sy" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Balance</div><div class="stat-val" style="font-size:13px" id="flexSBalance">₹0</div></div>
+      <div class="stat-box" style="padding:8px"><div class="stat-lbl" style="font-size:8px">Payments</div><div class="stat-val" style="font-size:13px" id="flexSCount">0</div></div>
+    </div>
+
+    <div id="flexScheduleWrap" style="display:none;margin-bottom:14px">
+      <div class="field-label" style="margin-bottom:8px">📊 Schedule</div>
+      <div class="tablewrap" style="overflow-x:auto;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+        <table style="width:100%;border-collapse:collapse;min-width:520px;font-size:11px">
+          <thead><tr style="background:var(--bg3)"><th style="padding:6px;text-align:center">#</th><th style="padding:6px;text-align:left">Date</th><th style="padding:6px;text-align:right">Days</th><th style="padding:6px;text-align:right">Interest</th><th style="padding:6px;text-align:right">Payment</th><th style="padding:6px;text-align:right">Closing</th></tr></thead>
+          <tbody id="flexScheduleBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn-go" onclick="saveFlexLoan()">✅ Save Loan</button>
+    <button class="btn-cancel" onclick="closeModal('flexLoanModal')">Cancel</button>
   </div>
 </div>
 
@@ -2589,7 +2656,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="modal-handle"></div>
     <div class="modal-title" id="exportKeyModalTitle">🔐 Set Backup Password</div>
     <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:10px;padding:9px 13px;margin-bottom:12px">
-      <span style="font-size:11px;font-weight:700;color:var(--text3)">📦 Estimated backup size</span>
+      <span id="exportFileSizeLabel" style="font-size:11px;font-weight:700;color:var(--text3)">📦 Estimated backup size</span>
       <span id="exportFileSizeChip" style="font-size:11px;font-weight:900;color:var(--accent);background:rgba(124,92,252,0.12);border:1px solid rgba(124,92,252,0.25);border-radius:20px;padding:3px 10px">calculating…</span>
     </div>
     <div style="background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.2);border-radius:12px;padding:12px;margin-bottom:14px">
@@ -2608,7 +2675,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     </div>
     <div id="exportKeyError" style="display:none;color:var(--red);font-size:12px;font-weight:900;padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:8px"></div>
     <button class="btn-go" id="exportKeySubmitBtn" onclick="handleExportKeySubmit()">📤 Export Backup</button>
-    <button class="btn-cancel" onclick="closeModal('exportKeyModal');document.getElementById('exportKeyInput').value='';document.getElementById('exportKeyError').style.display='none';document.getElementById('exportKeyModal').dataset.mode='';document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';">Cancel</button>
+    <button class="btn-cancel" onclick="cancelExportKeyModal()">Cancel</button>
   </div>
 </div>
 
@@ -2899,6 +2966,44 @@ const EXPENSE_CATS=Object.values(EXPENSE_CATS_GROUPED).flat(); // base list — 
 const INVEST_EXP_CATS=['Investments','Mutual Fund Buy','SIP','Stocks Buy','ETF Buy','Crypto Buy','Gold Buy','NPS/PPF','Bonds Buy','FD Deposit'];
 function isInvestmentExpense(cat){ return INVEST_EXP_CATS.includes(cat); }
 
+// ── COMPULSORY / NEW EXPENSE SECTIONS ────────────────────────────────────────
+// Compulsory = fixed recurring expenses that repeat every month
+const COMPULSORY_CATS=['Rent','Electricity','Water','LPG','Recharge/Internet','EMI & Payments','Tax','Institution/Education','Health/Medicine','Insurance'];
+function isBudgetCompulsory(cat){ return COMPULSORY_CATS.includes(cat); }
+
+// ── PER-MONTH BUDGET HELPERS ──────────────────────────────────────────────────
+function getBudgetMonthKey(month,year){
+  var m=month!=null?month:state.currentMonth;
+  var y=year!=null?year:state.currentYear;
+  return y+'-'+m;
+}
+function getCurrentMonthBudget(){
+  var key=getBudgetMonthKey();
+  if(!state.monthlyBudgets[key]) return {compulsory:{},variable:{}};
+  return state.monthlyBudgets[key];
+}
+function getPrevMonthBudget(){
+  var m=state.currentMonth,y=state.currentYear;
+  m--; if(m<0){m=11;y--;}
+  var key=getBudgetMonthKey(m,y);
+  return state.monthlyBudgets[key]||null;
+}
+function setCurrentMonthBudget(data){
+  var key=getBudgetMonthKey();
+  state.monthlyBudgets[key]=data;
+  // Keep legacy state.budgets in sync (flat merged) for all functions that read it
+  var flat={};
+  Object.assign(flat, data.compulsory||{}, data.variable||{});
+  state.budgets=flat;
+  saveState();
+}
+function hasBudgetForCurrentMonth(){
+  var key=getBudgetMonthKey();
+  var b=state.monthlyBudgets[key];
+  if(!b) return false;
+  return Object.keys(b.compulsory||{}).length>0||Object.keys(b.variable||{}).length>0;
+}
+
 // ── TRANSLATION STRINGS ──────────────────────────────────────────────────────
 const LANG = {
   en:{
@@ -3005,7 +3110,7 @@ function applyTranslations(){
   renderHistory();
   renderLiabilities();
 }
-const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#e879f9'}};
+const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Flexible':{emoji:'🧮',desc:'Informal loan, ad-hoc repayments',color:'#06b6d4'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#e879f9'}};
 const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI':{emoji:'🔷',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💰',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
 // ======== MULTI-USER PROFILE SYSTEM ========
@@ -3077,7 +3182,7 @@ function selectProfile(id){
   setActiveProfileId(id);
   _currentProfileId=id;
   // Reset state to defaults then load profile data
-  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null});
+  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''});
   loadState();
   applyTheme(state.theme);
   applyFont(state.font);
@@ -3212,7 +3317,7 @@ function saveProfile(){
   } else {
     var newId='p_'+Date.now();
     // Fresh minimal state — no copy of existing data
-    var fresh={pin:pinVal,fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null};
+    var fresh={pin:pinVal,fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''};
     // Write ONLY to the profile key — no ft_v5 write here
     try{ localStorage.setItem(getProfileStateKey(newId),JSON.stringify(fresh)); }catch(e){
       errEl.textContent='Storage full — please export a backup and clear data first';
@@ -3284,7 +3389,7 @@ function switchToProfile(id){
   saveState();
   setActiveProfileId(id);
   _currentProfileId=id;
-  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',trackerOpeningBalance:null});
+  Object.assign(state,{pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',transactions:[],goals:[],assets:[],liabilities:[],budgets:{},bills:[],accounts:[],recurring:[],allocTargets:{},familyMembers:['Self'],isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',driveConnected:false,driveEmail:'',drivePassword:'',lastSync:''});
   loadState();
   applyTheme(state.theme); applyFont(state.font); updateCurrSymbols();
   initApp(); renderProfilesList();
@@ -3298,13 +3403,12 @@ function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
 let state={
   pin:'0000',fpEnabled:false,theme:'dark',font:'system',currency:'INR',currSymbol:'₹',lang:'en',currencyRate:1,baseCurrency:'INR',amtFormat:'short',
   transactions:[],goals:[],assets:[],liabilities:[],
-  budgets:{},bills:[],accounts:[],recurring:[],
-  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',monthlyOpenings:{},
+  budgets:{},monthlyBudgets:{},bills:[],accounts:[],recurring:[],
+  allocTargets:{},allocTargetsEnabled:false,billsResetMonth:'',
   familyMembers:['Self','Spouse','Child 1','Child 2','Parents'],
   currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),
   isLoggedIn:false,userName:'',userEmail:'',lastRecurCheck:'',
   driveConnected:false,driveEmail:'',drivePassword:'',lastSync:'',
-  trackerOpeningBalance:null,
   customExpCats:{},
   customIncomeCats:[],
   customPlatforms:[],
@@ -3348,6 +3452,22 @@ function loadState(){
     console.warn('localStorage not available:',e.message);
   }
   if(!Array.isArray(state.liabilities)) state.liabilities=[];
+  // One-time migration: fold legacy standalone Flexible Loans into liabilities so they
+  // show up on the Debts page and stop causing duplicate entries in the debt-link dropdown.
+  if(Array.isArray(state.flexLoans) && state.flexLoans.length){
+    state.flexLoans.forEach(function(fl){
+      var sched=flexComputeSchedule(fl.principal||0, fl.rate||0, fl.start, fl.payments||[]);
+      state.liabilities.push({
+        id:fl.id||Date.now(), name:fl.name, type:'Flexible', flexible:true,
+        total:fl.principal||0, principal:fl.principal||0, remaining:sched.balance,
+        emi:0, rate:fl.rate||0, start:fl.start, payments:fl.payments||[],
+        color:(LIAB_TYPES['Flexible']&&LIAB_TYPES['Flexible'].color)||'#06b6d4',
+        createdAt:fl.createdAt||Date.now()
+      });
+    });
+    state.flexLoans=[];
+    try{saveState();}catch(e){}
+  }
   if(!Array.isArray(state.bills)) state.bills=[];
   if(!Array.isArray(state.accounts)) state.accounts=[];
   if(!Array.isArray(state.recurring)) state.recurring=[];
@@ -3355,10 +3475,21 @@ function loadState(){
   if(!Array.isArray(state.transactions)) state.transactions=[];
   if(!Array.isArray(state.goals)) state.goals=[];
   if(!state.budgets||typeof state.budgets!=='object') state.budgets={};
+  if(!state.monthlyBudgets||typeof state.monthlyBudgets!=='object') state.monthlyBudgets={};
+  // Migrate legacy flat budgets into monthlyBudgets for current month if not yet done
+  var _migKey=getBudgetMonthKey(state.currentMonth!=null?state.currentMonth:new Date().getMonth(),state.currentYear||new Date().getFullYear());
+  if(Object.keys(state.budgets).length>0&&!state.monthlyBudgets[_migKey]){
+    var _migComp={},_migVar={};
+    Object.entries(state.budgets).forEach(function(e){var cat=e[0],v=e[1];if(isBudgetCompulsory(cat))_migComp[cat]=v;else _migVar[cat]=v;});
+    state.monthlyBudgets[_migKey]={compulsory:_migComp,variable:_migVar};
+  }
+  // Sync flat state.budgets from monthlyBudgets (current month wins)
+  var _syncMb=state.monthlyBudgets[_migKey]||{compulsory:{},variable:{}};
+  var _syncFlat={};Object.assign(_syncFlat,_syncMb.compulsory||{},_syncMb.variable||{});
+  state.budgets=_syncFlat;
   if(!state.allocTargets||typeof state.allocTargets!=='object') state.allocTargets={};
   if(state.allocTargetsEnabled===undefined) state.allocTargetsEnabled=false;
   if(!state.billsResetMonth) state.billsResetMonth='';
-  if(!state.monthlyOpenings||typeof state.monthlyOpenings!=='object') state.monthlyOpenings={};
   if(!state.customExpCats||typeof state.customExpCats!=='object') state.customExpCats={};
   if(!state.customCatEmojis) state.customCatEmojis={};
   if(!Array.isArray(state.customIncomeCats)) state.customIncomeCats=[];
@@ -3528,54 +3659,61 @@ function _scheduleSilentSync(){
 }
 function _silentSync(){
   if(!state.isLoggedIn) return;
+  // Never pop a password prompt from a background tick — only sync once a
+  // sync password has already been set up via a manual "Sync Now" / Load.
+  var pw=getSyncPasswordSilent();
+  if(!pw) return;
   // Refresh token if near expiry
   var _sess=localStorage.getItem('ft_gsession');
   try{var _so=JSON.parse(_sess);if(_so.expiry<Date.now()+60000)refreshToken();}catch(e){}
   var safeState=JSON.parse(JSON.stringify(state));
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
-  var payload=JSON.stringify({v:'1',updatedAt:safeState.lastSync,data:safeState});
-  var boundary='ft_b_'+Date.now();
-  var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
-  var CRLF='\r\n';
-  var body='--'+boundary+CRLF+'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
+  var innerPayload=JSON.stringify({v:'1',updatedAt:safeState.lastSync,data:safeState});
 
-  function doUpload(fileId){
-    var uploadUrl=fileId
-      ?'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=multipart'
-      :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    var uploadMethod=fileId?'PATCH':'POST';
-    return driveFetch(uploadUrl,{
-      method:uploadMethod,
-      headers:{'Content-Type':'multipart/related; boundary='+boundary},
-      body:body
-    }).then(function(r){return r.json();}).then(function(res){
-      if(res&&res.id){
-        gDriveFileId=res.id;
-        state.lastSync=safeState.lastSync;
-        var _sk=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
-        localStorage.setItem(_sk,JSON.stringify(state));
-        updateCloudSyncStatus();
-        console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
-        _saveEmergencyDriveBackup(payload);
-      } else if(res&&res.error&&(res.error.code===404||res.error.code===403)){
-        // Stale file ID — clear and retry as POST
-        gDriveFileId=null;
-        setTimeout(function(){ doUpload(null); },1500);
-      } else if(res&&res.error){
-        console.warn('[SilentSync] API error:',res.error.message);
-      }
-    });
-  }
+  packPayload(innerPayload,pw).then(function(payload){
+    var boundary='ft_b_'+Date.now();
+    var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
+    var CRLF='\r\n';
+    var body='--'+boundary+CRLF+'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF+meta+CRLF+'--'+boundary+CRLF+'Content-Type: application/json'+CRLF+CRLF+payload+CRLF+'--'+boundary+'--';
 
-  // If we don't have a file ID cached, find it first
-  if(!gDriveFileId){
-    findDriveFile().then(function(existing){
-      doUpload(existing?existing.id:null);
-    }).catch(function(e){ console.warn('[SilentSync] findDriveFile failed:',e.message); });
-  } else {
-    doUpload(gDriveFileId).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
-  }
+    function doUpload(fileId){
+      var uploadUrl=fileId
+        ?'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=multipart'
+        :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+      var uploadMethod=fileId?'PATCH':'POST';
+      return driveFetch(uploadUrl,{
+        method:uploadMethod,
+        headers:{'Content-Type':'multipart/related; boundary='+boundary},
+        body:body
+      }).then(function(r){return r.json();}).then(function(res){
+        if(res&&res.id){
+          gDriveFileId=res.id;
+          state.lastSync=safeState.lastSync;
+          var _sk=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
+          localStorage.setItem(_sk,JSON.stringify(state));
+          updateCloudSyncStatus();
+          console.log('[SilentSync] OK at',new Date().toLocaleTimeString());
+          _saveEmergencyDriveBackup(payload);
+        } else if(res&&res.error&&(res.error.code===404||res.error.code===403)){
+          // Stale file ID — clear and retry as POST
+          gDriveFileId=null;
+          setTimeout(function(){ doUpload(null); },1500);
+        } else if(res&&res.error){
+          console.warn('[SilentSync] API error:',res.error.message);
+        }
+      });
+    }
+
+    // If we don't have a file ID cached, find it first
+    if(!gDriveFileId){
+      findDriveFile().then(function(existing){
+        doUpload(existing?existing.id:null);
+      }).catch(function(e){ console.warn('[SilentSync] findDriveFile failed:',e.message); });
+    } else {
+      doUpload(gDriveFileId).catch(function(e){console.warn('[SilentSync] failed:',e.message);});
+    }
+  }).catch(function(e){ console.warn('[SilentSync] pack failed:',e.message); });
 }
 
 // ======== LOCK ========
@@ -3777,7 +3915,6 @@ function initApp(){
   setTodayDate();renderCatChips();updateDashboard();renderGoals();renderAssets();renderLiabilities();renderHistory();
   initCharts();updateMonthDisplay();updateBudget();renderBills();renderAccounts();renderRecurring();
   updateBillsBadge();checkRecurring();syncFontBtn();syncThemeBtn();syncLangBtn();updateDriveUI();applyAllocToggleUI();
-  checkMonthlyOpeningPrompt();
   applyAmountsHide();
   _clearAutoHideTimer();
   if(state.autoHideDelay>0&&!state.amountsHidden) _startAutoHideTimer();
@@ -3805,7 +3942,7 @@ function initApp(){
   }
   updateTxAccountSelect();
 }
-function setTodayDate(){const d=new Date().toISOString().split('T')[0];const f=document.getElementById('txDate');if(f){f.value=d;f.max=d;}}
+function setTodayDate(){const now=new Date();const d=now.toISOString().split('T')[0];const f=document.getElementById('txDate');if(f){f.value=d;f.max=d;}const tf=document.getElementById('txTime');if(tf){const hh=String(now.getHours()).padStart(2,'0');const mm=String(now.getMinutes()).padStart(2,'0');tf.value=hh+':'+mm;}}
 function initFpButton(){var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';}
 
 // ======== NAVIGATION ========
@@ -3896,7 +4033,7 @@ function showModal(id){
     var panel=modalBg.querySelector('.modal');
     if(panel)panel.scrollTop=0;
   },10);
-  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';var ef=document.getElementById('txExtraFields');if(ef)ef.style.display='none';var ea=document.getElementById('txExtraArrow');if(ea)ea.style.transform='';}
+  if(id==='txModal'){setTxType('income');setTodayDate();updateTxAccountSelect();updateTxLiabSelect();renderMemberChips();setRecurToggle(false);populatePayMethodSelects();var bw=document.getElementById('txBudgetWarning');if(bw)bw.style.display='none';}
   if(id==='assetModal'){setTimeout(updateAssetFields,50);}
   if(id==='driveModal'){updateDriveUI();}
   if(id==='gdriveSetupModal'){prefillGdriveForm();}
@@ -3956,7 +4093,7 @@ function toggleEditTxExtra(){
   ef.style.display=open?'none':'block';
   if(ea)ea.style.transform=open?'':'rotate(180deg)';
 }
-function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';checkTxBudgetWarning();}
+function setTxType(t){txType=t;document.getElementById('typeInc').classList.toggle('on',t==='income');document.getElementById('typeExp').classList.toggle('on',t==='expense');renderCatChips();updateTxAccountSelect();var llf=document.getElementById('liabLinkField');if(llf)llf.style.display=(t==='expense')?'block':'none';var pf=document.getElementById('platformField');if(pf){pf.style.display=(t==='income')?'none':'';if(t==='income'){var ps=document.getElementById('txPlatform');if(ps)ps.value='';}}checkTxBudgetWarning();}
 function renderCatChips(){
   // Populate the category select dropdown
   var sel=document.getElementById('txCatSelect');
@@ -4085,23 +4222,32 @@ function getSelCat(){return getSelCatFromSelect();}
 function saveTx(){
   const amt=parseFloat(document.getElementById('txAmt').value);
   const date=document.getElementById('txDate').value;
+  const time=document.getElementById('txTime').value||new Date().toTimeString().slice(0,5);
   const notes=document.getElementById('txNotes').value.trim();
   const acct=document.getElementById('txAccount').value;
   const liabLink=document.getElementById('txLiabLink')?.value||'';
   const cat=getSelCatFromSelect();
-  const platform=document.getElementById('txPlatform')?.value||'';
+  const platform=txType==='expense'?(document.getElementById('txPlatform')?.value||''):'';
   const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
   const amtINR=amt/(state.currencyRate||1);
   const member=getSelMember();
-  const tx={id:Date.now(),type:txType,amount:amtINR,date,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
+  const tx={id:Date.now(),type:txType,amount:amtINR,date,time,notes,category:cat,emoji:CAT_EMOJI[cat]||'🌀',account:acct,liabLink:liabLink,member:member,platform:platform,payMethod:payMethod};
   state.transactions.unshift(tx);
   // Balance only moves on the real bank/cash account — never on UPI/card (those are just payment rails)
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a){a.balance+=(txType==='income'?amtINR:-amtINR);}}
-  // Auto-reduce linked liability remaining
+  // Auto-reduce linked liability remaining, or log a payment against a flexible loan
   if(liabLink&&txType==='expense'){
     const l=state.liabilities.find(l=>String(l.id)===String(liabLink));
-    if(l){l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');}
+    if(l){
+      if(l.flexible){
+        addFlexPaymentFromTx(l.id,date,amtINR,tx.id);
+        renderFlexLoans();
+        showToast('🧮 Payment logged to '+l.name,'green');
+      } else {
+        l.remaining=Math.max(0,l.remaining-amtINR);showToast('💳 '+l.name+' outstanding reduced by '+state.currSymbol+fmt(cv(amtINR)),'green');
+      }
+    }
   }
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
@@ -4153,8 +4299,7 @@ function resetTxForm(){
   var plat=document.getElementById('txPlatform');if(plat)plat.value='';
   var pm=document.getElementById('txPayMethod');if(pm)pm.value='';
   var ll=document.getElementById('txLiabLink');if(ll)ll.value='';
-  var ef=document.getElementById('txExtraFields');if(ef)ef.style.display='none';
-  var ea=document.getElementById('txExtraArrow');if(ea)ea.style.transform='';
+
   setTxType('income');setRecurToggle(false);
 }
 function getMonthTxs(){return state.transactions.filter(tx=>{const d=new Date(tx.date);return d.getMonth()===state.currentMonth&&d.getFullYear()===state.currentYear;});}
@@ -4173,22 +4318,40 @@ function getTransferNetForAccountInMonth(acctId, m, y){
   return net;
 }
 
+// ── Net of an account's transactions + transfers dated relative to a given month/year.
+// inclusive=true  → sums everything dated ON OR AFTER (month,year)  [this month onward]
+// inclusive=false → sums everything dated STRICTLY AFTER (month,year)
+// Anchoring off the account's live balance (rather than summing everything from account
+// creation forward) means this stays correct even if an opening balance was ever hand-edited,
+// and it works identically whether the viewed month is in the past, present, or future.
+function acctNetSince(acctId, month, year, inclusive){
+  var net=0;
+  state.transactions.forEach(function(t){
+    if(String(t.account)!==String(acctId)) return;
+    var d=new Date(t.date); var dY=d.getFullYear(), dM=d.getMonth();
+    var after=inclusive?(dY>year||(dY===year&&dM>=month)):(dY>year||(dY===year&&dM>month));
+    if(!after) return;
+    net+=(t.type==='income'?t.amount:-t.amount);
+  });
+  (state.transfers||[]).forEach(function(tr){
+    var d=new Date(tr.date); var dY=d.getFullYear(), dM=d.getMonth();
+    var after=inclusive?(dY>year||(dY===year&&dM>=month)):(dY>year||(dY===year&&dM>month));
+    if(!after) return;
+    if(String(tr.to)===String(acctId))   net+=tr.amount;
+    if(String(tr.from)===String(acctId)) net-=tr.amount;
+  });
+  return net;
+}
+
 function getCarryForward(month, year){
-  // Carry = tracker base + sum of each account's (opening + prior income - prior expense + prior transfer net)
-  // Transfers cancel out globally, but are needed for per-account accuracy
-  var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
-  var carry=base;
+  // Carry into (month,year) = each account's live balance, minus everything dated this
+  // month or later. This is always exactly right, however many months forward or back
+  // the person navigates, because it's anchored to the live balance rather than replayed
+  // forward from the account's original opening balance.
+  var carry=0;
   state.accounts.forEach(function(a){
-    var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
-    var txPrev=state.transactions.filter(function(t){
-      if(String(t.account)!==String(a.id)) return false;
-      var d=new Date(t.date); var dY=d.getFullYear(),dM=d.getMonth();
-      return dY<year||(dY===year&&dM<month);
-    });
-    var inc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-    var exp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    // Transfers cancel across accounts so don't affect total carry — per-account only
-    carry+=opening+inc-exp;
+    if(typeof a.balance!=='number') return;
+    carry+=a.balance-acctNetSince(a.id, month, year, true);
   });
   return carry;
 }
@@ -4213,7 +4376,6 @@ function showCarryBreakdown(){
   var month=state.currentMonth, year=state.currentYear;
   var sym=state.currSymbol;
   var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var base=(typeof state.trackerOpeningBalance==='number'&&!isNaN(state.trackerOpeningBalance))?state.trackerOpeningBalance:0;
   var accounts=state.accounts||[];
   var transfers=state.transfers||[];
 
@@ -4246,19 +4408,6 @@ function showCarryBreakdown(){
     });
     return net;
   }
-
-  // ── Global carry (transfers cancel globally, so only account opening + tx net matters) ──
-  var globalCarry=base;
-  accounts.forEach(function(a){
-    var opening=typeof a.openingBalance==='number'?a.openingBalance:0;
-    var txPrev=state.transactions.filter(function(t){
-      if(String(t.account)!==String(a.id)) return false;
-      var d=new Date(t.date); return d.getFullYear()<year||(d.getFullYear()===year&&d.getMonth()<month);
-    });
-    var inc=txPrev.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-    var exp=txPrev.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    globalCarry+=opening+inc-exp;
-  });
 
   // ── HTML ──
   var html='';
@@ -4314,6 +4463,11 @@ function showCarryBreakdown(){
       if(String(tr.from)===String(a.id)) trTotal-=tr.amount;
     });
     var closing=opening+inc-exp+trTotal;
+    // Anchor to the account's live balance so this always reconciles exactly with the Accounts
+    // page and History, no matter which month (past, current, or future) is being viewed.
+    if(typeof a.balance==='number'){
+      closing=a.balance-acctNetSince(a.id, month, year, true);
+    }
     totalOpen+=opening; totalInc2+=inc; totalExp2+=exp; totalTr2+=trTotal; totalClose+=closing;
     var ac=a.color||'var(--accent)';
     html+='<tr>'
@@ -4381,6 +4535,13 @@ function showCarryBreakdown(){
     var curExp=txCur.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
     var curTr=trNet(a.id, month, year);
     var curClose=curOpen+curInc-curExp+curTr;
+    // Anchor Open/Close to the account's live balance so this reconciles exactly with what's
+    // shown on the Accounts page and after each transaction in History — whether the month
+    // being viewed is in the past, the real current month, or a future month like next month.
+    if(typeof a.balance==='number'){
+      curClose=a.balance-acctNetSince(a.id, month, year, false);
+      curOpen=curClose-curInc+curExp-curTr;
+    }
     curTotalOpen+=curOpen; curTotalInc+=curInc; curTotalExp+=curExp; curTotalTr+=curTr; curTotalClose+=curClose;
     var ac=a.color||'var(--accent)';
     html+='<tr>'
@@ -4410,17 +4571,6 @@ function showCarryBreakdown(){
   +'</tr></tfoot></table>';
   html+='</div></div>';
 
-  if(base!==0){
-    html+='<div style="background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.2);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--accent)">🏁 Tracker Opening Balance</div>'
-      +'<div style="font-size:12px;font-weight:900;color:'+(base>=0?'var(--green)':'var(--red)')+'">'+sym+fmt(cv(base))+'</div>'
-    +'</div>';
-  }
-  html+='<div style="background:var(--bg2);border:2px solid '+(globalCarry>=0?'var(--green)':'var(--red)')+';border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div><div style="font-size:13px;font-weight:900;color:var(--text)">↩️ Carry Into '+mNames[month]+' '+year+'</div>'
-    +'<div style="font-size:9px;color:var(--text3);margin-top:2px">Σ account closings before this month (transfers cancel out)</div></div>'
-    +'<div style="font-size:18px;font-weight:900;color:'+(globalCarry>=0?'var(--green)':'var(--red)')+'">'+( globalCarry>=0?'+':'-')+sym+fmt(cv(Math.abs(globalCarry)))+'</div>'
-  +'</div>';
   html+='</div>'; // end cfPanelOverall
 
   // ══════════════════════════════════════════
@@ -4433,6 +4583,7 @@ function showCarryBreakdown(){
     accounts.forEach(function(acct){
       var ac=acct.color||'var(--accent)';
       var opening=typeof acct.openingBalance==='number'?acct.openingBalance:0;
+      var hasLiveBal=typeof acct.balance==='number';
       var runBal=opening;
       var acctMonthRows=[];
       allMonths.forEach(function(mo){
@@ -4446,9 +4597,17 @@ function showCarryBreakdown(){
         var tr=trNet(acct.id, mo.m, mo.y);
         var openBal=runBal;
         runBal=runBal+inc-exp+tr;
+        // Anchor every month's Open/Close to the account's live running balance rather than
+        // accumulating forward from the original opening balance — this way each row reconciles
+        // exactly with the Accounts page and History regardless of which month is being viewed
+        // (past, current, or a future month like next month), and however far it's navigated.
+        if(hasLiveBal){
+          runBal=acct.balance-acctNetSince(acct.id, mo.m, mo.y, false);
+          openBal=runBal-inc+exp-tr;
+        }
         acctMonthRows.push({mo:mo,isCurrent:isCurrent,inc:inc,exp:exp,tr:tr,openBal:openBal,closeBal:runBal,txCount:txs.length});
       });
-      var finalBal=runBal;
+      var finalBal=hasLiveBal?acct.balance:runBal;
 
       html+='<div style="background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:14px">';
       html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-bottom:2px solid '+ac+'44">'
@@ -4517,15 +4676,6 @@ function showCarryBreakdown(){
     +'<button onclick="document.getElementById(\'cfEditAccountSection\').style.display=\'none\'" style="margin-top:8px;background:transparent;border:none;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;width:100%;text-align:center">✕ Cancel</button>'
   +'</div>';
 
-  html+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:4px">'
-    +'<div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:4px">🏁 Tracker Opening Balance</div>'
-    +'<div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;line-height:1.5">Global starting balance <b style="color:var(--text)">before using this app</b>.</div>'
-    +'<div style="display:flex;gap:8px;align-items:center">'
-      +'<input id="carryOpeningInput" type="number" placeholder="e.g. 11600" value="'+(base?cv(base):'')+'" style="flex:1;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-weight:700;font-family:var(--font);outline:none">'
-      +'<button onclick="saveCarryOpening()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:900;cursor:pointer">Save</button>'
-    +'</div>'
-    +'<div style="font-size:10px;color:var(--text3);margin-top:8px;font-weight:600">💡 Negative = deficit. Enter 0 to reset.</div>'
-  +'</div>';
 
   document.getElementById('carryBreakdownBody').innerHTML=html;
   if(state.amountsHidden) _tagAllMoneyElements();
@@ -4581,15 +4731,6 @@ function cfSaveAccountOpening(){
   cfSwitchTab('account');
 }
 
-function saveCarryOpening(){
-  var v=parseFloat(document.getElementById('carryOpeningInput').value);
-  if(isNaN(v)) v=0;
-  state.trackerOpeningBalance=v/(state.currencyRate||1);
-  saveState();
-  updateDashboard();
-  showToast('Tracker opening balance set to '+state.currSymbol+fmt(cv(state.trackerOpeningBalance)),'green');
-  showCarryBreakdown();
-}
 // ── Build per-account running balance for every transaction ──────────────────
 // Returns Map<String(txId), {balance:Number, acctColor:String}>
 // Sorts ALL transactions + transfers chronologically, then walks through them
@@ -4607,10 +4748,10 @@ function buildRunningBalances(){
   // Build unified event list: transactions + transfers
   var events = [];
   (state.transactions||[]).forEach(function(tx){
-    events.push({sortKey: tx.date + '_' + String(tx.id).padStart(16,'0'), isTx: true, data: tx});
+    events.push({sortKey: tx.date + 'T' + (tx.time||'00:00') + '_' + String(tx.id).padStart(16,'0'), isTx: true, data: tx});
   });
   (state.transfers||[]).forEach(function(tr){
-    events.push({sortKey: tr.date + '_t' + String(tr.id).padStart(15,'0'), isTx: false, data: tr});
+    events.push({sortKey: tr.date + 'T' + (tr.time||'00:00') + '_t' + String(tr.id).padStart(15,'0'), isTx: false, data: tr});
   });
 
   // Sort newest → oldest
@@ -4662,7 +4803,7 @@ function txHTML(tx, balInfo){
     balPill=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:4px"><span style="font-size:9px;color:var(--text3);font-weight:600">bal</span><span style="font-size:10px;font-weight:800;color:${balNeg?'var(--red)':balColor};background:${balColor}18;border:1px solid ${balColor}33;border-radius:5px;padding:1px 6px;letter-spacing:-0.2px">${balNeg?'−':''}${state.currSymbol}${fmt(cv(Math.abs(balInfo.balance)))}</span></div>`;
   }
   // Title = category; subtitle = date + ℹ
-  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.category}</div><div class="tx-meta">${formatDate(tx.date)}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
+  return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.category}</div><div class="tx-meta">${formatDate(tx.date)}${tx.time?'<span style="font-size:10px;color:var(--text3);margin-left:4px">· '+formatTxTime(tx.time)+'</span>':''}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
 }
 function showTxDescInfo(cat,_unused,date,notes,platform,payMethod){
   var m=document.getElementById('txDescInfoModal');
@@ -4709,7 +4850,9 @@ function editTx(id){
   document.getElementById('editTxAmt').value=parseFloat((tx.amount*(state.currencyRate||1)).toFixed(2));
   const dateField=document.getElementById('editTxDate');
   dateField.value=tx.date;
-  dateField.max=todayStr; // block future dates
+  dateField.max=todayStr;
+  const timeField=document.getElementById('editTxTime');
+  if(timeField) timeField.value=tx.time||'';
   document.getElementById('editTxNotes').value=tx.notes||'';
   document.getElementById('editTxOrigAmt').value=tx.amount;  // stored INR value
   document.getElementById('editTxOrigType').value=tx.type;
@@ -4748,6 +4891,8 @@ function setEditTxType(t){
   document.getElementById('editTxTypeInc').classList.toggle('inc',t==='income');
   document.getElementById('editTxTypeExp').classList.toggle('on',t==='expense');
   document.getElementById('editTxTypeExp').classList.toggle('exp',t==='expense');
+  var epf=document.getElementById('editPlatformField');
+  if(epf){epf.style.display=(t==='income')?'none':'';if(t==='income'){var eps=document.getElementById('editTxPlatform');if(eps)eps.value='';}}
   // Repopulate category select for this type
   var sel=document.getElementById('editTxCatSelect');
   var lbl=document.getElementById('editCatSelectLabel');
@@ -4825,10 +4970,11 @@ function saveEditTx(){
   const id=document.getElementById('editTxId').value;
   const amt=parseFloat(document.getElementById('editTxAmt').value);
   const date=document.getElementById('editTxDate').value;
+  const time=document.getElementById('editTxTime').value||tx.time||'';
   const notes=document.getElementById('editTxNotes').value.trim();
   const acct=document.getElementById('editTxAccount').value;
   const cat=(document.getElementById('editTxCatSelect')?.value)||'Other';
-  const platform=document.getElementById('editTxPlatform')?.value||'';
+  const platform=editTxType==='expense'?(document.getElementById('editTxPlatform')?.value||''):'';
   // payMethod = UPI/Credit Card/etc — metadata only, no balance effect
   const payMethod=editTxType==='expense'?(document.getElementById('editTxPayMethod')?.value||''):'';
   const member=getEditSelMember();
@@ -4842,15 +4988,18 @@ function saveEditTx(){
   const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
   // Reverse original real-account balance effect (origAmt is already in INR)
   if(origAcct){const a=state.accounts.find(a=>String(a.id)===String(origAcct));if(a)a.balance-=(origType==='income'?origAmt:-origAmt);}
-  // Reverse original liability-link effect
+  // Reverse original liability-link effect (or remove the auto-logged flex-loan payment)
   const origLiabLink=tx.liabLink||'';
   if(origLiabLink&&origType==='expense'){
-    const l=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
-    if(l) l.remaining=Math.min(l.total||l.remaining+origAmt, l.remaining+origAmt);
+    const origL=state.liabilities.find(l=>String(l.id)===String(origLiabLink));
+    if(origL){
+      if(origL.flexible){ removeFlexPaymentByTx(tx.id); }
+      else { origL.remaining=Math.min(origL.total||origL.remaining+origAmt, origL.remaining+origAmt); }
+    }
   }
   // Apply all updated fields
   tx.type=editTxType;tx.amount=amtINR2;
-  tx.date=date;tx.notes=notes;tx.account=acct;
+  tx.date=date;tx.time=time;tx.notes=notes;tx.account=acct;
   tx.category=cat||tx.category||'Other';
   tx.emoji=CAT_EMOJI[tx.category]||'🌀';
   tx.platform=platform;
@@ -4858,11 +5007,14 @@ function saveEditTx(){
   tx.member=member;
   // Balance moves only on the real bank/cash account
   if(acct){const a=state.accounts.find(a=>String(a.id)===String(acct));if(a)a.balance+=(editTxType==='income'?amtINR2:-amtINR2);}
-  // Re-apply liability-link effect with new values
+  // Re-apply liability-link effect with new values (or re-log the flex-loan payment)
   const newLiabLink=tx.liabLink||'';
   if(newLiabLink&&editTxType==='expense'){
-    const l=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
-    if(l) l.remaining=Math.max(0,l.remaining-amtINR2);
+    const newL=state.liabilities.find(l=>String(l.id)===String(newLiabLink));
+    if(newL){
+      if(newL.flexible){ addFlexPaymentFromTx(newL.id,date,amtINR2,tx.id); renderFlexLoans(); }
+      else { newL.remaining=Math.max(0,newL.remaining-amtINR2); }
+    }
   }
   saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
   if(curPage==='analytics')renderAnalytics();
@@ -4881,17 +5033,23 @@ function deleteFromEdit(){
   customConfirm('🗑️','Delete Transaction','This cannot be undone.',function(){
     const tx=state.transactions.find(t=>String(t.id)===String(id));
     if(tx?.account){const a=state.accounts.find(a=>String(a.id)===String(tx.account));if(a)a.balance-=(tx.type==='income'?tx.amount:-tx.amount);}
-    // Restore liability remaining if this was a liability-linked expense
+    // Restore liability remaining if this was a liability-linked expense, or remove the auto-logged flex-loan payment
     if(tx?.liabLink&&tx.type==='expense'){
-      const l=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
-      if(l) l.remaining=Math.min(l.total||l.remaining+tx.amount, l.remaining+tx.amount);
+      const delL=state.liabilities.find(l=>String(l.id)===String(tx.liabLink));
+      if(delL){
+        if(delL.flexible){ removeFlexPaymentByTx(tx.id); renderFlexLoans(); }
+        else { delL.remaining=Math.min(delL.total||delL.remaining+tx.amount, delL.remaining+tx.amount); }
+      }
     }
     state.transactions=state.transactions.filter(t=>String(t.id)!==String(id));
     saveState();closeModal('editTxModal');updateDashboard();renderHistory();updateBudget();renderAccounts();
     if(curPage==='analytics')renderAnalytics();
   });
 }
-function changeMonth(d){state.currentMonth+=d;if(state.currentMonth>11){state.currentMonth=0;state.currentYear++;}if(state.currentMonth<0){state.currentMonth=11;state.currentYear--;}saveState();updateMonthDisplay();updateDashboard();}
+function changeMonth(d){state.currentMonth+=d;if(state.currentMonth>11){state.currentMonth=0;state.currentYear++;}if(state.currentMonth<0){state.currentMonth=11;state.currentYear--;}
+  // Sync flat state.budgets from the per-month store
+  var mb=getCurrentMonthBudget();var flat={};Object.assign(flat,mb.compulsory||{},mb.variable||{});state.budgets=flat;
+  saveState();updateMonthDisplay();updateDashboard();}
 function updateMonthDisplay(){const m=['January','February','March','April','May','June','July','August','September','October','November','December'];document.getElementById('monthDisplay').textContent=m[state.currentMonth]+' '+state.currentYear;}
 
 // ======== DASHBOARD ========
@@ -5162,7 +5320,7 @@ function renderHistory(){
   if(acctFilter)txs=txs.filter(t=>String(t.account)===String(acctFilter));
 
   // Build combined items — merge transfers for 'all' and 'transfer' filters
-  var items=txs.map(function(tx){return{date:tx.date,sortKey:tx.date+'_'+tx.id,isTx:true,data:tx};});
+  var items=txs.map(function(tx){return{date:tx.date,sortKey:tx.date+'T'+(tx.time||'00:00')+'_'+tx.id,isTx:true,data:tx};});
   if(histFilt==='all'||histFilt==='transfer'){
     (state.transfers||[]).forEach(function(tr){
       if(search){
@@ -5170,7 +5328,7 @@ function renderHistory(){
         if(!hay.includes(search)) return;
       }
       if(acctFilter&&String(tr.from)!==String(acctFilter)&&String(tr.to)!==String(acctFilter)) return;
-      items.push({date:tr.date,sortKey:tr.date+'_t'+tr.id,isTx:false,data:tr});
+      items.push({date:tr.date,sortKey:tr.date+'T'+(tr.time||'00:00')+'_t'+tr.id,isTx:false,data:tr});
     });
   }
 
@@ -7881,9 +8039,10 @@ function autoCalcEMI(){
 }
 function saveLiab(){const name=document.getElementById('liabName').value.trim();const type=document.getElementById('liabType').value;const total=parseFloat(document.getElementById('liabTotal').value||'0');const remaining=parseFloat(document.getElementById('liabRemaining').value||'0');const emi=parseFloat(document.getElementById('liabEMI').value||'0');const rate=parseFloat(document.getElementById('liabRate').value||'0');if(!name||!remaining){showToast('Enter loan name and outstanding amount','yellow');return;}const rate2=state.currencyRate||1;const totalINR=total/rate2;const remINR=remaining/rate2;const emiINR=emi/rate2;const editId=document.getElementById('liabModal').dataset.editId;if(editId){const l=state.liabilities.find(l=>l.id===parseInt(editId));if(l){l.name=name;l.type=type;l.total=totalINR;l.remaining=remINR;l.emi=emiINR;l.rate=rate;l.color=LIAB_TYPES[type]?.color||'#ef4444';}}else{state.liabilities.push({id:Date.now(),name,type,total:totalINR,remaining:remINR,emi:emiINR,rate,color:LIAB_TYPES[type]?.color||'#ef4444'});}saveState();closeModal('liabModal');renderLiabilities();updateDashboard();if(curPage==='wealth')renderWealth();['liabName','liabTotal','liabRemaining','liabEMI','liabRate','liabTenure'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});var b=document.getElementById('emiAutoCalcBox');if(b)b.style.display='none';document.getElementById('liabModal').dataset.editId='';document.querySelector('#liabModal .btn-go').textContent='✅ Add Debt';}
 function renderLiabilities(){const totalDebt=state.liabilities.reduce((s,l)=>s+l.remaining,0);const totalEMI=state.liabilities.reduce((s,l)=>s+l.emi,0);const totalAssets=state.assets.reduce((s,a)=>s+a.value,0);const ratio=totalAssets>0?Math.round(totalDebt/totalAssets*100):0;document.getElementById('totalDebt').textContent=fmt(cv(totalDebt));document.getElementById('totalEMI').textContent=fmt(cv(totalEMI));document.getElementById('debtRatio').textContent=ratio+'%';updateCurrSymbols();const c=document.getElementById('liabList');if(!state.liabilities.length){c.innerHTML=`<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">${tr('noDebts')}</div><div class="empty-desc">${tr('noDebtsDesc')}</div></div>`;renderLiabTypes();return;}c.innerHTML=state.liabilities.map(l=>{const paidPct=l.total>0?Math.round((l.total-l.remaining)/l.total*100):0;const info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];return`<div class="goal-box"><div class="goal-top"><div class="goal-left"><div class="goal-icon" style="background:${l.color}22;border-color:${l.color}44">${info.emoji}</div><div><div class="goal-name">${l.name}</div><div class="goal-amt">${l.type}${l.rate?' · '+l.rate+'% p.a.':''}</div></div></div><div style="display:flex;align-items:center;gap:8px"><div><div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red)">${state.currSymbol}${fmt(cv(l.remaining))}</div><div style="font-size:10px;font-weight:900;color:var(--text3);text-align:right">REMAINING</div></div><div style="font-size:15px;cursor:pointer;color:var(--blue);padding:4px" onclick="editLiab(${l.id})" title="Edit">✏️</div><div style="font-size:16px;cursor:pointer;color:var(--text3)" onclick="deleteLiab(${l.id})">✕</div></div></div>${l.total>0?`<div class="goal-bar"><div class="goal-fill" style="width:${paidPct}%;background:linear-gradient(90deg,${l.color},${l.color}88)"></div></div><div class="goal-foot"><span>${paidPct}% paid off</span><span>${state.currSymbol}${fmt(cv(l.total))} original</span></div>`:''} ${l.emi>0?`<div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:900">📅 Monthly EMI</span><span style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--yellow)">${state.currSymbol}${fmt(cv(l.emi))}</span></div>`:''}</div>`;}).join('');renderLiabTypes();}
-function deleteLiab(id){customConfirm('💸','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);saveState();renderLiabilities();updateDashboard();});}
+function deleteLiab(id){customConfirm('💸','Delete Debt','This cannot be undone.',function(){state.liabilities=state.liabilities.filter(l=>l.id!==id);delete _flexExpanded[id];saveState();renderLiabilities();updateDashboard();});}
 function editLiab(id){
   const l=state.liabilities.find(l=>l.id===id);if(!l)return;
+  if(l.flexible){openFlexLoanModal(id);return;}
   document.getElementById('liabName').value=l.name;
   document.getElementById('liabType').value=l.type;
   const r4=state.currencyRate||1;
@@ -7918,23 +8077,36 @@ function _safeIBudgetId(cat){return 'ibudget_'+cat.replace(/[^a-zA-Z0-9_]/g,'_')
 function renderInlineBudgetInputs(){
   var c=document.getElementById('inlineBudgetInputs');
   if(!c)return;
-  var budgetedCats=Object.keys(state.budgets);
-  c.innerHTML=budgetedCats.map(function(cat){
-    var sid=_safeIBudgetId(cat);
-    return '<div class="field" id="ibudgetRow_'+sid+'">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center">'
-      +'<div class="field-label">'+(CAT_EMOJI[cat]||'\uD83C\uDF00')+' '+cat+'</div>'
-      +'<span onclick="removeInlineBudgetCat(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\') " style="font-size:12px;color:var(--red);cursor:pointer;font-weight:900;padding:2px 8px">✕</span>'
-      +'</div>'
-      +'<input type="number" class="field-input" id="'+sid+'" data-cat="'+cat+'" placeholder="0" value="'+(state.budgets[cat]?parseFloat((state.budgets[cat]*(state.currencyRate||1)).toFixed(2)):'')+'" inputmode="numeric" oninput="updateInlineBudgetTotal()"></div>';
-  }).join('');
-  if(!budgetedCats.length){
-    c.innerHTML='<div style="text-align:center;padding:14px 0;font-size:12px;font-weight:700;color:var(--text3)">Tap \u2795 Add Category below to start</div>';
+  var mb=getCurrentMonthBudget();
+  var compCats=Object.keys(mb.compulsory||{});
+  var varCats=Object.keys(mb.variable||{});
+  // Auto-add missing expense cats with 0
+  getExpenseCats().forEach(function(cat){
+    if(!(mb.compulsory||{}).hasOwnProperty(cat)&&!(mb.variable||{}).hasOwnProperty(cat)){
+      if(isBudgetCompulsory(cat)){if(compCats.indexOf(cat)<0)compCats.push(cat);}
+      else{if(varCats.indexOf(cat)<0)varCats.push(cat);}
+    }
+  });
+  function makeRows(cats,section){
+    return cats.map(function(cat){
+      var sid=_safeIBudgetId(cat);
+      var existing=(mb[section]&&mb[section][cat]!=null)?mb[section][cat]:0;
+      var val=existing>0?parseFloat((existing*(state.currencyRate||1)).toFixed(2)):'';
+      return '<div class="field" id="ibudgetRow_'+sid+'"><div style="display:flex;justify-content:space-between;align-items:center"><div class="field-label">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div><span onclick="removeInlineBudgetCat(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')" style="font-size:12px;color:var(--red);cursor:pointer;font-weight:900;padding:2px 8px">✕</span></div><input type="number" class="field-input" id="'+sid+'" data-cat="'+cat+'" data-section="'+section+'" placeholder="0 = no limit" value="'+val+'" inputmode="numeric" oninput="updateInlineBudgetTotal()"></div>';
+    }).join('');
   }
+  var html='<div style="font-size:10px;font-weight:900;color:#fb923c;letter-spacing:1px;margin:4px 0 8px">🔒 COMPULSORY EXPENSES</div>';
+  html+=makeRows(compCats,'compulsory');
+  html+='<div style="font-size:10px;font-weight:900;color:var(--accent);letter-spacing:1px;margin:12px 0 8px">🔄 VARIABLE EXPENSES</div>';
+  html+=makeRows(varCats,'variable');
+  c.innerHTML=html;
   updateInlineBudgetTotal();
 }
 function removeInlineBudgetCat(cat){
-  delete state.budgets[cat];
+  var mb=getCurrentMonthBudget();
+  delete (mb.compulsory||{})[cat];
+  delete (mb.variable||{})[cat];
+  setCurrentMonthBudget(mb);
   renderInlineBudgetInputs();
   var picker=document.getElementById('inlineAddCatPicker');
   if(picker) picker.remove();
@@ -7957,7 +8129,7 @@ function showInlineAddCatPicker(){
     +'<div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px">TAP TO ADD</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:7px">'
     +available.map(function(cat){
-      return '<div class="chip" style="font-size:12px;padding:6px 11px" onclick="addInlineBudgetCat(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\') ">'+(CAT_EMOJI[cat]||'\uD83C\uDF00')+' '+cat+'</div>';
+      return '<div class="chip" style="font-size:12px;padding:6px 11px" onclick="addInlineBudgetCat(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div>';
     }).join('')+'</div></div>';
   var addBtn=document.getElementById('inlineBudgetAddBtn');
   if(addBtn) addBtn.insertAdjacentHTML('beforebegin',html);
@@ -7965,33 +8137,33 @@ function showInlineAddCatPicker(){
 function addInlineBudgetCat(cat){
   var picker=document.getElementById('inlineAddCatPicker');
   if(picker) picker.remove();
-  var c=document.getElementById('inlineBudgetInputs');
   var sid=_safeIBudgetId(cat);
-  if(document.getElementById(sid)) return; // already present
-  var empty=c.querySelector('div[style*="Add Category"]');
-  if(empty) c.innerHTML='';
-  var html='<div class="field" id="ibudgetRow_'+sid+'">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div class="field-label">'+(CAT_EMOJI[cat]||'\uD83C\uDF00')+' '+cat+'</div>'
-    +'<span onclick="removeInlineBudgetCat(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\') " style="font-size:12px;color:var(--red);cursor:pointer;font-weight:900;padding:2px 8px">✕</span>'
-    +'</div>'
-    +'<input type="number" class="field-input" id="'+sid+'" data-cat="'+cat+'" placeholder="0" value="" inputmode="numeric" oninput="updateInlineBudgetTotal()"></div>';
-  c.insertAdjacentHTML('beforeend',html);
-  updateInlineBudgetTotal();
+  if(document.getElementById(sid)) return;
+  // Add to the appropriate section in state
+  var mb=getCurrentMonthBudget();
+  var section=isBudgetCompulsory(cat)?'compulsory':'variable';
+  if(!mb[section]) mb[section]={};
+  mb[section][cat]=0;
+  setCurrentMonthBudget(mb);
+  renderInlineBudgetInputs();
   var el=document.getElementById(sid);
   if(el) el.focus();
 }
 
 
+
 function saveInlineBudgets(){
-  var newBudgets={};
+  var mb=getCurrentMonthBudget();
+  var newComp=Object.assign({},mb.compulsory||{});
+  var newVar=Object.assign({},mb.variable||{});
   document.querySelectorAll('#inlineBudgetInputs input[data-cat]').forEach(function(inp){
     var cat=inp.dataset.cat;
     var v=parseFloat(inp.value||'0');
-    if(cat&&v>0) newBudgets[cat]=v/(state.currencyRate||1);
+    var amt=isNaN(v)?0:v/(state.currencyRate||1);
+    if(newComp.hasOwnProperty(cat)) newComp[cat]=amt;
+    else newVar[cat]=amt;
   });
-  state.budgets=newBudgets;
-  saveState();
+  setCurrentMonthBudget({compulsory:newComp,variable:newVar});
   var picker=document.getElementById('inlineAddCatPicker');
   if(picker) picker.remove();
   var form=document.getElementById('budgetEditForm');
@@ -8124,9 +8296,7 @@ function renderAccounts(){
     const info=ACCT_TYPES[a.type]||{emoji:'🏦'};
     const txNet=state.transactions.filter(t=>String(t.account)===String(a.id)).reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     const openBal=typeof a.openingBalance==='number'?a.openingBalance:0;
-    const today=new Date();const mobVal=getMonthlyOpening(a.id,today.getFullYear(),today.getMonth());
-    const mobNote=mobVal!=null?`<div style="margin-top:3px"><span style="font-size:9px;color:var(--accent);font-weight:700;background:rgba(79,142,247,0.1);padding:1px 6px;border-radius:6px;border:1px solid rgba(79,142,247,0.2)">📅 ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()]} opening: ${state.currSymbol}${fmt(cv(mobVal))}</span></div>`:'';
-    const openNote=(Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'')+mobNote;
+    const openNote=(Math.abs(openBal)>0.5?`<div style="font-size:9px;color:var(--text3);font-weight:700;margin-top:1px">Opening: ${state.currSymbol}${fmt(cv(openBal))}${txNet!==0?' · Txns: '+(txNet>0?'+':'−')+state.currSymbol+fmt(cv(Math.abs(txNet))):''}</div>`:'');
     return`<div class="tx"><div class="tx-ico" style="background:${a.color}22;border-color:${a.color}44;font-size:22px">${info.emoji}</div><div class="tx-body"><div class="tx-name">${a.name}</div><div class="tx-meta">${a.type}</div>${openNote}</div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font);font-size:15px;font-weight:700;color:${a.balance>=0?'var(--green)':'var(--red)'}">${state.currSymbol}${fmt(cv(Math.abs(a.balance)))}</div><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:4px"><div style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:900;background:rgba(68,138,255,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(68,138,255,0.3)" onclick="editAcct('${a.id}')">✏️ Edit</div><div style="font-size:10px;color:var(--red);cursor:pointer;font-weight:900;background:rgba(255,69,105,0.1);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,69,105,0.2)" onclick="deleteAcct('${a.id}')">Remove</div></div></div></div>`;
   }).join('');
   // Update history filter dropdown
@@ -8174,11 +8344,13 @@ function updateTxAccountSelect(){
 function updateTxLiabSelect(){
   var sel=document.getElementById('txLiabLink');
   if(!sel) return;
-  sel.innerHTML='<option value="">-- None --</option>'+
-    state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
-      var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
-      return '<option value="'+l.id+'">'+info.emoji+' '+l.name+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
-    }).join('');
+  // Single unified list — flexible loans now live in state.liabilities too, so there's
+  // no separate source to double up on here.
+  var liabOpts=state.liabilities.filter(function(l){return l.remaining>0;}).map(function(l){
+    var info=LIAB_TYPES[l.type]||LIAB_TYPES['Other'];
+    return '<option value="'+l.id+'">'+info.emoji+' '+escHtml(l.name)+' ('+state.currSymbol+fmt(cv(l.remaining))+' left)</option>';
+  }).join('');
+  sel.innerHTML='<option value="">-- None --</option>'+liabOpts;
 }
 
 
@@ -8608,8 +8780,11 @@ function toggleAllocTargets(){
 }
 
 // ── WEALTH PAGE BUDGET SETTINGS ──────────────────────────────────────────────
-var _wbudgetSelectedCats=[];
 var _wbudgetTotalAmt=0;
+// _wbudgetData holds {compulsory:{cat:amtBase,...}, variable:{cat:amtBase,...}}
+var _wbudgetData={compulsory:{},variable:{}};
+
+function _wbSafeId(cat){return 'wbs_'+cat.replace(/[^a-zA-Z0-9_]/g,'_');}
 
 function renderWealthBudgetView(){
   var el=document.getElementById('wealthBudgetView');
@@ -8617,14 +8792,16 @@ function renderWealthBudgetView(){
   var txs=getMonthTxs().filter(function(t){return t.type==='expense';});
   var spent={};
   txs.forEach(function(t){spent[t.category]=(spent[t.category]||0)+t.amount;});
-  var hasBudgets=Object.keys(state.budgets).length>0;
+  var mb=getCurrentMonthBudget();
+  var allBudgets=Object.assign({},mb.compulsory||{},mb.variable||{});
+  var hasBudgets=Object.keys(allBudgets).length>0;
   if(!hasBudgets){
     el.innerHTML='<div style="background:var(--bg3);border-radius:12px;padding:14px;text-align:center"><div style="font-size:22px;margin-bottom:6px">🎯</div><div style="font-size:12px;font-weight:900;color:var(--text3)">No budget set for this month</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:4px">Tap ✏️ Edit to set up your monthly budget</div></div>';
     return;
   }
   var r3=state.currencyRate||1;
-  var totalLimit=Object.values(state.budgets).reduce(function(s,v){return s+v;},0);
-  var totalSpent=Object.keys(state.budgets).reduce(function(s,cat){return s+(spent[cat]||0);},0);
+  var totalLimit=Object.values(allBudgets).reduce(function(s,v){return s+v;},0);
+  var totalSpent=Object.keys(allBudgets).reduce(function(s,cat){return s+(spent[cat]||0);},0);
   var totalPct=totalLimit>0?Math.min(100,Math.round(totalSpent/totalLimit*100)):0;
   var totalOver=totalSpent>totalLimit;
   var totalCol=totalOver?'var(--red)':totalPct>=80?'var(--yellow)':'var(--green)';
@@ -8636,51 +8813,140 @@ function renderWealthBudgetView(){
   html+='<div style="height:6px;background:var(--bg2);border-radius:100px;overflow:hidden"><div style="height:100%;width:'+totalPct+'%;background:'+totalCol+';border-radius:100px;transition:width .5s"></div></div>';
   html+='<div style="display:flex;justify-content:space-between;margin-top:5px"><span style="font-size:10px;color:var(--text3);font-weight:700">'+totalPct+'% used</span><span style="font-size:10px;font-weight:700;color:'+(totalOver?'var(--red)':'var(--text3)')+'">'+( totalOver?'Over '+state.currSymbol+fmt(cv(totalSpent-totalLimit)):state.currSymbol+fmt(cv(totalLimit-totalSpent))+' left')+'</span></div>';
   html+='</div>';
-  html+='<div style="display:flex;flex-direction:column;gap:7px">';
-  Object.entries(state.budgets).forEach(function(entry){
-    var cat=entry[0], limit=entry[1];
-    var s=spent[cat]||0;
-    var pct=Math.min(100,Math.round(s/limit*100));
-    var allocPct=totalLimit>0?Math.round(limit/totalLimit*100):0;
-    var isOver=s>limit;
-    var col=isOver?'var(--red)':pct>=80?'var(--yellow)':'var(--green)';
-    html+='<div style="background:var(--bg3);border-radius:10px;padding:10px 12px">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html+='<div style="display:flex;align-items:center;gap:7px"><span style="font-size:16px">'+(CAT_EMOJI[cat]||'🌀')+'</span><div><div style="font-size:12px;font-weight:700">'+cat+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">'+allocPct+'% of total budget</div></div>'+(isOver?'<span style="font-size:9px;background:rgba(255,69,105,0.15);color:var(--red);padding:2px 6px;border-radius:6px;font-weight:900">OVER</span>':'')+'</div>';
-    html+='<div style="text-align:right"><div style="font-family:var(--font);font-size:12px;font-weight:700;color:'+col+'">'+state.currSymbol+fmt(cv(s))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">of '+state.currSymbol+fmt(cv(limit))+'</div></div>';
-    html+='</div>';
-    html+='<div style="height:4px;background:var(--bg2);border-radius:100px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:100px;transition:width .5s"></div></div>';
-    html+='</div>';
-  });
-  html+='</div>';
+  function renderSection(label,color,sectionKey){
+    var cats=Object.keys(mb[sectionKey]||{});
+    if(!cats.length) return '';
+    var h='<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:900;color:'+color+';letter-spacing:1px;margin-bottom:7px">'+label+'</div>';
+    h+='<div style="display:flex;flex-direction:column;gap:6px">';
+    cats.forEach(function(cat){
+      var limit=allBudgets[cat]||0;
+      var s=spent[cat]||0;
+      if(limit===0&&s===0) return;
+      var pct=limit>0?Math.min(100,Math.round(s/limit*100)):0;
+      var allocPct=totalLimit>0?Math.round(limit/totalLimit*100):0;
+      var isOver=limit>0&&s>limit;
+      var col=isOver?'var(--red)':pct>=80?'var(--yellow)':'var(--green)';
+      h+='<div style="background:var(--bg3);border-radius:10px;padding:9px 11px">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+      h+='<div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px">'+(CAT_EMOJI[cat]||'🌀')+'</span><div><div style="font-size:12px;font-weight:700">'+cat+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">'+allocPct+'% of total</div></div>'+(isOver?'<span style="font-size:9px;background:rgba(255,69,105,0.15);color:var(--red);padding:2px 6px;border-radius:6px;font-weight:900">OVER</span>':'')+'</div>';
+      h+='<div style="text-align:right"><div style="font-family:var(--font);font-size:12px;font-weight:700;color:'+col+'">'+state.currSymbol+fmt(cv(s))+'</div><div style="font-size:10px;color:var(--text3);font-weight:700">of '+state.currSymbol+fmt(cv(limit))+'</div></div>';
+      h+='</div>';
+      if(limit>0){h+='<div style="height:4px;background:var(--bg2);border-radius:100px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:100px;transition:width .5s"></div></div>';}
+      h+='</div>';
+    });
+    h+='</div></div>';
+    return h;
+  }
+  html+=renderSection('🔒 COMPULSORY EXPENSES','#fb923c','compulsory');
+  html+=renderSection('🔄 VARIABLE EXPENSES','var(--accent)','variable');
   el.innerHTML=html;
 }
 
 function startWealthBudgetEdit(){
   var MONTHS_LBL=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var now=new Date();
+  var moName=MONTHS_LBL[state.currentMonth!=null?state.currentMonth:now.getMonth()]+' '+(state.currentYear||now.getFullYear());
   var ml=document.getElementById('wbudgetMonthLabel');
-  if(ml) ml.textContent=MONTHS_LBL[state.currentMonth!=null?state.currentMonth:now.getMonth()]+' '+(state.currentYear||now.getFullYear());
-  // Pre-fill total from existing budgets (in display currency)
+  if(ml) ml.textContent=moName;
+  var hasCurrent=hasBudgetForCurrentMonth();
+  var hasPrev=getPrevMonthBudget()!==null;
+  if(!hasCurrent&&hasPrev){
+    var cpLabel=document.getElementById('wbudgetNewMonthName');
+    if(cpLabel) cpLabel.textContent=moName;
+    document.getElementById('wbudgetCopyPrompt').style.display='';
+    document.getElementById('wealthBudgetView').style.display='none';
+    document.getElementById('wealthBudgetEditBtn').style.display='none';
+    return;
+  }
+  _wbudgetOpenEditForm();
+}
+
+function _wbudgetOpenEditForm(){
+  var mb=getCurrentMonthBudget();
   var r3=state.currencyRate||1;
-  var existingTotal=Object.values(state.budgets).reduce(function(s,v){return s+v;},0);
+  _wbudgetData={
+    compulsory:Object.assign({},mb.compulsory||{}),
+    variable:Object.assign({},mb.variable||{})
+  };
+  // Auto-add all missing expense categories with 0
+  var allCats=getExpenseCats();
+  allCats.forEach(function(cat){
+    var inComp=_wbudgetData.compulsory.hasOwnProperty(cat);
+    var inVar=_wbudgetData.variable.hasOwnProperty(cat);
+    if(!inComp&&!inVar){
+      if(isBudgetCompulsory(cat)) _wbudgetData.compulsory[cat]=0;
+      else _wbudgetData.variable[cat]=0;
+    }
+  });
+  var existingTotal=Object.values(Object.assign({},_wbudgetData.compulsory,_wbudgetData.variable)).reduce(function(s,v){return s+v;},0);
+  _wbudgetTotalAmt=existingTotal;
   var totalEl=document.getElementById('wbudgetTotal');
   if(totalEl) totalEl.value=existingTotal>0?parseFloat((existingTotal*r3).toFixed(2)):'';
-  // Reset globals
-  _wbudgetTotalAmt=existingTotal; // already in base currency
-  _wbudgetSelectedCats=Object.keys(state.budgets).slice();
-  // Show step 1
+  document.getElementById('wbudgetCopyPrompt').style.display='none';
   document.getElementById('wbudgetStep1').style.display='';
   document.getElementById('wbudgetStep2').style.display='none';
-  document.getElementById('wbudgetStep3').style.display='none';
   document.getElementById('wealthBudgetEditArea').style.display='';
   document.getElementById('wealthBudgetView').style.display='none';
   document.getElementById('wealthBudgetEditBtn').style.display='none';
   document.getElementById('wealthBudgetSaveBtn').style.display='none';
 }
 
+var _wbCopyCompulsoryAction='new'; // 'copy' or 'new'
+
+function wbudgetCopyStepA(action){
+  // Record Section 1 choice, show Section 2 prompt
+  _wbCopyCompulsoryAction=action;
+  var resultEl=document.getElementById('wbCopyStepAResult');
+  if(resultEl){
+    var label=action==='copy'?'📋 Compulsory: copied from last month':'✏️ Compulsory: will set new amounts';
+    var col=action==='copy'?'var(--green)':'var(--text3)';
+    resultEl.innerHTML='<div style="font-size:11px;font-weight:900;color:'+col+';background:var(--bg3);border-radius:8px;padding:7px 10px;margin-bottom:4px">'+label+'</div>';
+  }
+  document.getElementById('wbCopyStepA').style.display='none';
+  document.getElementById('wbCopyStepB').style.display='';
+}
+
+function wbudgetCopyStepB(action){
+  // Apply both Section 1 and Section 2 choices, then open edit form
+  var prev=getPrevMonthBudget();
+  if(!state.monthlyBudgets) state.monthlyBudgets={};
+  var key=getBudgetMonthKey();
+  if(!state.monthlyBudgets[key]) state.monthlyBudgets[key]={compulsory:{},variable:{}};
+
+  // Apply Section 1
+  if(_wbCopyCompulsoryAction==='copy'&&prev&&prev.compulsory){
+    state.monthlyBudgets[key].compulsory=Object.assign({},prev.compulsory);
+  } else {
+    state.monthlyBudgets[key].compulsory={};
+  }
+  // Apply Section 2
+  if(action==='copy'&&prev&&prev.variable){
+    state.monthlyBudgets[key].variable=Object.assign({},prev.variable);
+  } else {
+    state.monthlyBudgets[key].variable={};
+  }
+
+  var flat={};
+  Object.assign(flat,state.monthlyBudgets[key].compulsory,state.monthlyBudgets[key].variable);
+  state.budgets=flat;
+  saveState();
+
+  // Reset prompt UI for next time
+  document.getElementById('wbCopyStepA').style.display='';
+  document.getElementById('wbCopyStepB').style.display='none';
+  document.getElementById('wbudgetCopyPrompt').style.display='none';
+
+  _wbudgetOpenEditForm();
+}
+
 function cancelWealthBudgetEdit(){
   document.getElementById('wealthBudgetEditArea').style.display='none';
+  document.getElementById('wbudgetCopyPrompt').style.display='none';
+  // Reset copy prompt steps
+  var stepA=document.getElementById('wbCopyStepA');
+  var stepB=document.getElementById('wbCopyStepB');
+  if(stepA) stepA.style.display='';
+  if(stepB) stepB.style.display='none';
   document.getElementById('wealthBudgetView').style.display='';
   document.getElementById('wealthBudgetEditBtn').style.display='';
   document.getElementById('wealthBudgetSaveBtn').style.display='none';
@@ -8690,117 +8956,86 @@ function wbudgetNextStep(){
   var v=parseFloat(document.getElementById('wbudgetTotal').value||'0');
   if(!v||v<=0){showToast('Enter total monthly budget amount','yellow');return;}
   var r3=state.currencyRate||1;
-  _wbudgetTotalAmt=v/r3; // store in base currency
-  // Build category picker — pre-select previously selected cats
-  var cats=getExpenseCats();
-  var container=document.getElementById('wbudgetCatPicker');
-  container.innerHTML=cats.map(function(cat){
-    var sel=_wbudgetSelectedCats.indexOf(cat)>=0;
-    return '<div class="chip'+(sel?' on':'')+'" data-cat="'+cat+'" onclick="wbudgetToggleCat(this)" style="font-size:12px;padding:6px 11px">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div>';
-  }).join('');
+  _wbudgetTotalAmt=v/r3;
+  _buildStep2Inputs();
   document.getElementById('wbudgetStep1').style.display='none';
   document.getElementById('wbudgetStep2').style.display='';
 }
 
-function wbudgetToggleCat(el){
-  var cat=el.dataset.cat;
-  var idx=_wbudgetSelectedCats.indexOf(cat);
-  if(idx>=0){_wbudgetSelectedCats.splice(idx,1);el.classList.remove('on');}
-  else{_wbudgetSelectedCats.push(cat);el.classList.add('on');}
-}
-
-function wbudgetBackToStep1(){
-  // Preserve the selection state when going back
-  var picker=document.getElementById('wbudgetCatPicker');
-  if(picker){
-    _wbudgetSelectedCats=[];
-    picker.querySelectorAll('.chip.on').forEach(function(el){_wbudgetSelectedCats.push(el.dataset.cat);});
-  }
-  document.getElementById('wbudgetStep1').style.display='';
-  document.getElementById('wbudgetStep2').style.display='none';
-}
-
-function _buildStep3Inputs(){
+function _buildSectionInputs(containerId,section,accentColor){
   var r3=state.currencyRate||1;
-  var totalDisp=parseFloat((_wbudgetTotalAmt*r3).toFixed(2));
-  document.getElementById('wbudgetTotalDisp').textContent=state.currSymbol+fmt(totalDisp);
-  var container=document.getElementById('wbudgetAmtInputs');
-  // Preserve existing input values if already rendered
-  var existingVals={};
-  container.querySelectorAll('input[id^="wbudget_"]').forEach(function(inp){
-    var cat=inp.id.replace('wbudget_','');
-    existingVals[cat]=inp.value;
-  });
-  container.innerHTML=_wbudgetSelectedCats.map(function(cat){
-    var val=existingVals[cat]!==undefined&&existingVals[cat]!==''?existingVals[cat]
-      :(state.budgets[cat]?parseFloat((state.budgets[cat]*r3).toFixed(2)):'');
-    var safeId=cat.replace(/[^a-zA-Z0-9_]/g,'_');
-    return '<div style="margin-bottom:10px" id="wbrow_'+safeId+'">'
+  var container=document.getElementById(containerId);
+  if(!container) return;
+  var cats=Object.keys(_wbudgetData[section]);
+  if(!cats.length){
+    container.innerHTML='<div style="text-align:center;padding:10px;font-size:11px;font-weight:700;color:var(--text3)">No categories — tap ➕ below to add</div>';
+    return;
+  }
+  container.innerHTML=cats.map(function(cat){
+    var val=_wbudgetData[section][cat]>0?parseFloat((_wbudgetData[section][cat]*r3).toFixed(2)):'';
+    var sid=_wbSafeId(cat);
+    return '<div style="margin-bottom:10px" id="wbrow_'+sid+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-      +'<div style="font-size:13px;font-weight:700">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div>'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-      +'<span style="font-size:11px;font-weight:900;color:var(--accent)" id="wallocpct_'+safeId+'">0%</span>'
-      +'<span onclick="wbudgetRemoveCat(\''+cat+'\')" style="font-size:12px;color:var(--red);cursor:pointer;font-weight:900;padding:2px 6px;border-radius:6px;background:rgba(255,69,105,0.1)">✕</span>'
+      +'<div style="font-size:12px;font-weight:700">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +'<span style="font-size:11px;font-weight:900;color:'+accentColor+'" id="wbpct_'+sid+'">0%</span>'
+      +'<span onclick="wbudgetRemoveCatSection(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\',\''+section+'\')" style="font-size:11px;color:var(--red);cursor:pointer;font-weight:900;padding:2px 5px;border-radius:5px;background:rgba(255,69,105,0.1)">✕</span>'
       +'</div></div>'
-      +'<input type="number" class="field-input" id="wbudget_'+safeId+'" data-cat="'+cat+'" placeholder="0" value="'+val+'" inputmode="numeric" oninput="wbudgetUpdatePcts()">'
-      +'<div style="height:3px;background:var(--bg3);border-radius:100px;margin-top:5px;overflow:hidden"><div id="wallocbar_'+safeId+'" style="height:100%;width:0%;background:var(--accent);border-radius:100px;transition:width .3s"></div></div>'
+      +'<input type="number" class="field-input" id="wbi_'+sid+'" data-cat="'+cat+'" data-section="'+section+'" placeholder="0 = no limit" value="'+val+'" inputmode="numeric" oninput="wbudgetUpdatePcts()">'
       +'</div>';
   }).join('');
   wbudgetUpdatePcts();
 }
 
-function wbudgetGoToStep3(){
-  // Read actual selection from DOM picker
-  var picker=document.getElementById('wbudgetCatPicker');
-  if(picker){
-    _wbudgetSelectedCats=[];
-    picker.querySelectorAll('.chip.on').forEach(function(el){_wbudgetSelectedCats.push(el.dataset.cat);});
-  }
-  if(!_wbudgetSelectedCats.length){showToast('Select at least one category','yellow');return;}
-  _buildStep3Inputs();
-  document.getElementById('wbudgetStep2').style.display='none';
-  document.getElementById('wbudgetStep3').style.display='';
+function _buildStep2Inputs(){
+  _buildSectionInputs('wbudgetCompulsoryInputs','compulsory','#fb923c');
+  _buildSectionInputs('wbudgetVariableInputs','variable','var(--accent)');
+  wbudgetUpdatePcts();
 }
 
-function wbudgetRemoveCat(cat){
-  var idx=_wbudgetSelectedCats.indexOf(cat);
-  if(idx>=0) _wbudgetSelectedCats.splice(idx,1);
-  _buildStep3Inputs();
+function wbudgetRemoveCatSection(cat,section){
+  delete _wbudgetData[section][cat];
+  _buildSectionInputs(section==='compulsory'?'wbudgetCompulsoryInputs':'wbudgetVariableInputs',section,section==='compulsory'?'#fb923c':'var(--accent)');
+  wbudgetUpdatePcts();
 }
 
-function wbudgetAddCatInline(){
-  // Show a small inline picker of unselected cats
+function wbudgetAddCatInlineSection(section){
+  var pickerId='wbAddPicker_'+section;
+  var existing=document.getElementById(pickerId);
+  if(existing){existing.remove();return;}
   var allCats=getExpenseCats();
-  var available=allCats.filter(function(c){return _wbudgetSelectedCats.indexOf(c)<0;});
+  var used=Object.keys(_wbudgetData.compulsory).concat(Object.keys(_wbudgetData.variable));
+  var available=allCats.filter(function(c){return used.indexOf(c)<0;});
   if(!available.length){showToast('All categories already added','yellow');return;}
-  var html='<div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:10px" id="wbudgetAddPicker">'
-    +'<div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px">TAP TO ADD</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:7px">'
+  var containerId=section==='compulsory'?'wbudgetCompulsoryInputs':'wbudgetVariableInputs';
+  var html='<div id="'+pickerId+'" style="background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:8px">'
+    +'<div style="font-size:10px;font-weight:900;color:var(--text3);margin-bottom:7px">TAP TO ADD</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
     +available.map(function(cat){
-      return '<div class="chip" style="font-size:12px;padding:6px 11px" onclick="wbudgetAddCatDirect(\''+cat+'\')">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div>';
+      return '<div class="chip" style="font-size:11px;padding:5px 9px" onclick="wbudgetAddCatToSection(\''+cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\',\''+section+'\')">'+(CAT_EMOJI[cat]||'🌀')+' '+cat+'</div>';
     }).join('')
     +'</div></div>';
-  var existing=document.getElementById('wbudgetAddPicker');
-  if(existing){existing.remove();return;} // toggle off
-  var container=document.getElementById('wbudgetAmtInputs');
-  container.insertAdjacentHTML('beforebegin',html);
+  var refEl=document.getElementById(containerId);
+  if(refEl) refEl.insertAdjacentHTML('afterend',html);
 }
 
-function wbudgetAddCatDirect(cat){
-  if(_wbudgetSelectedCats.indexOf(cat)<0) _wbudgetSelectedCats.push(cat);
-  var picker=document.getElementById('wbudgetAddPicker');
-  if(picker) picker.remove();
-  _buildStep3Inputs();
+function wbudgetAddCatToSection(cat,section){
+  if(!_wbudgetData[section]) _wbudgetData[section]={};
+  _wbudgetData[section][cat]=0;
+  var other=section==='compulsory'?'variable':'compulsory';
+  delete _wbudgetData[other][cat];
+  ['wbAddPicker_compulsory','wbAddPicker_variable'].forEach(function(id){var el=document.getElementById(id);if(el)el.remove();});
+  _buildSectionInputs('wbudgetCompulsoryInputs','compulsory','#fb923c');
+  _buildSectionInputs('wbudgetVariableInputs','variable','var(--accent)');
+  wbudgetUpdatePcts();
 }
 
 function wbudgetUpdatePcts(){
   var r3=state.currencyRate||1;
   var total=_wbudgetTotalAmt*r3;
   var allocated=0;
-  _wbudgetSelectedCats.forEach(function(cat){
-    var safeId=cat.replace(/[^a-zA-Z0-9_]/g,'_');
-    var el=document.getElementById('wbudget_'+safeId);
-    var v=el?parseFloat(el.value||'0'):0;
+  document.querySelectorAll('#wbudgetCompulsoryInputs input[data-cat],#wbudgetVariableInputs input[data-cat]').forEach(function(inp){
+    var v=parseFloat(inp.value||'0');
     allocated+=(isNaN(v)?0:v);
   });
   var unalloc=total-allocated;
@@ -8809,42 +9044,33 @@ function wbudgetUpdatePcts(){
     ua.textContent=(unalloc<0?'−':'')+state.currSymbol+fmt(Math.abs(unalloc));
     ua.style.color=unalloc<0?'var(--red)':unalloc===0?'var(--green)':'var(--yellow)';
   }
-  _wbudgetSelectedCats.forEach(function(cat){
-    var safeId=cat.replace(/[^a-zA-Z0-9_]/g,'_');
-    var el=document.getElementById('wbudget_'+safeId);
-    var v=el?parseFloat(el.value||'0'):0;
+  var totalDisp=document.getElementById('wbudgetTotalDisp');
+  if(totalDisp) totalDisp.textContent=state.currSymbol+fmt(_wbudgetTotalAmt*r3);
+  document.querySelectorAll('#wbudgetCompulsoryInputs input[data-cat],#wbudgetVariableInputs input[data-cat]').forEach(function(inp){
+    var sid=_wbSafeId(inp.dataset.cat);
+    var v=parseFloat(inp.value||'0');
     var pct=total>0&&v>0?Math.round(v/total*100):0;
-    var pctEl=document.getElementById('wallocpct_'+safeId);
-    var barEl=document.getElementById('wallocbar_'+safeId);
+    var pctEl=document.getElementById('wbpct_'+sid);
     if(pctEl) pctEl.textContent=pct+'%';
-    if(barEl) barEl.style.width=Math.min(100,pct)+'%';
   });
-}
-
-function wbudgetBackToStep2(){
-  document.getElementById('wbudgetStep2').style.display='';
-  document.getElementById('wbudgetStep3').style.display='none';
-  // Sync picker chips with current _wbudgetSelectedCats
-  var picker=document.getElementById('wbudgetCatPicker');
-  if(picker){
-    picker.querySelectorAll('.chip').forEach(function(el){
-      el.classList.toggle('on',_wbudgetSelectedCats.indexOf(el.dataset.cat)>=0);
-    });
-  }
 }
 
 function saveWealthBudgets(){
   var r3=state.currencyRate||1;
-  var newBudgets={};
-  _wbudgetSelectedCats.forEach(function(cat){
-    var safeId=cat.replace(/[^a-zA-Z0-9_]/g,'_');
-    var el=document.getElementById('wbudget_'+safeId);
-    var v=el?parseFloat(el.value||'0'):0;
-    if(v>0) newBudgets[cat]=v/r3;
+  var newComp={},newVar={};
+  document.querySelectorAll('#wbudgetCompulsoryInputs input[data-cat]').forEach(function(inp){
+    var cat=inp.dataset.cat;
+    var v=parseFloat(inp.value||'0');
+    newComp[cat]=isNaN(v)?0:v/r3;
   });
-  if(!Object.keys(newBudgets).length){showToast('Enter at least one category amount','yellow');return;}
-  state.budgets=newBudgets;
-  saveState();
+  document.querySelectorAll('#wbudgetVariableInputs input[data-cat]').forEach(function(inp){
+    var cat=inp.dataset.cat;
+    var v=parseFloat(inp.value||'0');
+    newVar[cat]=isNaN(v)?0:v/r3;
+  });
+  var hasAny=Object.values(newComp).some(function(v){return v>0;})||Object.values(newVar).some(function(v){return v>0;});
+  if(!hasAny){showToast('Enter at least one amount','yellow');return;}
+  setCurrentMonthBudget({compulsory:newComp,variable:newVar});
   cancelWealthBudgetEdit();
   renderWealthBudgetView();
   updateBudget();updateBudgetAlertBar();
@@ -8889,76 +9115,6 @@ function showBudgetChartModal(){
   showModal('budgetChartModal');
 }
 
-// ── MONTHLY OPENING BALANCE ──────────────────────────────────────────────────
-function getMonthKey(date){return `${date.getFullYear()}-${date.getMonth()}`;}
-
-function checkMonthlyOpeningPrompt(){
-  const today=new Date();
-  // Only prompt on the 1st of the month
-  if(today.getDate()!==1) return;
-  if(!state.accounts||!state.accounts.length) return;
-  const key=getMonthKey(today);
-  // Already set this month
-  if(state.monthlyOpenings[key]) return;
-  // Show modal after a short delay so app renders first
-  setTimeout(()=>showMonthlyOpeningModal(key),800);
-}
-
-function showMonthlyOpeningModal(key){
-  const today=new Date();
-  const monthName=['January','February','March','April','May','June','July','August','September','October','November','December'][today.getMonth()];
-  const fields=document.getElementById('monthlyOpeningFields');
-  if(!fields)return;
-  fields.innerHTML=state.accounts.map(a=>`
-    <div style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${a.color};flex-shrink:0"></div>
-        <div style="font-size:13px;font-weight:900;color:var(--text)">${a.name}</div>
-        <div style="font-size:10px;color:var(--text3);font-weight:700">${a.type}</div>
-      </div>
-      <div style="position:relative">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--text3)">${state.currSymbol}</span>
-        <input type="number" id="mob_${a.id}" class="field-input" style="padding-left:28px" placeholder="0"
-          value="${state.monthlyOpenings[key]?.[a.id]!=null?cv(state.monthlyOpenings[key][a.id]):''}">
-      </div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;margin-top:4px">
-        Current running balance: ${state.currSymbol}${fmt(cv(a.balance))}
-      </div>
-    </div>
-  `).join('');
-  document.getElementById('monthlyOpeningModal').dataset.key=key;
-  document.querySelector('#monthlyOpeningModal .modal-title').textContent=`📅 ${monthName} Opening Balances`;
-  showModal('monthlyOpeningModal');
-}
-
-function saveMonthlyOpenings(){
-  const key=document.getElementById('monthlyOpeningModal').dataset.key;
-  if(!key)return;
-  if(!state.monthlyOpenings[key]) state.monthlyOpenings[key]={};
-  let filled=0;
-  state.accounts.forEach(a=>{
-    const el=document.getElementById('mob_'+a.id);
-    if(el&&el.value!==''){
-      const val=parseFloat(el.value)||0;
-      state.monthlyOpenings[key][a.id]=val/(state.currencyRate||1);
-      filled++;
-    }
-  });
-  saveState();
-  closeModal('monthlyOpeningModal');
-  if(filled>0) showToast(`✅ ${filled} account opening balance${filled>1?'s':''} saved for this month`,'green');
-}
-
-function getMonthlyOpening(acctId,year,month){
-  const key=`${year}-${month}`;
-  return state.monthlyOpenings?.[key]?.[acctId]??null;
-}
-
-// Call from accounts page — manual trigger button
-function openMonthlyOpeningModal(){
-  const today=new Date();
-  showMonthlyOpeningModal(getMonthKey(today));
-}
 function renderAnalytics(){renderNetWorthTimeline();renderMainChart();renderIncExpChart();setExpTrendTab(expTrendTab);renderYearlySummary();renderCatBreakdown();if(state.amountsHidden) setTimeout(_tagAllMoneyElements,150);}
 
 function localDateStr(d){
@@ -8988,21 +9144,23 @@ function renderExpTrendChart(){
   if(expTrendTab==='day'){
     // TODAY only — one bar per category that has transactions today
     var todayTxs=state.transactions.filter(function(t){return t.date===todayStr;});
-    var catMap={};
+    var catMapExp={},catMapInc={};
     todayTxs.forEach(function(t){
       if(t.type==='expense'){
-        catMap[t.category]=(catMap[t.category]||0)+t.amount;
+        catMapExp[t.category]=(catMapExp[t.category]||0)+t.amount;
+      } else if(t.type==='income'){
+        catMapInc[t.category]=(catMapInc[t.category]||0)+t.amount;
       }
     });
-    var cats=Object.keys(catMap);
+    var cats=Object.keys(catMapExp).concat(Object.keys(catMapInc).filter(function(c){return Object.keys(catMapExp).indexOf(c)===-1;}));
     if(cats.length===0){
       // No transactions today — show empty single bar labeled "Today"
       labels=['Today'];expData=[0];incData=[0];
     } else {
       cats.forEach(function(c){
         labels.push((CAT_EMOJI[c]||'💸')+' '+c);
-        expData.push(cv(catMap[c]));
-        incData.push(0);
+        expData.push(cv(catMapExp[c]||0));
+        incData.push(cv(catMapInc[c]||0));
       });
     }
     var todayInc=cv(todayTxs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0));
@@ -9140,7 +9298,20 @@ function switchChart(type,el){document.querySelectorAll('#chartTabs .fpill').for
 function renderMainChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;if(charts.main)charts.main.destroy();const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const labels=Object.keys(cm),data=Object.values(cm).map(cv);const FALLBACK_PALETTE=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const colors=labels.map((l,i)=>CAT_COLOR[l]||FALLBACK_PALETTE[i%FALLBACK_PALETTE.length]);const total=data.reduce((a,b)=>a+b,0);const isDoughnut=chartType==='doughnut';document.getElementById('donutCenter').style.display=isDoughnut?'block':'none';if(isDoughnut)document.getElementById('donutVal').textContent=state.currSymbol+fmt(cv(total));var isPie=chartType==='pie'||chartType==='doughnut';
   const cc2=chartColors();charts.main=new Chart(ctx,{type:chartType,data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:2,hoverOffset:isPie?16:0,borderRadius:['bar'].includes(chartType)?8:(isPie?4:0),borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,cutout:chartType==='doughnut'?'65%':undefined,animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{color:cc2.legend,font:{size:11,weight:'700'},boxWidth:10,boxHeight:10,padding:12,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){var t=c.dataset.data.reduce(function(a,b){return a+b;},0);var pct=(c.parsed/t*100).toFixed(1);return' '+c.label+': '+state.currSymbol+fmt(cv(c.parsed))+' ('+pct+'%)';}}}},scales:['bar','line'].includes(chartType)?{x:{grid:{display:false},ticks:{color:cc2.tick,font:{size:10}}},y:{grid:{color:cc2.grid},ticks:{color:cc2.tick,font:{size:10}}}}:undefined}});}
 function renderIncExpChart(){const ctx=document.getElementById('incExpChart');if(!ctx)return;if(charts.ie)charts.ie.destroy();const now=new Date(),months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const labels=[],iD=[],eD=[];for(let i=5;i>=0;i--){const m=(now.getMonth()-i+12)%12;const y=now.getFullYear()-(now.getMonth()-i<0?1:0);labels.push(months[m]);const mt=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});iD.push(cv(mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)));eD.push(cv(mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)));}const cc3=chartColors();charts.ie=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:iD,backgroundColor:'rgba(34,197,94,.65)',borderRadius:8,borderSkipped:false},{label:'Expense',data:eD,backgroundColor:'rgba(239,68,68,.65)',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:cc3.legend,font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:cc3.tick,font:{size:10}}},y:{grid:{color:cc3.grid},ticks:{color:cc3.tick,font:{size:10}}}}}});}
-function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div></div>';}).join('');}
+var catBreakdownOpen=null;
+function toggleCatBreakdown(cat){catBreakdownOpen=(catBreakdownOpen===cat)?null:cat;renderCatBreakdown();}
+function renderCatBreakdown(){const txs=getMonthTxs().filter(t=>t.type==='expense');const cm={};txs.forEach(t=>{cm[t.category]=(cm[t.category]||0)+t.amount;});const total=Object.values(cm).reduce((a,b)=>a+b,0);const c=document.getElementById('catBreakdown');if(!Object.keys(cm).length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-weight:900">No expense data this month</div>';return;}const FP=['#c084fc','#fb923c','#34d399','#60a5fa','#fbbf24','#f472b6','#38bdf8','#4ade80','#818cf8','#facc15'];const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);c.innerHTML=entries.map(([cat,amt],i)=>{const pct=(amt/total*100).toFixed(1);const budget=state.budgets[cat];const isOver=budget&&amt>budget;const col=CAT_COLOR[cat]||FP[i%FP.length];const isOpen=catBreakdownOpen===cat;
+  var listHTML='';
+  if(isOpen){
+    var catTxs=txs.filter(function(t){return t.category===cat;});
+    catTxs.sort(function(a,b){var ka=a.date+'T'+(a.time||'00:00')+'_'+String(a.id).padStart(16,'0');var kb=b.date+'T'+(b.time||'00:00')+'_'+String(b.id).padStart(16,'0');return kb.localeCompare(ka);});
+    listHTML='<div style="margin-top:8px;border-top:1px solid var(--border2);padding-top:8px">'+catTxs.map(function(t){
+      var timeStr='';
+      if(t.time){var hp=t.time.split(':');var hh=parseInt(hp[0],10);var mm=hp[1];var ap=hh>=12?'PM':'AM';var h12=hh%12;if(h12===0)h12=12;timeStr=' · '+h12+':'+mm+' '+ap;}
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px"><div style="color:var(--text2);font-weight:700">'+formatDate(t.date)+timeStr+(t.notes?' · '+t.notes:'')+'</div><div style="font-weight:900;color:var(--red)">-'+state.currSymbol+fmt(cv(t.amount))+'</div></div>';
+    }).join('')+'</div>';
+  }
+  return'<div style="margin-bottom:14px;cursor:pointer" onclick="toggleCatBreakdown(\''+cat.replace(/'/g,"\\'")+'\')"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px"><span style="font-size:22px">'+(CAT_EMOJI[cat]||'🌀')+'</span>'+cat+(isOver?'<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 6px;border-radius:6px;font-weight:900">Over Budget</span>':'')+'</span><span style="font-family:var(--font);font-size:13px;font-weight:700">'+state.currSymbol+fmt(cv(amt))+'</span></div><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="flex:1"><div class="pbar-fill" style="width:'+pct+'%;background:'+(isOver?'var(--red)':col)+'"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';min-width:38px;text-align:right">'+pct+'%</span></div>'+listHTML+'</div>';}).join('');}
 function renderAssetChart(){
   const ctx=document.getElementById('assetChart');
   if(!ctx) return;
@@ -9743,69 +9914,82 @@ function syncToCloud(){
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
 
-  var payload=JSON.stringify({
+  var innerPayload=JSON.stringify({
     v:'1',
     updatedAt:safeState.lastSync,
     data:safeState
   });
 
-  var timedOut=false;
-  state._syncRetried=false;
-  var timer=setTimeout(function(){
-    timedOut=true;
-    if(el) el.textContent='Timed out — retrying...';
-    showToast('⚠️ Sync timed out. Retrying once...','yellow');
-    setTimeout(function(){ if(!state._syncRetried){ state._syncRetried=true; syncToCloud(); } },3000);
-  },45000);
-
-  // SAFE UPLOAD: PATCH existing file if found, POST new if not.
-  // The file is NEVER deleted before a successful upload.
-  findDriveFile().then(function(existing){
-    var boundary='ft_bound_'+Date.now();
-    var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
-    var CRLF='\r\n';
-    var body='--'+boundary+CRLF
-      +'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF
-      +meta+CRLF
-      +'--'+boundary+CRLF
-      +'Content-Type: application/json'+CRLF+CRLF
-      +payload+CRLF
-      +'--'+boundary+'--';
-    var uploadUrl, uploadMethod;
-    if(existing && existing.id){
-      uploadUrl='https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=multipart';
-      uploadMethod='PATCH';
-    } else {
-      uploadUrl='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-      uploadMethod='POST';
-    }
-    return driveFetch(uploadUrl,{
-      method:uploadMethod,
-      headers:{'Content-Type':'multipart/related; boundary='+boundary},
-      body:body
-    }).then(function(r){ return r.json(); });
-  }).then(function(res){
-    clearTimeout(timer); if(timedOut) return;
-    if(!res||res.error){
-      var msg=(res&&res.error)?res.error.message:'Unknown error';
-      showToast('❌ Sync failed: '+msg,'red');
-      if(el) el.textContent='Sync failed';
-      console.error('Sync error:',res);
+  getSyncPassword().then(function(pw){
+    if(!pw){
+      if(el) el.textContent='Sync needs a password';
+      showToast('☁️ Sync needs an encryption password to continue.','yellow');
       return;
     }
-    if(res.id) gDriveFileId=res.id;
-    state.lastSync=safeState.lastSync;
-    state._syncRetried=false;
-    saveState();
-    updateCloudSyncStatus();
-    showToast('✅ Synced to Google Drive!','green');
-    // ── Keep a permanent emergency backup file in Drive (separate from main) ──
-    _saveEmergencyDriveBackup(payload);
+    return packPayload(innerPayload,pw).then(function(payload){
+
+      var timedOut=false;
+      state._syncRetried=false;
+      var timer=setTimeout(function(){
+        timedOut=true;
+        if(el) el.textContent='Timed out — retrying...';
+        showToast('⚠️ Sync timed out. Retrying once...','yellow');
+        setTimeout(function(){ if(!state._syncRetried){ state._syncRetried=true; syncToCloud(); } },3000);
+      },45000);
+
+      // SAFE UPLOAD: PATCH existing file if found, POST new if not.
+      // The file is NEVER deleted before a successful upload.
+      findDriveFile().then(function(existing){
+        var boundary='ft_bound_'+Date.now();
+        var meta=JSON.stringify({name:DRIVE_FILE_NAME,'mimeType':'application/json'});
+        var CRLF='\r\n';
+        var body='--'+boundary+CRLF
+          +'Content-Type: application/json; charset=UTF-8'+CRLF+CRLF
+          +meta+CRLF
+          +'--'+boundary+CRLF
+          +'Content-Type: application/json'+CRLF+CRLF
+          +payload+CRLF
+          +'--'+boundary+'--';
+        var uploadUrl, uploadMethod;
+        if(existing && existing.id){
+          uploadUrl='https://www.googleapis.com/upload/drive/v3/files/'+existing.id+'?uploadType=multipart';
+          uploadMethod='PATCH';
+        } else {
+          uploadUrl='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+          uploadMethod='POST';
+        }
+        return driveFetch(uploadUrl,{
+          method:uploadMethod,
+          headers:{'Content-Type':'multipart/related; boundary='+boundary},
+          body:body
+        }).then(function(r){ return r.json(); });
+      }).then(function(res){
+        clearTimeout(timer); if(timedOut) return;
+        if(!res||res.error){
+          var msg=(res&&res.error)?res.error.message:'Unknown error';
+          showToast('❌ Sync failed: '+msg,'red');
+          if(el) el.textContent='Sync failed';
+          console.error('Sync error:',res);
+          return;
+        }
+        if(res.id) gDriveFileId=res.id;
+        state.lastSync=safeState.lastSync;
+        state._syncRetried=false;
+        saveState();
+        updateCloudSyncStatus();
+        showToast('✅ Synced to Google Drive! (compressed & encrypted)','green');
+        // ── Keep a permanent emergency backup file in Drive (separate from main) ──
+        _saveEmergencyDriveBackup(payload);
+      }).catch(function(e){
+        clearTimeout(timer);
+        showToast('❌ Sync error: '+e.message,'red');
+        if(el) el.textContent='Sync failed';
+        console.error('Sync catch:',e);
+      });
+    });
   }).catch(function(e){
-    clearTimeout(timer);
-    showToast('❌ Sync error: '+e.message,'red');
+    showToast('❌ Sync setup error: '+e.message,'red');
     if(el) el.textContent='Sync failed';
-    console.error('Sync catch:',e);
   });
 }
 
@@ -9857,151 +10041,170 @@ function loadFromCloud(){
   // ── SAFETY SNAPSHOT: preserve local data before any network op ──
   var localSnapshot=JSON.parse(JSON.stringify(state));
 
-  var timedOut=false;
-  var timer=setTimeout(function(){
-    timedOut=true;
-    if(el) el.textContent='Timed out — local data safe';
-    showToast('⚠️ Load timed out. Your local data is untouched.','red');
-  },45000);
+  getSyncPassword().then(function(pw){
+    if(!pw){
+      if(el) el.textContent='Sync needs a password';
+      showToast('☁️ Sync needs an encryption password to continue.','yellow');
+      return;
+    }
 
-  findDriveFile().then(function(existing){
-    if(!existing){
-      clearTimeout(timer);
-      // ── Main file missing — try restoring from the emergency backup copy first ──
-      if(el) el.textContent='Main file missing — checking backup copy...';
-      var eq=encodeURIComponent("name='"+DRIVE_EMERGENCY_NAME+"' and trashed=false");
-      return driveFetch('https://www.googleapis.com/drive/v3/files?q='+eq+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc')
-        .then(function(r){ return r.json(); })
-        .then(function(eres){
-          var emergencyFile=eres&&eres.files&&eres.files[0]?eres.files[0]:null;
-          if(emergencyFile){
-            // ✅ Backup copy found — restore from it
-            if(el) el.textContent='Restoring from backup copy...';
-            showToast('📋 Main file missing. Restoring from backup copy...','blue');
-            return driveFetch('https://www.googleapis.com/drive/v3/files/'+emergencyFile.id+'?alt=media')
-              .then(function(r){
-                if(!r.ok) throw new Error('HTTP '+r.status+' reading backup copy');
-                return r.json();
-              }).then(function(p){
-                // Tag so success path knows to re-create the main file
-                if(p) p._restoredFromEmergency=true;
-                return p;
-              });
-          } else {
-            // No emergency backup either — nothing to restore from
-            var hasLocalData=(localSnapshot.transactions||[]).length>0
-              ||(localSnapshot.assets||[]).length>0
-              ||(localSnapshot.goals||[]).length>0;
-            if(hasLocalData){
-              if(el) el.textContent='No backup found — uploading local data...';
-              showToast('☁️ No backup found on Drive. Uploading your local data now...','yellow');
+    var timedOut=false;
+    var timer=setTimeout(function(){
+      timedOut=true;
+      if(el) el.textContent='Timed out — local data safe';
+      showToast('⚠️ Load timed out. Your local data is untouched.','red');
+    },45000);
+
+    findDriveFile().then(function(existing){
+      if(!existing){
+        clearTimeout(timer);
+        // ── Main file missing — try restoring from the emergency backup copy first ──
+        if(el) el.textContent='Main file missing — checking backup copy...';
+        var eq=encodeURIComponent("name='"+DRIVE_EMERGENCY_NAME+"' and trashed=false");
+        return driveFetch('https://www.googleapis.com/drive/v3/files?q='+eq+'&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime+desc')
+          .then(function(r){ return r.json(); })
+          .then(function(eres){
+            var emergencyFile=eres&&eres.files&&eres.files[0]?eres.files[0]:null;
+            if(emergencyFile){
+              // ✅ Backup copy found — restore from it
+              if(el) el.textContent='Restoring from backup copy...';
+              showToast('📋 Main file missing. Restoring from backup copy...','blue');
+              return driveFetch('https://www.googleapis.com/drive/v3/files/'+emergencyFile.id+'?alt=media')
+                .then(function(r){
+                  if(!r.ok) throw new Error('HTTP '+r.status+' reading backup copy');
+                  return r.json();
+                }).then(function(p){
+                  // Tag so success path knows to re-create the main file
+                  if(p) p._restoredFromEmergency=true;
+                  return p;
+                });
             } else {
-              if(el) el.textContent='No backup found';
-              showToast('No Drive backup found. Add data and it will sync automatically.','yellow');
+              // No emergency backup either — nothing to restore from
+              var hasLocalData=(localSnapshot.transactions||[]).length>0
+                ||(localSnapshot.assets||[]).length>0
+                ||(localSnapshot.goals||[]).length>0;
+              if(hasLocalData){
+                if(el) el.textContent='No backup found — uploading local data...';
+                showToast('☁️ No backup found on Drive. Uploading your local data now...','yellow');
+              } else {
+                if(el) el.textContent='No backup found';
+                showToast('No Drive backup found. Add data and it will sync automatically.','yellow');
+              }
+              setTimeout(function(){ syncToCloud(); }, 500);
+              return null; // nothing to restore
             }
-            setTimeout(function(){ syncToCloud(); }, 500);
-            return null; // nothing to restore
-          }
+          });
+      }
+      return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media')
+        .then(function(r){
+          if(!r.ok) throw new Error('HTTP '+r.status+' fetching backup');
+          return r.json();
         });
-    }
-    return driveFetch('https://www.googleapis.com/drive/v3/files/'+existing.id+'?alt=media')
-      .then(function(r){
-        if(!r.ok) throw new Error('HTTP '+r.status+' fetching backup');
-        return r.json();
-      });
-  }).then(function(payload){
-    if(!payload) return; // no-backup path already handled above
-    clearTimeout(timer);
-    if(timedOut) return;
-
-    if(payload.error){
-      // ── STRICT: API error — restore snapshot, never apply bad data ──
-      showToast('❌ Drive error: '+payload.error.message+'. Local data safe.','red');
-      if(el) el.textContent='Load failed — local data safe';
-      return;
-    }
-
-    // Parse imported data
-    var imported;
-    try{
-      imported=payload.data||payload;
-      if(typeof imported==='string') imported=JSON.parse(imported);
-    }catch(e){
-      showToast('❌ Backup file corrupted. Local data safe.','red');
-      if(el) el.textContent='Corrupt backup — local data safe';
-      return;
-    }
-
-    // ── STRICT SAFETY: Validate Drive data has meaningful content ──
-    var driveTxCount=(imported.transactions||[]).length;
-    var localTxCount=(localSnapshot.transactions||[]).length;
-    // If Drive has zero transactions but local has data → refuse to apply, push local instead
-    if(driveTxCount===0 && localTxCount>0){
+    }).then(function(rawPayload){
+      if(!rawPayload) return; // no-backup path already handled above
       clearTimeout(timer);
-      if(el) el.textContent='Drive backup empty — keeping local data';
-      showToast('⚠️ Drive backup has no transactions. Keeping your local data & re-uploading...','yellow');
-      setTimeout(function(){ syncToCloud(); }, 800);
-      return;
-    }
+      if(timedOut) return;
 
-    // ── MERGE: always union of both sides, never discard either ──
-    var localTime=localSnapshot.lastSync?new Date(localSnapshot.lastSync).getTime():0;
-    var driveTime=payload.updatedAt?new Date(payload.updatedAt).getTime():0;
-    var allTx={};
-    (localSnapshot.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
-    (imported.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
-    var mergedTx=Object.values(allTx).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+      if(rawPayload.error){
+        // ── STRICT: API error — restore snapshot, never apply bad data ──
+        showToast('❌ Drive error: '+rawPayload.error.message+'. Local data safe.','red');
+        if(el) el.textContent='Load failed — local data safe';
+        return;
+      }
 
-    // For all arrays: take the side with more data (never shrink)
-    var base=driveTime>=localTime?imported:localSnapshot;
-    var keep={
-      isLoggedIn:localSnapshot.isLoggedIn, userName:localSnapshot.userName,
-      userEmail:localSnapshot.userEmail, lastSync:new Date().toISOString(),
-      gClientId:localSnapshot.gClientId, localProfilePhoto:localSnapshot.localProfilePhoto,
-      pin:localSnapshot.pin, fpEnabled:localSnapshot.fpEnabled,
-      transactions:mergedTx
-    };
-    Object.assign(state, base, keep);
-    ['liabilities','bills','accounts','recurring','assets','goals'].forEach(function(k){
-      var localArr=localSnapshot[k]||[];
-      var driveArr=imported[k]||[];
-      state[k]=driveArr.length>=localArr.length?driveArr:localArr;
+      var wasRestoredFromEmergency=!!rawPayload._restoredFromEmergency;
+
+      // Decrypt + decompress (transparently handles legacy uncompressed shapes too)
+      return unpackPayload(rawPayload,pw).then(function(payload){
+        // Parse imported data
+        var imported;
+        try{
+          imported=payload.data||payload;
+          if(typeof imported==='string') imported=JSON.parse(imported);
+        }catch(e){
+          showToast('❌ Backup file corrupted. Local data safe.','red');
+          if(el) el.textContent='Corrupt backup — local data safe';
+          return;
+        }
+
+        // ── STRICT SAFETY: Validate Drive data has meaningful content ──
+        var driveTxCount=(imported.transactions||[]).length;
+        var localTxCount=(localSnapshot.transactions||[]).length;
+        // If Drive has zero transactions but local has data → refuse to apply, push local instead
+        if(driveTxCount===0 && localTxCount>0){
+          clearTimeout(timer);
+          if(el) el.textContent='Drive backup empty — keeping local data';
+          showToast('⚠️ Drive backup has no transactions. Keeping your local data & re-uploading...','yellow');
+          setTimeout(function(){ syncToCloud(); }, 800);
+          return;
+        }
+
+        // ── MERGE: always union of both sides, never discard either ──
+        var localTime=localSnapshot.lastSync?new Date(localSnapshot.lastSync).getTime():0;
+        var driveTime=payload.updatedAt?new Date(payload.updatedAt).getTime():0;
+        var allTx={};
+        (localSnapshot.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
+        (imported.transactions||[]).forEach(function(t){if(t&&t.id)allTx[t.id]=t;});
+        var mergedTx=Object.values(allTx).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+
+        // For all arrays: take the side with more data (never shrink)
+        var base=driveTime>=localTime?imported:localSnapshot;
+        var keep={
+          isLoggedIn:localSnapshot.isLoggedIn, userName:localSnapshot.userName,
+          userEmail:localSnapshot.userEmail, lastSync:new Date().toISOString(),
+          gClientId:localSnapshot.gClientId, localProfilePhoto:localSnapshot.localProfilePhoto,
+          pin:localSnapshot.pin, fpEnabled:localSnapshot.fpEnabled,
+          transactions:mergedTx
+        };
+        Object.assign(state, base, keep);
+        ['liabilities','bills','accounts','recurring','assets','goals'].forEach(function(k){
+          var localArr=localSnapshot[k]||[];
+          var driveArr=imported[k]||[];
+          state[k]=driveArr.length>=localArr.length?driveArr:localArr;
+        });
+        if(!state.budgets) state.budgets={};
+
+        saveState();
+        applyTheme(state.theme);
+        applyFont(state.font);
+        updateCurrSymbols();
+        initApp();
+
+        var added=mergedTx.length-driveTxCount;
+        var msg;
+        if(wasRestoredFromEmergency){
+          msg='✅ Restored from backup copy! '+state.transactions.length+' transactions recovered. Re-creating main file...';
+        } else {
+          msg=added>0
+            ?'✅ Merged! '+added+' local entries kept + Drive data restored. Total: '+mergedTx.length+' transactions.'
+            :'✅ Loaded from Drive! '+state.transactions.length+' transactions restored.';
+        }
+        showToast(msg,'green');
+        if(el) el.textContent='Last sync: '+new Date().toLocaleString();
+        if(el2) el2.textContent='Last sync: '+new Date().toLocaleString();
+        // If we restored from emergency backup, re-create the main file now
+        if(wasRestoredFromEmergency){
+          setTimeout(function(){ syncToCloud(); }, 1000);
+        }
+        // Start auto-sync now that we're loaded
+        startAutoSync();
+      }).catch(function(e){
+        clearTimeout(timer);
+        // ── Wrong password or corrupted payload — restore snapshot, never apply bad data ──
+        Object.assign(state, localSnapshot);
+        showToast('❌ Wrong sync password or corrupted backup. Local data safe.','red');
+        if(el) el.textContent='Decrypt failed — local data safe';
+        console.error('loadFromCloud unpack error:',e);
+      });
+
+    }).catch(function(e){
+      clearTimeout(timer);
+      // ── STRICT: On any network/parse error — restore snapshot, never lose data ──
+      Object.assign(state, localSnapshot);
+      showToast('❌ Load error: '+e.message+'. Local data restored safely.','red');
+      if(el) el.textContent='Error — local data safe';
+      console.error('loadFromCloud error:',e);
     });
-    if(!state.budgets) state.budgets={};
-
-    saveState();
-    applyTheme(state.theme);
-    applyFont(state.font);
-    updateCurrSymbols();
-    initApp();
-
-    var added=mergedTx.length-driveTxCount;
-    var restoredFromEmergency=!!(payload&&payload._restoredFromEmergency);
-    var msg;
-    if(restoredFromEmergency){
-      msg='✅ Restored from backup copy! '+state.transactions.length+' transactions recovered. Re-creating main file...';
-    } else {
-      msg=added>0
-        ?'✅ Merged! '+added+' local entries kept + Drive data restored. Total: '+mergedTx.length+' transactions.'
-        :'✅ Loaded from Drive! '+state.transactions.length+' transactions restored.';
-    }
-    showToast(msg,'green');
-    if(el) el.textContent='Last sync: '+new Date().toLocaleString();
-    if(el2) el2.textContent='Last sync: '+new Date().toLocaleString();
-    // If we restored from emergency backup, re-create the main file now
-    if(restoredFromEmergency){
-      setTimeout(function(){ syncToCloud(); }, 1000);
-    }
-    // Start auto-sync now that we're loaded
-    startAutoSync();
-
-  }).catch(function(e){
-    clearTimeout(timer);
-    // ── STRICT: On any network/parse error — restore snapshot, never lose data ──
-    Object.assign(state, localSnapshot);
-    showToast('❌ Load error: '+e.message+'. Local data restored safely.','red');
-    if(el) el.textContent='Error — local data safe';
-    console.error('loadFromCloud error:',e);
   });
 }
 
@@ -10057,13 +10260,116 @@ function xorDecrypt(enc, key){
   return new TextDecoder().decode(out);
 }
 
+// ── Gzip compression (native CompressionStream/DecompressionStream) + safe base64 ──
+// Chunked base64 avoids "Maximum call stack size exceeded" on multi-MB buffers.
+function bufferToBase64Safe(buf){
+  const bytes=(buf instanceof Uint8Array)?buf:new Uint8Array(buf);
+  const chunkSize=0x8000;
+  let binary='';
+  for(let i=0;i<bytes.length;i+=chunkSize){
+    binary+=String.fromCharCode.apply(null, bytes.subarray(i,i+chunkSize));
+  }
+  return btoa(binary);
+}
+function base64ToBufferSafe(b64){
+  const bin=atob(b64);
+  const buf=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+  return buf;
+}
+async function gzipCompressStr(str){
+  const stream=new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+  const buf=await new Response(stream).arrayBuffer();
+  return bufferToBase64Safe(buf);
+}
+async function gzipDecompressStr(b64){
+  const bytes=base64ToBufferSafe(b64);
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const buf=await new Response(stream).arrayBuffer();
+  return new TextDecoder().decode(buf);
+}
+
+// ── Unified pack/unpack: wraps any raw JSON string into a compressed (+ optionally
+// encrypted) transport payload. Used identically by Drive sync (auto + manual) and
+// file export/import, so every backup path shares one on-disk/on-Drive format. ──
+async function packPayload(rawJsonString, password){
+  const compressed=await gzipCompressStr(rawJsonString);
+  const finalPayload=password?xorEncrypt(compressed,password):compressed;
+  return JSON.stringify({v:2,compressed:true,encrypted:!!password,packedAt:new Date().toISOString(),payload:finalPayload});
+}
+// Reverses packPayload. Transparently falls back to legacy (pre-compression) shapes
+// so old Drive files / old exported files still restore correctly.
+async function unpackPayload(wrapperStringOrObj, password){
+  const wrapper=typeof wrapperStringOrObj==='string'?JSON.parse(wrapperStringOrObj):wrapperStringOrObj;
+  if(wrapper && wrapper.v===2 && wrapper.compressed){
+    let data=wrapper.payload;
+    if(wrapper.encrypted) data=xorDecrypt(data,password||'');
+    data=await gzipDecompressStr(data);
+    return JSON.parse(data);
+  }
+  return wrapper; // legacy plain/unencrypted shape — caller handles as before
+}
+
+// ── Sync password: prompted once, cached in memory + locally (obfuscated) so
+// silent auto-sync can reuse it without asking again on every sync. ──
+var _syncPasswordCache=null;
+var _pendingSyncPasswordResolve=null;
+function getSyncPasswordSilent(){
+  if(_syncPasswordCache) return _syncPasswordCache;
+  const stored=localStorage.getItem('ft_sync_pw_v1');
+  if(stored){
+    try{ _syncPasswordCache=xorDecrypt(stored,'ft_device_local_v1'); return _syncPasswordCache; }catch(e){}
+  }
+  return null;
+}
+function getSyncPassword(){
+  const cached=getSyncPasswordSilent();
+  if(cached) return Promise.resolve(cached);
+  return new Promise(function(resolve){
+    _pendingSyncPasswordResolve=resolve;
+    const modal=document.getElementById('exportKeyModal');
+    modal.dataset.mode='syncSetup';
+    document.getElementById('exportKeyModalTitle').textContent='🔐 Set Sync Password';
+    document.querySelector('#exportKeyModal .btn-go').textContent='☁️ Enable Encrypted Sync';
+    showModal('exportKeyModal');
+  });
+}
+function cancelExportKeyModal(){
+  const modal=document.getElementById('exportKeyModal');
+  const mode=modal.dataset.mode||'';
+  closeModal('exportKeyModal');
+  document.getElementById('exportKeyInput').value='';
+  document.getElementById('exportKeyError').style.display='none';
+  modal.dataset.mode='';
+  document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';
+  document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';
+  if(mode==='syncSetup' && _pendingSyncPasswordResolve){
+    const resolve=_pendingSyncPasswordResolve; _pendingSyncPasswordResolve=null;
+    resolve(null);
+  }
+}
+
+function formatBytes(bytes){
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(2)+' MB';
+}
 function getBackupSizeStr(){
   try{
     const raw=buildBackupPayload();
-    const bytes=new TextEncoder().encode(raw).length;
-    if(bytes<1024) return bytes+' B';
-    if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
-    return (bytes/(1024*1024)).toFixed(2)+' MB';
+    return formatBytes(new TextEncoder().encode(raw).length);
+  }catch(e){return '—';}
+}
+// Builds the exact same wrapper backupToDrive() writes to Drive/localStorage,
+// so the size shown in Settings matches the real uploaded file byte-for-byte
+// (gzip compression + encryption + wrapper overhead included, not a raw guess).
+async function getDriveBackupSizeStr(){
+  try{
+    const payload=buildBackupPayload();
+    const packed=await packPayload(payload,state.drivePassword);
+    const wrapper=JSON.parse(packed);
+    wrapper.email=state.driveEmail;
+    return formatBytes(new TextEncoder().encode(JSON.stringify(wrapper)).length);
   }catch(e){return '—';}
 }
 function buildBackupPayload(){
@@ -10092,10 +10398,15 @@ function triggerDownload(blob, filename){
 }
 function exportData(){
   showModal('exportKeyModal');
-  setTimeout(function(){
-    var chip=document.getElementById('exportFileSizeChip');
-    if(chip) chip.textContent=getBackupSizeStr();
-  },50);
+  var label=document.getElementById('exportFileSizeLabel');
+  if(label) label.textContent='📦 Estimated backup size';
+  var chip=document.getElementById('exportFileSizeChip');
+  if(chip) chip.textContent=getBackupSizeStr()+' (uncompressed)';
+  try{
+    packPayload(buildBackupPayload(),null).then(function(json){
+      if(chip) chip.textContent=formatBytes(new TextEncoder().encode(json).length)+' compressed';
+    }).catch(function(){});
+  }catch(e){}
 }
 function handleExportKeySubmit(){
   const modal=document.getElementById('exportKeyModal');
@@ -10113,11 +10424,31 @@ function handleExportKeySubmit(){
     document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';
     document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';
     _doVerifyWithKey(key);
+  } else if(mode==='syncSetup'){
+    const hasNum=/[0-9]/.test(key);
+    const hasSpecial=/[^a-zA-Z0-9]/.test(key);
+    const hasUpper=/[A-Z]/.test(key);
+    const hasLower=/[a-z]/.test(key);
+    if(key.length<6){errEl.textContent='Min 6 characters required';errEl.style.display='block';return;}
+    if(!hasNum){errEl.textContent='Must include at least one number (0-9)';errEl.style.display='block';return;}
+    if(!hasSpecial){errEl.textContent='Must include at least one special character (!@#$% etc.)';errEl.style.display='block';return;}
+    if(!hasUpper||!hasLower){errEl.textContent='Must include both UPPER and lower case letters';errEl.style.display='block';return;}
+    errEl.style.display='none';
+    closeModal('exportKeyModal');
+    _syncPasswordCache=key;
+    try{ localStorage.setItem('ft_sync_pw_v1', xorEncrypt(key,'ft_device_local_v1')); }catch(e){}
+    keyEl.value='';
+    modal.dataset.mode='';
+    document.querySelector('#exportKeyModal .btn-go').textContent='📤 Export Backup';
+    document.getElementById('exportKeyModalTitle').textContent='🔐 Set Backup Password';
+    showToast('✅ Sync password set! Your Drive backups are now encrypted.','green');
+    const resolve=_pendingSyncPasswordResolve; _pendingSyncPasswordResolve=null;
+    if(resolve) resolve(key);
   } else {
     doExportWithKey();
   }
 }
-function doExportWithKey(){
+async function doExportWithKey(){
   const keyEl=document.getElementById('exportKeyInput');
   const key=(keyEl?.value||'').trim();
   const errEl=document.getElementById('exportKeyError');
@@ -10135,9 +10466,7 @@ function doExportWithKey(){
   closeModal('exportKeyModal');
   try{
     const payload=buildBackupPayload();
-    const encrypted=xorEncrypt(payload,key);
-    const wrapper={ft_encrypted:true,version:'ft-v5',date:new Date().toISOString(),payload:encrypted};
-    const json=JSON.stringify(wrapper,null,2);
+    const json=await packPayload(payload,key); // gzip-compressed + encrypted
     const blob=new Blob([json],{type:'application/json'});
     const filename='finance-tracker-backup-'+new Date().toISOString().split('T')[0]+'.json';
     const ok=triggerDownload(blob,filename);
@@ -10157,14 +10486,17 @@ function verifyBackup(){
   document.getElementById('exportKeyModalTitle').textContent='🔍 Verify Backup';
   document.getElementById('exportKeyError').style.display='none';
   document.getElementById('exportKeyInput').value='';
+  const label=document.getElementById('exportFileSizeLabel');
+  const chip=document.getElementById('exportFileSizeChip');
+  if(label) label.textContent='📊 Current data size';
+  if(chip) chip.textContent=getBackupSizeStr();
   showModal('exportKeyModal');
 }
-function _doVerifyWithKey(key){
+async function _doVerifyWithKey(key){
   try{
     const payload=buildBackupPayload();
-    const encrypted=xorEncrypt(payload,key);
-    const decrypted=xorDecrypt(encrypted,key);
-    const parsed=JSON.parse(decrypted);
+    const packed=await packPayload(payload,key);
+    const parsed=await unpackPayload(packed,key);
     const ok=parsed.data&&
       parsed.data.transactions.length===state.transactions.length&&
       parsed.data.assets.length===state.assets.length&&
@@ -10186,11 +10518,23 @@ function handleImport(event){
   const file=event.target.files[0];
   if(!file)return;
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       const raw=JSON.parse(e.target.result);
-      if(raw.ft_encrypted){
-        // Stash raw and show password modal
+      if(raw && raw.v===2 && raw.compressed){
+        // New gzip-compressed format
+        if(raw.encrypted){
+          _pendingImportData=raw;
+          document.getElementById('importKeyInput').value='';
+          document.getElementById('importKeyError').style.display='none';
+          document.getElementById('importKeyModal').classList.add('on');
+        } else {
+          const wrapper=await unpackPayload(raw,null);
+          const imported=wrapper.data||wrapper;
+          _applyImport(imported);
+        }
+      } else if(raw.ft_encrypted){
+        // Legacy (pre-compression) encrypted export
         _pendingImportData=raw;
         document.getElementById('importKeyInput').value='';
         document.getElementById('importKeyError').style.display='none';
@@ -10206,15 +10550,21 @@ function handleImport(event){
   reader.readAsText(file);
 }
 
-function submitImportKey(){
+async function submitImportKey(){
   const key=document.getElementById('importKeyInput').value;
   const errEl=document.getElementById('importKeyError');
   if(!key){errEl.textContent='Please enter the backup password';errEl.style.display='block';return;}
   if(!_pendingImportData){closeModal('importKeyModal');return;}
   try{
-    const decrypted=xorDecrypt(_pendingImportData.payload,key);
-    const wrapper=JSON.parse(decrypted);
-    const imported=wrapper.data||wrapper;
+    let imported;
+    if(_pendingImportData.v===2 && _pendingImportData.compressed){
+      const wrapper=await unpackPayload(_pendingImportData,key);
+      imported=wrapper.data||wrapper;
+    } else {
+      const decrypted=xorDecrypt(_pendingImportData.payload,key);
+      const wrapper=JSON.parse(decrypted);
+      imported=wrapper.data||wrapper;
+    }
     if(typeof imported!=='object'||Array.isArray(imported)){throw new Error('bad format');}
     closeModal('importKeyModal');
     document.getElementById('importKeyInput').value='';
@@ -10291,32 +10641,40 @@ function disconnectDrive(){
   showToast('Drive disconnected.','yellow');
 }
 
-function backupToDrive(){
-  // Simulate Drive backup: encrypt and offer download + store to localStorage
+async function backupToDrive(){
+  // Simulate Drive backup: compress+encrypt and offer download + store to localStorage
   try{
     const payload=buildBackupPayload();
-    const encrypted=xorEncrypt(payload,state.drivePassword);
-    const wrapper={ft_encrypted:true,version:'ft-v5',date:new Date().toISOString(),email:state.driveEmail,payload:encrypted};
+    const packed=await packPayload(payload,state.drivePassword); // gzip + optional encryption, same pipeline as local export
+    const wrapper=JSON.parse(packed);
+    wrapper.email=state.driveEmail; // keep for display purposes only
+    const finalStr=JSON.stringify(wrapper);
     // Store in localStorage as "cloud" backup
-    localStorage.setItem('ft_drive_backup',JSON.stringify(wrapper));
+    localStorage.setItem('ft_drive_backup',finalStr);
     state.lastSync=new Date().toISOString();
     saveState();
-    // Also offer download
-    const blob=new Blob([JSON.stringify(wrapper,null,2)],{type:'application/json'});
+    // Also offer download (compact — no need to pretty-print a compressed blob)
+    const blob=new Blob([finalStr],{type:'application/json'});
     triggerDownload(blob,'ft-drive-backup-'+new Date().toISOString().split('T')[0]+'.json');
     updateDriveUI();
-    showToast('✅ Backed up! Encrypted file downloaded. Upload to your Google Drive folder.','green');
+    showToast('✅ Backed up! Compressed & encrypted file downloaded. Upload to your Google Drive folder.','green');
   }catch(e){showToast('❌ Backup failed: '+e.message,'red');}
 }
 
-function restoreFromDrive(){
+async function restoreFromDrive(){
   // Try to restore from localStorage backup first
   const stored=localStorage.getItem('ft_drive_backup');
   if(stored){
     try{
       const wrapper=JSON.parse(stored);
-      const decrypted=xorDecrypt(wrapper.payload,state.drivePassword);
-      const parsed=JSON.parse(decrypted);
+      let parsed;
+      if(wrapper && wrapper.v===2 && wrapper.compressed){
+        parsed=await unpackPayload(wrapper,state.drivePassword);
+      }else{
+        // Legacy uncompressed Drive backups (pre-gzip) — decode the old way
+        const decrypted=xorDecrypt(wrapper.payload,state.drivePassword);
+        parsed=JSON.parse(decrypted);
+      }
       const imported=parsed.data||parsed;
       Object.assign(state,imported);
       if(!state.liabilities)state.liabilities=[];if(!state.bills)state.bills=[];if(!state.accounts)state.accounts=[];if(!state.recurring)state.recurring=[];if(!state.budgets)state.budgets={};
@@ -10352,7 +10710,10 @@ function updateDriveUI(){
   if(conn&&unconn){conn.style.display=connected?'block':'none';unconn.style.display=connected?'none':'block';}
   if(emailDisp)emailDisp.textContent=state.driveEmail||'';
   var driveSizeChip=document.getElementById('driveFileSizeChip');
-  if(driveSizeChip&&connected) driveSizeChip.textContent=getBackupSizeStr();
+  if(driveSizeChip&&connected){
+    driveSizeChip.textContent='calculating…';
+    getDriveBackupSizeStr().then(function(str){ driveSizeChip.textContent=str; });
+  }
 }
 
 // ======== INSTALL APP (PWA) ========
@@ -11010,6 +11371,7 @@ function fmt(n){
 // cv: convert stored INR amount to current display currency
 function cv(n){return(n||0)*(state.currencyRate||1);}
 function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
+function formatTxTime(t){if(!t)return '';try{const[h,m]=t.split(':');const hr=parseInt(h);const ampm=hr>=12?'PM':'AM';const h12=hr%12||12;return h12+':'+m+' '+ampm;}catch(e){return t;}}
 
 // ======== PWA MANIFEST + ICON ========
 (function(){
@@ -11079,13 +11441,14 @@ function formatDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateStri
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
 // ── Version stamp: change this string on every release to force SW update ──
-var BUILD = 'ft-build-20260607-v21';
+var BUILD = 'ft-build-20260630-v22';
 
 (function(){
   if(!('serviceWorker' in navigator)) return;
 
   var swCode = [
     "var SKIP_URLS = ['firestore','googleapis','firebase','anthropic','api.anthropic'];",
+    "var CACHE_NAME = '" + BUILD + "';",
 
     // Install: skip waiting immediately so new SW activates without delay
     "self.addEventListener('install', function(e){",
@@ -11260,7 +11623,7 @@ showPage=function(id){
   _origShowPage(id);
   if(id==='calendar'){renderBillCalendar();}
   if(id==='transfers'){renderTransferList();populateTransferSelects();}
-  if(id==='debtcountdown'){renderDebtCountdown();populatePrepaySelect();}
+  if(id==='debtcountdown'){renderDebtCountdown();populatePrepaySelect();renderFlexLoans();}
   if(id==='retirement'){renderRetirementPage();}
   if(id==='emergency'){populateEfundDropdown();calcEmergencyFund();}
   if(id==='trends'){renderSpendingTrends();}
@@ -11567,15 +11930,255 @@ var _dpExpanded = {}; // loanId -> active sub-tab ('schedule'|'suggestions')
 function renderDebtCountdown() {
   var c = document.getElementById('debtCountdownList');
   if (!c) return;
-  if (!state.liabilities || !state.liabilities.length) {
+  // Flexible (no-fixed-EMI) loans get their own card style below — exclude from EMI amortization cards.
+  var fixedLoans = (state.liabilities || []).filter(function(l) { return !l.flexible; });
+  if (!fixedLoans.length) {
     c.innerHTML = '<div class="empty"><div class="empty-big">🎉</div><div class="empty-title">No debts found</div><div class="empty-desc">Add liabilities to track payoff</div></div>';
     return;
   }
-  c.innerHTML = state.liabilities.map(function(l) { return dpBuildCard(l); }).join('');
+  c.innerHTML = fixedLoans.map(function(l) { return dpBuildCard(l); }).join('');
 }
 
 function populatePrepaySelect() {} // legacy stub
 function calcPrepay() {} // legacy stub
+
+// ============ FLEXIBLE INTEREST LOAN CALCULATOR ============
+var _flexExpanded = {};
+
+function flexComputeSchedule(principal, annualRate, startStr, payments) {
+  principal = Math.max(0, parseFloat(principal) || 0);
+  annualRate = Math.max(0, parseFloat(annualRate) || 0);
+  var out = { schedule: [], totalInterest: 0, totalPaid: 0, balance: principal };
+  if (!startStr) return out;
+  var start = new Date(startStr + 'T00:00:00');
+  var entries = (payments || []).filter(function(p) { return p.date; }).map(function(p) {
+    return { date: p.date, amount: Math.max(0, parseFloat(p.amount) || 0), txId: p.txId };
+  }).sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+  var balance = principal, previous = start, totalInterest = 0, totalPaid = 0, schedule = [];
+  entries.forEach(function(entry, i) {
+    if (balance <= 0) return;
+    var date = new Date(entry.date + 'T00:00:00');
+    if (date < previous) return;
+    var days = Math.round((date - previous) / 86400000);
+    var interest = balance * (annualRate / 100) * (days / 365);
+    var payment = Math.min(entry.amount, balance + interest);
+    var principalPaid = Math.max(0, payment - interest);
+    var closing = Math.max(0, balance - principalPaid);
+    totalInterest += interest; totalPaid += payment;
+    schedule.push({ n: i + 1, date: date, days: days, opening: balance, interest: interest, payment: payment, principalPaid: principalPaid, closing: closing, txId: entry.txId });
+    balance = closing; previous = date;
+  });
+  out.schedule = schedule; out.totalInterest = totalInterest; out.totalPaid = totalPaid; out.balance = balance;
+  return out;
+}
+
+function flexMoney(n) { return state.currSymbol + (n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+
+// Called from the transaction Add/Edit flow when a transaction is linked to a flexible loan.
+// Adds (or, on edit-save, re-adds) a payment entry tagged with the transaction's id so it can
+// be found and removed automatically if that transaction is later edited or deleted.
+function addFlexPaymentFromTx(flexId, date, amountINR, txId) {
+  var fl = (state.liabilities || []).find(function(f) { return String(f.id) === String(flexId) && f.flexible; });
+  if (!fl) return null;
+  if (!Array.isArray(fl.payments)) fl.payments = [];
+  fl.payments.push({ date: date, amount: amountINR, txId: txId });
+  fl.remaining = flexComputeSchedule(fl.principal, fl.rate, fl.start, fl.payments).balance;
+  return fl;
+}
+function removeFlexPaymentByTx(txId) {
+  (state.liabilities || []).forEach(function(fl) {
+    if (fl.flexible && Array.isArray(fl.payments)) {
+      fl.payments = fl.payments.filter(function(p) { return String(p.txId) !== String(txId); });
+      fl.remaining = flexComputeSchedule(fl.principal, fl.rate, fl.start, fl.payments).balance;
+    }
+  });
+}
+
+function renderFlexLoans() {
+  var c = document.getElementById('flexLoanList');
+  if (!c) return;
+  var flexList = (state.liabilities || []).filter(function(l) { return l.flexible; });
+  if (!flexList.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-big">🧮</div><div class="empty-title">No flexible loans</div><div class="empty-desc">Track informal loans with ad-hoc, no-fixed-EMI repayments</div></div>';
+    return;
+  }
+  c.innerHTML = flexList.map(function(fl) { return flexLoanCard(fl); }).join('');
+}
+
+function toggleFlexCard(id) { _flexExpanded[id] = _flexExpanded[id] ? null : 'on'; renderFlexLoans(); }
+
+function flexLoanCard(fl) {
+  var r5 = state.currencyRate || 1;
+  var principalDisp = (fl.principal || 0) * r5;
+  var paymentsDisp = (fl.payments || []).map(function(p) { return { date: p.date, amount: (p.amount || 0) * r5, txId: p.txId }; });
+  var d = flexComputeSchedule(principalDisp, fl.rate, fl.start, paymentsDisp);
+  var pct = principalDisp > 0 ? Math.max(0, Math.min(100, Math.round((principalDisp - d.balance) / principalDisp * 100))) : 0;
+  var open = !!_flexExpanded[fl.id];
+  var html = '<div class="dp-card">';
+  html += '<div class="dp-card-header" onclick="toggleFlexCard(' + fl.id + ')">'
+    + '<div style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:rgba(124,92,252,0.13);border:1px solid rgba(124,92,252,0.3)">🧮</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:900;color:var(--text)">' + escHtml(fl.name) + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3)">' + (fl.rate ? fl.rate + '% p.a. · ' : '') + 'from ' + formatDate(fl.start) + '</div></div>'
+    + '<div style="text-align:right;flex-shrink:0"><div style="font-size:14px;font-weight:900;color:var(--red)">' + flexMoney(d.balance) + '</div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--text3)">balance</div></div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-left:6px">' + (open ? '▲' : '▼') + '</div></div>';
+  html += '<div style="padding:0 14px 10px"><div style="background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:4px"><div style="height:6px;width:' + pct + '%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px"></div></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text3)"><span>' + pct + '% paid</span></div></div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 14px 12px">'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--accent)">' + flexMoney(d.balance) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Balance</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--red)">' + flexMoney(d.totalInterest) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Interest</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--green)">' + flexMoney(d.totalPaid) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Paid</div></div>'
+    + '<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 4px"><div style="font-size:12px;font-weight:900;color:var(--text)">' + ((fl.payments || []).length) + '</div><div style="font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Payments</div></div>'
+    + '</div>';
+  if (open) {
+    html += '<div class="dp-card-body">';
+    if (d.schedule.length) {
+      html += '<div class="tablewrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:520px;font-size:11px">'
+        + '<thead><tr style="background:var(--bg3)"><th style="padding:6px;text-align:center">#</th><th style="padding:6px;text-align:left">Date</th><th style="padding:6px;text-align:right">Days</th><th style="padding:6px;text-align:right">Interest</th><th style="padding:6px;text-align:right">Payment</th><th style="padding:6px;text-align:right">Closing</th></tr></thead><tbody>'
+        + d.schedule.map(function(row) {
+            return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px;text-align:center">' + row.n + '</td><td style="padding:6px">' + row.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) + (row.txId ? ' <span title="Auto-added from a transaction" style="font-size:9px">🔗</span>' : '') + '</td><td style="padding:6px;text-align:right">' + row.days + '</td><td style="padding:6px;text-align:right">' + flexMoney(row.interest) + '</td><td style="padding:6px;text-align:right">' + flexMoney(row.payment) + '</td><td style="padding:6px;text-align:right">' + flexMoney(row.closing) + '</td></tr>';
+          }).join('')
+        + '</tbody></table></div>';
+    } else {
+      html += '<div class="empty" style="padding:16px 0"><div class="empty-desc">No payments recorded yet</div></div>';
+    }
+    html += '<div style="display:flex;gap:8px;margin-top:12px">'
+      + '<button class="btn-go" style="flex:1;margin:0" onclick="event.stopPropagation();openFlexLoanModal(' + fl.id + ')">✏️ Edit</button>'
+      + '<button class="btn-cancel" style="flex:1;margin:0;color:var(--red);border-color:rgba(255,69,105,0.3)" onclick="event.stopPropagation();deleteFlexLoan(' + fl.id + ')">🗑️ Delete</button>'
+      + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function resetFlexLoanForm() {
+  document.getElementById('flexName').value = '';
+  document.getElementById('flexPrincipal').value = '';
+  document.getElementById('flexRate').value = '';
+  document.getElementById('flexStart').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('flexPaymentRows').innerHTML = '';
+  addFlexPaymentRow();
+  document.getElementById('flexLoanModal').dataset.editId = '';
+  document.querySelector('#flexLoanModal .modal-title').textContent = '🧮 Add Flexible Loan';
+  document.querySelector('#flexLoanModal .btn-go').textContent = '✅ Save Loan';
+  calcFlexPreview();
+}
+
+function openFlexLoanModal(id) {
+  if (id === undefined || id === null) {
+    resetFlexLoanForm();
+    showModal('flexLoanModal');
+    return;
+  }
+  var fl = state.liabilities.find(function(f) { return f.id === id && f.flexible; });
+  if (!fl) return;
+  var r6 = state.currencyRate || 1;
+  document.getElementById('flexName').value = fl.name;
+  document.getElementById('flexPrincipal').value = fl.principal ? parseFloat((fl.principal * r6).toFixed(2)) : '';
+  document.getElementById('flexRate').value = fl.rate || '';
+  document.getElementById('flexStart').value = fl.start || '';
+  var rowsC = document.getElementById('flexPaymentRows');
+  rowsC.innerHTML = '';
+  (fl.payments && fl.payments.length ? fl.payments : [{ date: '', amount: '' }]).forEach(function(p) {
+    addFlexPaymentRow(p.date, p.amount ? parseFloat((p.amount * r6).toFixed(2)) : '', p.txId);
+  });
+  document.getElementById('flexLoanModal').dataset.editId = id;
+  document.querySelector('#flexLoanModal .modal-title').textContent = '🧮 Edit Flexible Loan';
+  document.querySelector('#flexLoanModal .btn-go').textContent = '✅ Update Loan';
+  showModal('flexLoanModal');
+  calcFlexPreview();
+}
+
+function addFlexPaymentRow(date, amount, txId) {
+  date = date || ''; amount = (amount === undefined || amount === null) ? '' : amount;
+  var row = document.createElement('div');
+  row.className = 'flexPayRow';
+  if (txId) row.dataset.txId = txId;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px';
+  var lockedTag = txId ? ' <span title="Auto-added from a linked transaction" style="font-size:10px">🔗</span>' : '';
+  row.innerHTML = '<div class="field" style="margin-bottom:0"><div class="field-label">Date' + lockedTag + '</div><input type="date" class="field-input flexPayDate" value="' + date + '" oninput="calcFlexPreview()"></div>'
+    + '<div class="field" style="margin-bottom:0"><div class="field-label">Amount</div><input type="number" class="field-input flexPayAmt" min="0" step="0.01" inputmode="decimal" value="' + amount + '" oninput="calcFlexPreview()"></div>'
+    + '<button class="btn-cancel" style="margin:0;padding:11px 12px;color:var(--red)" onclick="this.closest(\'.flexPayRow\').remove();calcFlexPreview()">✕</button>';
+  document.getElementById('flexPaymentRows').appendChild(row);
+}
+
+function calcFlexPreview() {
+  var principal = parseFloat(document.getElementById('flexPrincipal').value) || 0;
+  var rate = parseFloat(document.getElementById('flexRate').value) || 0;
+  var start = document.getElementById('flexStart').value;
+  var payments = [].slice.call(document.querySelectorAll('#flexPaymentRows .flexPayRow')).map(function(row) {
+    return { date: row.querySelector('.flexPayDate').value, amount: row.querySelector('.flexPayAmt').value, txId: row.dataset.txId };
+  });
+  var d = flexComputeSchedule(principal, rate, start, payments);
+  var sym = state.currSymbol;
+  document.getElementById('flexSInterest').textContent = sym + d.totalInterest.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('flexSPaid').textContent = sym + d.totalPaid.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('flexSBalance').textContent = sym + d.balance.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('flexSCount').textContent = payments.filter(function(p) { return p.date; }).length;
+  var wrap = document.getElementById('flexScheduleWrap');
+  var body = document.getElementById('flexScheduleBody');
+  if (d.schedule.length) {
+    wrap.style.display = 'block';
+    body.innerHTML = d.schedule.map(function(row) {
+      return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px;text-align:center">' + row.n + '</td><td style="padding:6px">' + row.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) + (row.txId ? ' <span title="Auto-added from a transaction" style="font-size:9px">🔗</span>' : '') + '</td><td style="padding:6px;text-align:right">' + row.days + '</td><td style="padding:6px;text-align:right">' + sym + row.interest.toLocaleString('en-IN', { maximumFractionDigits: 0 }) + '</td><td style="padding:6px;text-align:right">' + sym + row.payment.toLocaleString('en-IN', { maximumFractionDigits: 0 }) + '</td><td style="padding:6px;text-align:right">' + sym + row.closing.toLocaleString('en-IN', { maximumFractionDigits: 0 }) + '</td></tr>';
+    }).join('');
+  } else {
+    wrap.style.display = 'none';
+    body.innerHTML = '';
+  }
+}
+
+function saveFlexLoan() {
+  var name = document.getElementById('flexName').value.trim();
+  var principal = parseFloat(document.getElementById('flexPrincipal').value) || 0;
+  var rate = parseFloat(document.getElementById('flexRate').value) || 0;
+  var start = document.getElementById('flexStart').value;
+  if (!name || !principal || !start) { showToast('Enter loan name, principal and start date', 'yellow'); return; }
+  var r7 = state.currencyRate || 1;
+  var payments = [].slice.call(document.querySelectorAll('#flexPaymentRows .flexPayRow')).map(function(row) {
+    var dt = row.querySelector('.flexPayDate').value;
+    var amt = parseFloat(row.querySelector('.flexPayAmt').value) || 0;
+    var p = { date: dt, amount: amt / r7 };
+    if (row.dataset.txId) p.txId = row.dataset.txId;
+    return p;
+  }).filter(function(p) { return p.date && p.amount > 0; });
+  var editId = document.getElementById('flexLoanModal').dataset.editId;
+  var principalINR = principal / r7;
+  if (editId) {
+    var fl = state.liabilities.find(function(f) { return f.id === parseInt(editId) && f.flexible; });
+    if (fl) {
+      fl.name = name; fl.principal = principalINR; fl.total = principalINR; fl.rate = rate; fl.start = start; fl.payments = payments; fl.updatedAt = Date.now();
+      fl.remaining = flexComputeSchedule(fl.principal, fl.rate, fl.start, fl.payments).balance;
+    }
+  } else {
+    var newFl = {
+      id: Date.now(), name: name, type: 'Flexible', flexible: true,
+      principal: principalINR, total: principalINR, rate: rate, start: start, payments: payments,
+      emi: 0, color: (LIAB_TYPES['Flexible'] && LIAB_TYPES['Flexible'].color) || '#06b6d4',
+      createdAt: Date.now()
+    };
+    newFl.remaining = flexComputeSchedule(newFl.principal, newFl.rate, newFl.start, newFl.payments).balance;
+    state.liabilities.push(newFl);
+  }
+  saveState();
+  closeModal('flexLoanModal');
+  renderFlexLoans();
+  renderLiabilities();
+  updateDashboard();
+  showToast('Flexible loan saved!', 'green');
+}
+
+function deleteFlexLoan(id) {
+  customConfirm('🧮', 'Delete Flexible Loan', 'This cannot be undone.', function() {
+    state.liabilities = state.liabilities.filter(function(f) { return f.id !== id; });
+    delete _flexExpanded[id];
+    saveState();
+    renderFlexLoans();
+    renderLiabilities();
+    updateDashboard();
+  });
+}
 
 function dpToggleCard(id) {
   _dpExpanded[id] = _dpExpanded[id] ? null : 'schedule';
@@ -12612,16 +13215,34 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v21 LATEST -->
+      <!-- v22 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">21</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">22</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v21 — 07 Jun 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v22 — 30 Jun 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            📊 <b style="color:var(--text)">Expense Trend day-view income fix</b> — Today tab now shows income per category alongside expense (was always 0)<br>
+            🗂️ <b style="color:var(--text)">Category Breakdown is now tappable</b> — tap a category to expand its transactions for the month, newest first<br>
+            🛠️ <b style="color:var(--text)">Service worker cache fix</b> — SW referenced an undefined cache name, which could silently fail to activate and leave the app stuck on an old cached build/version
+          </div>
+        </div>
+      </div>
+
+      <!-- v21 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">21</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v21 — 07 Jun 2026</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             ⚠️ <b style="color:var(--text)">Live budget warning on Add Transaction</b> — inline banner appears as you pick a category and type an amount; shows 📋 not in budget, ⚠️ 80%+ used, or 🚨 will exceed with exact overage<br>
@@ -12881,7 +13502,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v20 — 06 Jun 2026</span>
+      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v22 — 30 Jun 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
@@ -12918,19 +13539,6 @@ initGoogleDrive();
     <button class="btn-go" onclick="allocWarnAdjust()" style="background:var(--accent);margin-bottom:8px">🎯 Adjust Target</button>
     <button class="btn-cancel" onclick="allocWarnForce()" style="width:100%;margin-bottom:8px">➕ Add Anyway</button>
     <button class="btn-cancel" onclick="closeModal('allocWarnModal')" style="width:100%">✕ Cancel</button>
-  </div>
-</div>
-
-<!-- MONTHLY OPENING BALANCE MODAL -->
-<div class="modal-bg" id="monthlyOpeningModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div style="font-size:28px;text-align:center;margin-bottom:6px">📅</div>
-    <div class="modal-title" style="justify-content:center;text-align:center">Month Opening Balances</div>
-    <div style="font-size:12px;color:var(--text3);font-weight:600;text-align:center;margin-bottom:16px;line-height:1.6">Enter each account's actual balance at the start of this month.<br>This won't affect your transaction history.</div>
-    <div id="monthlyOpeningFields" style="margin-bottom:16px"></div>
-    <button class="btn-go" onclick="saveMonthlyOpenings()">✅ Save Opening Balances</button>
-    <button class="btn-cancel" onclick="closeModal('monthlyOpeningModal');showToast('Skipped — you can set this from Accounts page','yellow')" style="width:100%;margin-top:8px">Skip for now</button>
   </div>
 </div>
 
