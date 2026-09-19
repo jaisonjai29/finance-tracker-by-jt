@@ -4984,11 +4984,37 @@ function txHTML(tx, balInfo){
   // Title = category; subtitle = date + ℹ
   return`<div class="tx" onclick="editTx(${tx.id})"><div class="tx-ico" style="background:${bg}">${emojiHtml}</div><div class="tx-body"><div class="tx-name">${tx.category}</div><div class="tx-meta">${formatDate(tx.date)}${tx.time?'<span style="font-size:10px;color:var(--text3);margin-left:4px">· '+formatTxTime(tx.time)+'</span>':''}${_iBtn}</div>${badgeRow}</div><div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-top:2px"><div class="tx-amt" style="color:${col}">${tx.type==='income'?'＋':'－'}${state.currSymbol}${fmt(cv(tx.amount))}</div>${balPill}</div></div>`;
 }
+// Collapses split-group parts in a tx list into one synthetic row per group (used by Recent)
+function collapseSplitTxs(list){
+  var seen={},out=[];
+  list.forEach(function(tx){
+    if(!tx.splitGroup){out.push(tx);return;}
+    if(seen[tx.splitGroup])return;
+    seen[tx.splitGroup]=true;
+    var g=state.transactions.filter(function(t){return t.splitGroup===tx.splitGroup;});
+    out.push({_isSplitGroup:true,splitGroup:tx.splitGroup,type:tx.type,amount:g.reduce(function(s,t){return s+t.amount;},0),date:tx.date,time:tx.time,category:tx.category,emoji:tx.emoji,member:tx.member,splitParts:g.map(function(t){return{account:t.account,amount:t.amount,id:t.id};})});
+  });
+  return out;
+}
 // ── Split-across-accounts: renders the whole group as ONE row in History ──
-function splitGroupTxHTML(tx){
+function splitGroupTxHTML(tx, runBal){
+  // Per-account "balance after this part" chips, inline in the badge row right after the Split badge (History only — pass runBal)
+  var balPills='';
+  if(runBal){
+    var chips=tx.splitParts.slice().sort(function(a,b){return a.id-b.id;}).map(function(p){
+      var bi=runBal.get(String(p.id));
+      if(!bi) return '';
+      var a=state.accounts.find(function(a){return String(a.id)===String(p.account);});
+      var c=bi.acctColor||'var(--text2)';
+      var neg=bi.balance<0;
+      return `<span style="display:inline-flex;align-items:center;gap:3px;background:${c}18;border:1px solid ${c}33;border-radius:5px;padding:1px 6px;min-width:0"><span style="font-size:9px;color:var(--text3);font-weight:600;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a?escHtml(a.name):'bal'}</span><span style="font-size:10px;font-weight:800;color:${neg?'var(--red)':c};letter-spacing:-0.2px;white-space:nowrap">${neg?'−':''}${state.currSymbol}${fmt(cv(Math.abs(bi.balance)))}</span></span>`;
+    }).join('');
+    balPills=chips;
+  }
   const bg=tx.type==='income'?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)';
   const col=tx.type==='income'?'var(--green)':'var(--red)';
   const badges=['<span class="tx-badge" style="background:rgba(124,92,252,0.12);color:var(--accent);border:1px solid rgba(124,92,252,0.3)">🔀 Split · '+tx.splitParts.length+' accounts</span>'];
+  if(balPills)badges.push(balPills);
   const member=tx.member&&tx.member!=='Self'?tx.member:null;
   if(member)badges.push(`<span class="tx-badge" style="background:rgba(29,233,182,0.12);color:var(--teal);border:1px solid rgba(29,233,182,0.3)">👤 ${member}</span>`);
   const badgeRow=`<div class="tx-badges">${badges.join('')}</div>`;
@@ -5380,8 +5406,8 @@ function updateDashboard(){
   if(net>=0){badge.className='hero-badge badge-up';badge.textContent=tr('surplus')+' '+state.currSymbol+fmt(cv(net));}
   else{badge.className='hero-badge badge-dn';badge.textContent=tr('deficit')+' '+state.currSymbol+fmt(cv(Math.abs(net)));}
   const rc=document.getElementById('recentList');
-  const recent=txs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
-  rc.innerHTML=recent.length?recent.map(tx=>txHTML(tx)).join(''):`<div class="empty"><div class="empty-big">💸</div><div class="empty-title">${tr('noTx')}</div><div class="empty-desc">${tr('noTxDesc')}</div></div>`;
+  const recent=collapseSplitTxs(txs.slice().sort((a,b)=>b.date.localeCompare(a.date))).slice(0,5);
+  rc.innerHTML=recent.length?recent.map(tx=>tx._isSplitGroup?splitGroupTxHTML(tx):txHTML(tx)).join(''):`<div class="empty"><div class="empty-big">💸</div><div class="empty-title">${tr('noTx')}</div><div class="empty-desc">${tr('noTxDesc')}</div></div>`;
   // Budget alert bar
   updateBudgetAlertBar();
   renderMiniChart();
@@ -5658,7 +5684,7 @@ function renderHistory(){
     var summaryHTML=summaryParts.length?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:2px 7px;margin-left:6px;flex-shrink:0;white-space:nowrap;overflow:hidden;max-width:calc(100vw - 120px)">'+summaryParts.join('<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>')+( netStr?'<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>'+netStr:'')+'</span>':'';
     html+=`<div style="display:flex;align-items:center;gap:0;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px;overflow:hidden;white-space:nowrap">${formatDate(date)}${summaryHTML}</div><div class="box" style="padding:8px 14px">`;
     rows.forEach(function(item){
-      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=(item.data._isSplitGroup?splitGroupTxHTML(item.data):txHTML(item.data,bi));}else{html+=transferHistHTML(item.data);}
+      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=(item.data._isSplitGroup?splitGroupTxHTML(item.data,runBal):txHTML(item.data,bi));}else{html+=transferHistHTML(item.data);}
     });
     html+='</div>';
   });
