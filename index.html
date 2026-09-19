@@ -1714,12 +1714,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
         <!-- STATE 3: Signed in -->
         <div id="stateSignedIn" style="display:none">
           <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:2px solid rgba(34,197,94,0.2);border-radius:var(--radius-xs);margin-bottom:10px">
-            <div style="position:relative;cursor:pointer" onclick="document.getElementById('localPhotoInput').click()" title="Tap to change photo">
+            <div style="position:relative">
               <img id="userPhoto" src="" width="40" height="40" style="border-radius:50%;display:none;object-fit:cover">
               <div id="userPhotoFallback" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--accent-text)">?</div>
-              <div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px">📷</div>
             </div>
-            <input type="file" id="localPhotoInput" accept="image/*" style="display:none" onchange="setLocalProfilePhoto(event)">
             <div style="flex:1">
               <div style="font-size:14px;font-weight:900" id="userDisplayName">User</div>
               <div style="font-size:11px;color:var(--text3);font-weight:700" id="userEmailDisplay">email</div>
@@ -1875,10 +1873,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
       <div class="set-sec">
         <div class="set-sec-title">💾 Backup & Sync</div>
         <!-- Data size -->
-        <div class="set-row" style="cursor:default">
+        <div class="set-row" onclick="toggleDataSizeBreakdown()">
           <div class="set-row-left"><span class="set-row-icon">📦</span><div><div class="set-row-label">Data Size</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px" id="dataSizeDetail">Calculating…</div></div></div>
-          <div class="set-row-right" id="dataSizeText">—</div>
+          <div class="set-row-right"><span id="dataSizeText">—</span><span id="dataSizeChev" style="margin-left:6px">▸</span></div>
         </div>
+        <div id="dataSizeBreakdown" style="display:none;margin:-2px 0 8px;padding:6px 14px 10px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-xs)"></div>
         <!-- Export -->
         <div class="set-row" onclick="exportData()">
           <div class="set-row-left"><span class="set-row-icon">📤</span><div><div class="set-row-label">Export Backup</div><div style="font-size:11px;color:var(--text3);font-weight:700;margin-top:2px">Download encrypted JSON to your device</div></div></div>
@@ -3458,8 +3457,7 @@ let state={
   customPayIcons:{},
   autoLockEnabled:false,
   autoLockMs:300000,
-  fpCredentialId:null,
-  localProfilePhoto:''
+  fpCredentialId:null
 };
 let addMenuOpen=false;
 function toggleAddMenu(){addMenuOpen=!addMenuOpen;const m=document.getElementById('addMenu');if(m){m.style.display=addMenuOpen?'flex':'none';if(addMenuOpen)m.scrollTop=0;}const fab=document.getElementById('fab');if(fab)fab.textContent=addMenuOpen?'✕':'➕';}
@@ -3579,9 +3577,14 @@ function loadState(){
     currentUser={
       name:state.userName,
       email:state.userEmail||'',
-      photo:state.localProfilePhoto||'',
+      photo:'',
       id:''
     };
+  }
+  // Profile photo is no longer stored: drop any old copy and free its space immediately
+  if('localProfilePhoto' in state){
+    _stripUnwantedData(state);
+    try{localStorage.setItem(_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5',JSON.stringify(state));}catch(e){}
   }
   // ── Category migration: map old category names to new ones ──────────────────
   migrateCategoryNames();
@@ -3643,7 +3646,13 @@ function migrateCategoryNames(){
   }
   if(changed) saveState();
 }
+// Fields that must never be stored, backed up or synced (keeps data + backups small)
+function _stripUnwantedData(o){
+  if(o&&typeof o==='object'&&'localProfilePhoto' in o) delete o.localProfilePhoto;
+  return o;
+}
 function saveState(){
+  _stripUnwantedData(state);
   try{
     // Write ONLY to the profile-specific key (or legacy ft_v5 if no profile active)
     var storeKey=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
@@ -3677,9 +3686,67 @@ function updateDataSizeDisplay(){
       var txCount=(state.transactions||[]).length;
       elDetail.textContent=txCount+' transaction'+(txCount===1?'':'s')+' stored locally';
     }
+    var _dsb=document.getElementById('dataSizeBreakdown');
+    if(_dsb&&_dsb.style.display==='block')renderDataSizeBreakdown();
   }catch(e){
     if(elText)elText.textContent='—';
   }
+}
+// ── Data size breakdown (tap "Data Size" in Settings): income / expense / transfers / other ──
+var _DS_LABELS={accounts:'Accounts',assets:'Assets',liabilities:'Loans & debts',goals:'Goals',bills:'Bills',recurring:'Recurring',budgets:'Budgets',monthlyBudgets:'Monthly budgets',monthClosings:'Month closings',familyMembers:'Family members',allocTargets:'Allocation targets',flexLoans:'Flexible loans'};
+var _dsOtherOpen=false;
+function _dsBytes(v){try{return new Blob([JSON.stringify(v)]).size;}catch(e){return 0;}}
+function getDataSizeBreakdown(){
+  var txs=state.transactions||[];
+  var incTx=txs.filter(function(t){return t.type==='income';});
+  var expTx=txs.filter(function(t){return t.type==='expense';});
+  var oddTx=txs.filter(function(t){return t.type!=='income'&&t.type!=='expense';});
+  var trs=state.transfers||[];
+  var storeKey=_currentProfileId?getProfileStateKey(_currentProfileId):'ft_v5';
+  var total=new Blob([localStorage.getItem(storeKey)||JSON.stringify(state)]).size;
+  var inc=_dsBytes(incTx),exp=_dsBytes(expTx),tr=_dsBytes(trs);
+  var items=[],small=0;
+  if(oddTx.length)items.push({label:'Other transactions',count:oddTx.length,bytes:_dsBytes(oddTx)});
+  Object.keys(state).forEach(function(k){
+    if(k==='transactions'||k==='transfers')return;
+    var b=_dsBytes(state[k])+k.length+4;
+    if(b>=1024)items.push({label:_DS_LABELS[k]||k,count:Array.isArray(state[k])?state[k].length:null,bytes:b});
+    else small+=b;
+  });
+  if(small>0)items.push({label:'Settings & small items',count:null,bytes:small});
+  items.sort(function(a,b){return b.bytes-a.bytes;});
+  return {total:total,income:{n:incTx.length,bytes:inc},expense:{n:expTx.length,bytes:exp},transfer:{n:trs.length,bytes:tr},other:Math.max(0,total-inc-exp-tr),items:items};
+}
+function renderDataSizeBreakdown(){
+  var box=document.getElementById('dataSizeBreakdown');
+  if(!box)return;
+  var d=getDataSizeBreakdown();
+  function row(icon,label,cnt,bytes,color,click,sub){
+    var pct=d.total>0?Math.max(2,Math.round(bytes/d.total*100)):0;
+    return '<div '+(click?'onclick="'+click+'" ':'')+'style="padding:'+(sub?'6px 0 6px 18px':'9px 0')+';border-bottom:1px solid var(--border);'+(click?'cursor:pointer':'')+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:'+(sub?'12':'13')+'px;font-weight:'+(sub?'600':'700')+';color:var(--text)">'+icon+' '+escHtml(label)+(cnt!=null&&cnt!==''?' <span style="font-size:10px;color:var(--text3);font-weight:700">· '+cnt+'</span>':'')+'</span>'
+      +'<span style="font-size:12px;font-weight:800;color:'+color+';white-space:nowrap">'+formatDataBytes(bytes)+'</span></div>'
+      +(sub?'':'<div style="height:4px;border-radius:4px;background:var(--bg3);margin-top:6px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+color+'"></div></div>')
+      +'</div>';
+  }
+  var h='';
+  h+=row('💰','Income',d.income.n+' txns',d.income.bytes,'var(--green)');
+  h+=row('💸','Expenses',d.expense.n+' txns',d.expense.bytes,'var(--red)');
+  h+=row('🔁','Transfers',d.transfer.n+' items',d.transfer.bytes,'var(--blue)');
+  h+=row('🗂️','Other'+(_dsOtherOpen?' ▾':' ▸'),d.items.length+' groups',d.other,'var(--accent)','toggleDataSizeOther()');
+  if(_dsOtherOpen){
+    d.items.forEach(function(it){h+=row('•',it.label,it.count,it.bytes,'var(--text2)','',true);});
+  }
+  h+='<div style="display:flex;justify-content:space-between;padding-top:9px"><span style="font-size:13px;font-weight:900;color:var(--text)">Total stored</span><span style="font-size:13px;font-weight:900;color:var(--text)">'+formatDataBytes(d.total)+'</span></div>';
+  box.innerHTML=h;
+}
+function toggleDataSizeOther(){_dsOtherOpen=!_dsOtherOpen;renderDataSizeBreakdown();}
+function toggleDataSizeBreakdown(){
+  var box=document.getElementById('dataSizeBreakdown'),chev=document.getElementById('dataSizeChev');
+  if(!box)return;
+  var open=box.style.display==='block';
+  if(open){box.style.display='none';if(chev)chev.textContent='▸';}
+  else{renderDataSizeBreakdown();box.style.display='block';if(chev)chev.textContent='▾';}
 }
 // Restore from local emergency or previous backup if main state is corrupted/empty
 function restoreFromLocalBackup(){
@@ -3726,7 +3793,7 @@ function _silentSync(){
   // Refresh token if near expiry
   var _sess=localStorage.getItem('ft_gsession');
   try{var _so=JSON.parse(_sess);if(_so.expiry<Date.now()+60000)refreshToken();}catch(e){}
-  var safeState=JSON.parse(JSON.stringify(state));
+  var safeState=_stripUnwantedData(JSON.parse(JSON.stringify(state)));
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
   var innerPayload=JSON.stringify({v:'1',updatedAt:safeState.lastSync,data:safeState});
@@ -3978,7 +4045,6 @@ function initApp(){
   applyAmountsHide();
   _clearAutoHideTimer();
   if(state.autoHideDelay>0&&!state.amountsHidden) _startAutoHideTimer();
-  if(state.localProfilePhoto) applyProfilePhoto(state.localProfilePhoto);
   if(state.isLoggedIn&&currentUser){
     renderAuthSignedIn(currentUser);
     renderGoogleAccount();
@@ -9774,34 +9840,6 @@ function setAmtFormat(f){
   updateDashboard();renderHistory();if(curPage==='wealth')renderWealth();if(curPage==='assets')renderAssets();if(curPage==='analytics')renderAnalytics();renderAccounts();
 }
 function applyFont(f){document.documentElement.setAttribute('data-font',f);}
-function setLocalProfilePhoto(event){
-  var file=event.target.files[0];
-  if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var dataUrl=e.target.result;
-    state.localProfilePhoto=dataUrl;
-    saveState();
-    applyProfilePhoto(dataUrl);
-    showToast('Profile photo updated!','green');
-  };
-  reader.readAsDataURL(file);
-}
-
-function applyProfilePhoto(dataUrl){
-  if(!dataUrl)return;
-  // Update topbar avatar
-  var avatarImg=document.getElementById('avatarImg');
-  var avatarLetter=document.getElementById('avatarLetter');
-  if(avatarImg){avatarImg.src=dataUrl;avatarImg.style.display='block';}
-  if(avatarLetter)avatarLetter.style.display='none';
-  // Update settings avatar
-  var photoEl=document.getElementById('userPhoto');
-  var fallEl=document.getElementById('userPhotoFallback');
-  if(photoEl){photoEl.src=dataUrl;photoEl.style.display='block';}
-  if(fallEl)fallEl.style.display='none';
-}
-
 function syncLangBtn(){
   var el=document.getElementById('lang-en');
   if(el){document.querySelectorAll('#langGrid .font-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
@@ -10148,7 +10186,7 @@ function updateAuthUI(){
   if(!s1||!s2||!s3) return;
   // Use state.isLoggedIn as truth — currentUser may be null before SDK loads
   if(!currentUser && state.isLoggedIn && state.userName){
-    currentUser={name:state.userName,email:state.userEmail||'',photo:state.localProfilePhoto||'',id:''};
+    currentUser={name:state.userName,email:state.userEmail||'',photo:'',id:''};
   }
   if(currentUser && state.isLoggedIn){
     s1.style.display='none'; s2.style.display='none'; s3.style.display='block';
@@ -10159,7 +10197,7 @@ function updateAuthUI(){
     var avatarImg=document.getElementById('avatarImg');
     var avatarLetter=document.getElementById('avatarLetter');
     var displayName=currentUser.name||currentUser.email.split('@')[0];
-    var photoUrl=state.localProfilePhoto||currentUser.photo||'';
+    var photoUrl=currentUser.photo||'';
     if(nameEl) nameEl.textContent=displayName;
     if(emailEl) emailEl.textContent=currentUser.email;
     if(avatarImg&&avatarLetter){
@@ -10229,12 +10267,12 @@ function syncToCloud(){
   // ── SAFETY: Always save a local emergency backup before any Drive operation ──
   // This means even if Drive fails or corrupts, data is never lost
   try{
-    var _emergencyBackup=JSON.parse(JSON.stringify(state));
+    var _emergencyBackup=_stripUnwantedData(JSON.parse(JSON.stringify(state)));
     localStorage.setItem('ft_emergency_backup', JSON.stringify({savedAt:new Date().toISOString(),data:_emergencyBackup}));
   }catch(e){ console.warn('Emergency backup failed:',e); }
 
   // Build clean state to save
-  var safeState=JSON.parse(JSON.stringify(state));
+  var safeState=_stripUnwantedData(JSON.parse(JSON.stringify(state)));
   delete safeState.gClientId;
   safeState.lastSync=new Date().toISOString();
 
@@ -10363,7 +10401,7 @@ function loadFromCloud(){
   if(el) el.textContent='Loading from Drive...';
 
   // ── SAFETY SNAPSHOT: preserve local data before any network op ──
-  var localSnapshot=JSON.parse(JSON.stringify(state));
+  var localSnapshot=_stripUnwantedData(JSON.parse(JSON.stringify(state)));
 
   getSyncPassword().then(function(pw){
     if(!pw){
@@ -10476,7 +10514,7 @@ function loadFromCloud(){
         var keep={
           isLoggedIn:localSnapshot.isLoggedIn, userName:localSnapshot.userName,
           userEmail:localSnapshot.userEmail, lastSync:new Date().toISOString(),
-          gClientId:localSnapshot.gClientId, localProfilePhoto:localSnapshot.localProfilePhoto,
+          gClientId:localSnapshot.gClientId,
           pin:localSnapshot.pin, fpEnabled:localSnapshot.fpEnabled,
           transactions:mergedTx
         };
@@ -10701,7 +10739,7 @@ function buildBackupPayload(){
     version:'ft-v5',
     exportDate:new Date().toISOString(),
     checksum:state.transactions.length+'-'+state.assets.length+'-'+state.goals.length,
-    data:JSON.parse(JSON.stringify(state))
+    data:_stripUnwantedData(JSON.parse(JSON.stringify(state)))
   };
   return JSON.stringify(payload,null,2);
 }
