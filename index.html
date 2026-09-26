@@ -8679,7 +8679,9 @@ function saveAcct(){
 function renderAccounts(){
   const totalBal=state.accounts.reduce((s,a)=>s+a.balance,0);
   const c=document.getElementById('acctSummary');
-  c.innerHTML=`<div class="stat-grid" style="margin-bottom:0"><div class="stat-box sg"><span class="stat-emoji">🏦</span><div class="stat-lbl">Total Balance</div><div class="stat-val" style="font-size:16px">${state.currSymbol}${fmt(cv(totalBal))}</div></div><div class="stat-box sb"><span class="stat-emoji">💳</span><div class="stat-lbl">Accounts</div><div class="stat-val">${state.accounts.length}</div></div></div>`;
+  const balCls=totalBal>0?'sg':totalBal<0?'sr':'sb';
+  const balSign=totalBal<0?'−':'';
+  c.innerHTML=`<div class="stat-grid" style="margin-bottom:0"><div class="stat-box ${balCls}"><span class="stat-emoji">🏦</span><div class="stat-lbl">Total Balance</div><div class="stat-val" style="font-size:16px">${balSign}${state.currSymbol}${fmt(cv(Math.abs(totalBal)))}</div></div><div class="stat-box sb"><span class="stat-emoji">💳</span><div class="stat-lbl">Accounts</div><div class="stat-val">${state.accounts.length}</div></div></div>`;
   const al=document.getElementById('acctList');
   if(!state.accounts.length){al.innerHTML=`<div class="empty"><div class="empty-big">🏦</div><div class="empty-title">No accounts yet</div><div class="empty-desc">Add Cash, Bank, UPI, Credit Card</div></div>`;return;}
   al.innerHTML=state.accounts.map(a=>{
