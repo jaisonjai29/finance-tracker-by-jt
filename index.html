@@ -3112,64 +3112,6 @@ const LANG = {
 };
 function tr(key){ return LANG.en[key] || key; }
 
-function applyTranslations(){
-  var lang=state.lang||'en';
-  // Nav labels
-  var navMap={home:'home',analytics:'analytics',goals:'goals',assets:'assets',
-    liabilities:'liabilities',history:'history',budget:'budget',bills:'bills',
-    accounts:'accounts',assert:'assert',insights:'insights',recurring:'recurring'};
-  Object.entries(navMap).forEach(function(kv){
-    var el=document.querySelector('#nav-'+kv[0]+' .nav-lbl');
-    if(el) el.textContent=tr(kv[1]);
-  });
-  // Page title
-  var cur=document.getElementById('pageTitle');
-  if(cur){
-    var pageKey=Object.keys(navMap).find(function(k){return document.getElementById('page-'+k)?.classList.contains('on');});
-    if(pageKey) cur.textContent=tr(pageKey);
-  }
-  // Hero labels
-  var heroLabel=document.querySelector('.hero-label');
-  if(heroLabel) heroLabel.textContent=tr('netWorth');
-  // Stat labels
-  var statLabels=document.querySelectorAll('.stat-lbl');
-  var statKeys=['moneyIn','moneyOut'];
-  statLabels.forEach(function(el,i){ if(statKeys[i]) el.textContent=tr(statKeys[i]); });
-  // Savings rate label
-  var saveLbl=document.querySelector('.save-bar-label');
-  if(saveLbl) saveLbl.textContent=tr('savingsRate');
-  // See all button
-  var seeAllBtn=document.querySelector('.sec-btn[onclick*="history"]');
-  if(seeAllBtn) seeAllBtn.textContent=tr('seeAll');
-  // Search placeholder
-  var searchInp=document.getElementById('searchInput');
-  if(searchInp) searchInp.placeholder=tr('search');
-  // History filters
-  var histPills=document.querySelectorAll('#histFilter .fpill');
-  if(histPills[0]) histPills[0].textContent=tr('all');
-  if(histPills[1]) histPills[1].textContent=tr('income');
-  if(histPills[2]) histPills[2].textContent=tr('expense');
-  if(histPills[3]) histPills[3].textContent='📈 Invest';
-  // Debt summary labels
-  ['totalDebt','monthlyEMI','debtRatio'].forEach(function(k){
-    var els=document.querySelectorAll('.stat-lbl');
-    // handled dynamically in renderLiabilities
-  });
-  // Re-render dynamic content
-  // Wealth page static labels
-  var wHero=document.getElementById('wealthHeroLabel');if(wHero)wHero.textContent=tr('netWorth');
-  var wBadge=document.getElementById('wealthBadge');if(wBadge&&wBadge.classList.contains('badge-up'))wBadge.textContent=tr('assetsExceed');else if(wBadge)wBadge.textContent=tr('liabExceed');
-  var wA=document.getElementById('wLblAssets');if(wA)wA.textContent=tr('totalAssets');
-  var wD=document.getElementById('wLblDebts');if(wD)wD.textContent=tr('totalDebts');
-  var wC=document.getElementById('wLblAccts');if(wC)wC.textContent=tr('cashBank');
-  // Re-render wealth if open
-  if(document.getElementById('page-wealth')?.classList.contains('on')) renderWealth();
-  renderCatChips();
-  updateDashboard();
-  renderGoals();
-  renderHistory();
-  renderLiabilities();
-}
 const LIAB_TYPES={'Home Loan':{emoji:'🏠',desc:'Mortgage / housing loan',color:'#3b82f6'},'Car Loan':{emoji:'🚗',desc:'Vehicle financing',color:'#f97316'},'Personal Loan':{emoji:'💵',desc:'Unsecured personal loan',color:'#a855f7'},'Credit Card':{emoji:'💳',desc:'Credit card outstanding',color:'#ef4444'},'Education Loan':{emoji:'🎓',desc:'Student / education loan',color:'#22c55e'},'Business Loan':{emoji:'🏢',desc:'Business financing',color:'#eab308'},'Gold Loan':{emoji:'🥇',desc:'Loan against gold',color:'#f59e0b'},'Flexible':{emoji:'🧮',desc:'Informal loan, ad-hoc repayments',color:'#06b6d4'},'Other':{emoji:'💸',desc:'Other borrowings',color:'#e879f9'}};
 const ACCT_TYPES={'Savings Account':{emoji:'🏦',color:'#3b82f6'},'Salary Account':{emoji:'💼',color:'#6366f1'},'Current Account':{emoji:'🏢',color:'#8b5cf6'},'Cash':{emoji:'💵',color:'#22c55e'},'UPI':{emoji:'🔷',color:'#f97316'},'Credit Card':{emoji:'💳',color:'#ef4444'},'Debit Card':{emoji:'💰',color:'#06b6d4'},'Fixed Deposit':{emoji:'🏛️',color:'#eab308'},'PPF Account':{emoji:'📊',color:'#10b981'},'Investment / Demat':{emoji:'📈',color:'#a855f7'},'Wallet':{emoji:'👛',color:'#f43f5e'},'Loan Account':{emoji:'🏧',color:'#dc2626'}};
 
@@ -3775,26 +3717,6 @@ function toggleDataSizeBreakdown(){
   else{renderDataSizeBreakdown();box.style.display='block';if(chev)chev.textContent='▾';}
 }
 // Restore from local emergency or previous backup if main state is corrupted/empty
-function restoreFromLocalBackup(){
-  var sources=['ft_emergency_backup','ft_prev_backup'];
-  for(var i=0;i<sources.length;i++){
-    try{
-      var raw=localStorage.getItem(sources[i]);
-      if(!raw) continue;
-      var parsed=JSON.parse(raw);
-      var data=parsed.data||parsed;
-      if(data&&(data.transactions||[]).length>0){
-        Object.assign(state,data);
-        saveState();
-        initApp();
-        showToast('✅ Data restored from local backup ('+sources[i]+')','green');
-        return true;
-      }
-    }catch(e){}
-  }
-  showToast('No local backup found to restore.','red');
-  return false;
-}
 var _silentSyncTimer=null;
 function _scheduleSilentSync(){
   // Only require isLoggedIn — gAccessToken may be null after page reload but can be refreshed silently
@@ -4231,14 +4153,6 @@ function populatePayMethodSelects(){
     if(cur) el.value=cur;
   });
 }
-function toggleTxExtra(){
-  var ef=document.getElementById('txExtraFields');
-  var ea=document.getElementById('txExtraArrow');
-  if(!ef)return;
-  var open=ef.style.display==='block';
-  ef.style.display=open?'none':'block';
-  if(ea)ea.style.transform=open?'':'rotate(180deg)';
-}
 function toggleEditTxExtra(){
   var ef=document.getElementById('editTxExtraFields');
   var ea=document.getElementById('editTxExtraArrow');
@@ -4372,12 +4286,10 @@ function getSelCatFromSelect(){
   var sel=document.getElementById('txCatSelect');
   return sel?sel.value:'Other';
 }
-function getSelCat(){return getSelCatFromSelect();}
 // ── Split-across-accounts (Add Transaction only — does not touch edit flow) ──
 var txSplitMode=false;
 var _passEditId=null;
 function txNoPass(){return state.transactions.filter(function(t){return !t.pass;});}
-function heldForOthers(){var s=0;state.transactions.forEach(function(t){if(t.pass)s+=(t.type==='income'?t.amount:-t.amount);});return s;}
 function passAcctOpts(){return '<option value="">-- Select Account --</option>'+state.accounts.map(function(a){var i=ACCT_TYPES[a.type]||{emoji:'🏦'};return '<option value="'+a.id+'">'+i.emoji+' '+escHtml(a.name)+(a.type&&a.type!==a.name?' ['+a.type+']':'')+'</option>';}).join('');}
 function passAcctName(id){var a=state.accounts.find(function(x){return String(x.id)===String(id);});return a?a.name:'';}
 function openPassModal(gid){
@@ -4550,6 +4462,7 @@ function updateSplitRemaining(){
   else{ind.textContent='Over by '+state.currSymbol+fmt(Math.abs(remaining));ind.style.background='rgba(239,68,68,0.15)';ind.style.color='#ef4444';}
 }
 function saveSplitTx(splits,totalDisplay,date,time,notes,cat,platform,payMethod,liabLink){
+  var _kind=txType; // capture before closeModal('txModal') resets txType via resetTxForm()
   var rate=state.currencyRate||1;
   var member=getSelMember();
   var groupId='sp'+Date.now();
@@ -4571,7 +4484,7 @@ function saveSplitTx(splits,totalDisplay,date,time,notes,cat,platform,payMethod,
   }
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
-  if(txType==='expense'&&cat&&state.budgets[cat]){
+  if(_kind==='expense'&&cat&&state.budgets[cat]){
     var monthSpent=getMonthTxs().filter(function(t){return t.type==='expense'&&t.category===cat;}).reduce(function(s,t){return s+t.amount;},0);
     var limit=state.budgets[cat];
     if(monthSpent>limit){showToast('⚠️ '+cat+' budget exceeded by '+state.currSymbol+fmt(cv(monthSpent-limit))+'!','red');}
@@ -4580,6 +4493,8 @@ function saveSplitTx(splits,totalDisplay,date,time,notes,cat,platform,payMethod,
   showToast('✅ Split into '+splits.length+' transactions','green');
 }
 function saveTx(){
+  const txKind=txType;
+  const wantRecurring=txRecurring; // capture now: closeModal('txModal') resets the toggle via resetTxForm()
   const amt=parseFloat(document.getElementById('txAmt').value);
   const date=document.getElementById('txDate').value;
   const time=document.getElementById('txTime').value||new Date().toTimeString().slice(0,5);
@@ -4620,7 +4535,7 @@ function saveTx(){
   saveState();closeModal('txModal');updateDashboard();renderHistory();updateBudget();renderAccounts();renderLiabilities();
   if(curPage==='analytics')renderAnalytics();
   // ── Budget warning: check if this expense just pushed a category over its limit ──
-  if(txType==='expense'&&cat&&state.budgets[cat]){
+  if(txKind==='expense'&&cat&&state.budgets[cat]){
     var monthSpent=getMonthTxs().filter(t=>t.type==='expense'&&t.category===cat).reduce((s,t)=>s+t.amount,0);
     var limit=state.budgets[cat];
     var r3=state.currencyRate||1;
@@ -4633,8 +4548,8 @@ function saveTx(){
     }
   }
   // Auto-add as recurring if toggle was Yes
-  if(txRecurring){
-    addAsRecurring(desc,amt,txType,cat);
+  if(wantRecurring){
+    addAsRecurring(notes||cat,amt,txKind,cat);
     txRecurring=false;
   }
 }
@@ -4675,16 +4590,6 @@ function getMonthTxs(){return state.transactions.filter(tx=>{if(tx.pass)return f
 // Returns cumulative carry-forward amount from all months before the given month/year.
 // Positive = savings carried in; Negative = deficit carried in.
 // ── Transfer net effect on a single account for a specific month ──
-function getTransferNetForAccountInMonth(acctId, m, y){
-  var net=0;
-  (state.transfers||[]).forEach(function(tr){
-    var d=new Date(tr.date);
-    if(d.getFullYear()!==y||d.getMonth()!==m) return;
-    if(String(tr.to)===String(acctId))   net+=tr.amount;
-    if(String(tr.from)===String(acctId)) net-=tr.amount;
-  });
-  return net;
-}
 
 // ── Net of an account's transactions + transfers dated relative to a given month/year.
 // inclusive=true  → sums everything dated ON OR AFTER (month,year)  [this month onward]
@@ -4726,19 +4631,6 @@ function getCarryForward(month, year){
 
 // Show a modal breaking down how carry forward was calculated
 // ── Helper: compute per-account balance at end of a given month (or opening) ──
-function getAccountBalanceUpTo(acct, upToMonth, upToYear){
-  // Returns {opening, totalInc, totalExp, balance} for all months UP TO AND INCLUDING upToMonth/upToYear
-  var opening = typeof acct.openingBalance==='number' ? acct.openingBalance : 0;
-  var txs = state.transactions.filter(function(tx){
-    if(String(tx.account)!==String(acct.id)) return false;
-    var d=new Date(tx.date);
-    var dM=d.getMonth(), dY=d.getFullYear();
-    return dY<upToYear||(dY===upToYear&&dM<=upToMonth);
-  });
-  var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-  var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-  return {opening:opening, totalInc:inc, totalExp:exp, balance:opening+inc-exp};
-}
 
 function showCarryBreakdown(){
   var month=state.currentMonth, year=state.currentYear;
@@ -5330,6 +5222,7 @@ function showTxDescInfo(cat,_unused,date,notes,platform,payMethod){
   showModal('txDescInfoModal');
 }
 // ── Custom themed confirm dialog ─────────────────────────────────────────────
+function customAlert(icon,msg){showToast(icon+' '+msg,icon==='\u2705'?'green':'yellow');}
 function customConfirm(icon, title, msg, onOk){
   document.getElementById('confirmIcon').textContent=icon;
   document.getElementById('confirmTitle').textContent=title;
@@ -5469,7 +5362,8 @@ function saveEditTx(){
   const id=document.getElementById('editTxId').value;
   const amt=parseFloat(document.getElementById('editTxAmt').value);
   const date=document.getElementById('editTxDate').value;
-  const time=document.getElementById('editTxTime').value||tx.time||'';
+  const _origTx=state.transactions.find(t=>String(t.id)===String(id));
+  const time=document.getElementById('editTxTime').value||(_origTx&&_origTx.time)||'';
   const notes=document.getElementById('editTxNotes').value.trim();
   const acct=document.getElementById('editTxAccount').value;
   const cat=(document.getElementById('editTxCatSelect')?.value)||'Other';
@@ -5764,16 +5658,8 @@ function renderBudgetDonut(){
 }
 
 // BUDGET HISTORY CHART (moved to Wealth page — stubs kept for safety)
-function renderBudgetHistoryChart(){}
 // Helper: sum only budget-tracked categories
-function spent_inBudget(tx,budgets){
-  return budgets[tx.category]!==undefined?tx.amount:0;
-}
 // Old settings budget functions — now handled by Wealth page (stubs)
-function renderSettingsBudgetView(){}
-function renderSettingsBudgetInputs(){}
-function toggleSettingsBudgetEdit(){}
-function saveSettingsBudgets(){}
 
 // ======== HISTORY ========
 function renderMemberFilterChips(){
@@ -6202,12 +6088,6 @@ function getAllocStatus(scheme,pct){
   return{type:'ok',msg:'✅ On target'};
 }
 
-function renderAllocTargetInputs(){
-  renderWealthAllocBars();
-  // refresh modal if open
-  var m=document.getElementById('allocModal');
-  if(m&&m.classList.contains('on')) renderAllocModalRows();
-}
 
 // ── WEALTH PAGE: stacked bars (bigger icons + bars) ──────────────────
 function renderWealthAllocBars(){
@@ -7700,19 +7580,6 @@ function importDematXLSX(file){
   reader.readAsArrayBuffer(file);
 }
 
-function importDematCSV_legacy(event){
-  var file=event.target.files[0];
-  if(!file){return;}
-  event.target.value='';
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var text=e.target.result;
-    var result=parseDematCSV(text);
-    if(!result.rows.length){showToast('No holdings found in CSV. Check file format.','red');return;}
-    showDematPreview(result);
-  };
-  reader.readAsText(file);
-}
 
 function parseDematCSV(text){
   // Normalize line endings
@@ -8458,81 +8325,6 @@ function toggleAssetGroup(id){
   if(!isOpen&&state.amountsHidden) _tagAllMoneyElements();
 }
 
-async function runPortfolioAI(){
-  var btn=document.getElementById('portfolioAiBtn');
-  var content=document.getElementById('portfolioAiContent');
-  if(!btn||!content) return;
-  if(!state.assets||!state.assets.length){content.innerHTML='<div style="color:var(--text3)">Add some assets first to get AI insights.</div>';return;}
-  btn.textContent='⏳ Analysing…';btn.disabled=true;
-  content.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="width:20px;height:20px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div><span style="color:var(--text3)">Claude is reviewing your portfolio…</span></div>';
-
-  // Build concise portfolio summary for the prompt
-  var sym=state.currSymbol;
-  var totalVal=state.assets.reduce(function(s,a){return s+a.value;},0);
-  var totalInv=state.assets.reduce(function(s,a){return s+(a.invested||0);},0);
-  var totalPL=totalVal-totalInv;
-
-  // Group by scheme
-  var grpMap={};
-  state.assets.forEach(function(a){
-    var s=a.scheme||'Other';
-    if(!grpMap[s]) grpMap[s]={assets:[],value:0,invested:0};
-    grpMap[s].assets.push(a);grpMap[s].value+=a.value;grpMap[s].invested+=a.invested||0;
-  });
-
-  var holdingLines=[];
-  state.assets.forEach(function(a){
-    var d=a.details||{};var s=a.scheme;var line=a.name+' ('+s+')';
-    if((s==='Stocks'||s==='ETF')&&d.qty>0&&d.buyPrice>0&&d.currentPrice>0){
-      var inv=d.qty*d.buyPrice,cur=d.qty*d.currentPrice,pl=cur-inv,plp=(pl/inv*100).toFixed(1);
-      line+=' | Qty:'+d.qty+' | Avg:'+sym+fmt(cv(d.buyPrice))+' | CMP:'+sym+fmt(cv(d.currentPrice))+' | Invested:'+sym+fmt(cv(inv))+' | Value:'+sym+fmt(cv(cur))+' | P&L:'+sym+fmt(cv(Math.abs(pl)))+' ('+(pl>=0?'+':'-')+plp+'%)';
-    } else if(s==='Mutual Fund'&&d.units>0&&d.buyNav>0&&d.currentNav>0){
-      var inv=d.units*d.buyNav,cur=d.units*d.currentNav,pl=cur-inv,plp=(pl/inv*100).toFixed(1);
-      line+=' | Units:'+d.units.toFixed(3)+' | Avg NAV:'+sym+fmt(cv(d.buyNav))+' | NAV:'+sym+fmt(cv(d.currentNav))+' | Invested:'+sym+fmt(cv(inv))+' | Value:'+sym+fmt(cv(cur))+' | P&L:'+sym+fmt(cv(Math.abs(pl)))+' ('+(pl>=0?'+':'-')+plp+'%)';
-    } else {
-      line+=' | Value:'+sym+fmt(cv(a.value))+(a.invested?' | Invested:'+sym+fmt(cv(a.invested)):'');
-    }
-    holdingLines.push(line);
-  });
-
-  var schemeAllocs=Object.entries(grpMap).map(function([k,v]){
-    var pct=totalVal>0?(v.value/totalVal*100).toFixed(1):0;
-    var pl=v.value-v.invested;
-    return k+': '+pct+'% ('+sym+fmt(cv(v.value))+', P&L '+(pl>=0?'+':'')+sym+fmt(cv(Math.abs(pl)))+')';
-  }).join('\n');
-
-  var prompt='You are a smart financial advisor for an Indian investor.\n\nPORTFOLIO SUMMARY:\nTotal Invested: '+sym+fmt(cv(totalInv))+'\nCurrent Value: '+sym+fmt(cv(totalVal))+'\nOverall P&L: '+(totalPL>=0?'+':'')+sym+fmt(cv(Math.abs(totalPL)))+' ('+(totalInv>0?((totalPL/totalInv)*100).toFixed(1):0)+'%)\n\nASSET ALLOCATION:\n'+schemeAllocs+'\n\nHOLDINGS DETAIL:\n'+holdingLines.join('\n')+'\n\nProvide 3-5 concise, specific, actionable portfolio insights covering: top/worst performers, rebalancing suggestions, concentration risk, what action to consider (buy more / book partial profit / hold), and one actionable "next step".\n\nReturn ONLY valid JSON array (no markdown, no code fences):\n[{"type":"good|warn|bad|info","icon":"emoji","title":"max 7 words","text":"2-3 sentences with specific numbers"}]';
-
-  try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-    });
-    var data=await resp.json();
-    if(data.error) throw new Error(data.error.message);
-    var raw=data.content?.[0]?.text||'[]';
-    var clean=raw.replace(/```json|```/g,'').trim();
-    var insights=JSON.parse(clean);
-    var typeColors={good:'rgba(34,197,94,0.1)',warn:'rgba(255,215,64,0.1)',bad:'rgba(255,69,105,0.1)',info:'rgba(68,138,255,0.1)'};
-    var typeBorders={good:'rgba(34,197,94,0.3)',warn:'rgba(255,215,64,0.3)',bad:'rgba(255,69,105,0.3)',info:'rgba(68,138,255,0.3)'};
-    content.innerHTML=insights.map(function(ins){
-      var bg=typeColors[ins.type]||typeColors.info;
-      var bd=typeBorders[ins.type]||typeBorders.info;
-      return '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:12px;padding:12px 14px;margin-bottom:8px">'
-        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
-        +'<span style="font-size:22px">'+ins.icon+'</span>'
-        +'<div style="font-size:13px;font-weight:800;color:var(--text);line-height:1.3">'+ins.title+'</div>'
-        +'</div>'
-        +'<div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.7">'+ins.text+'</div>'
-        +'</div>';
-    }).join('');
-    btn.textContent='🔄 Refresh';btn.disabled=false;
-  }catch(e){
-    content.innerHTML='<div style="background:rgba(255,69,105,0.1);border:1px solid rgba(255,69,105,0.25);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--text2);font-weight:600">⚠️ Could not reach AI. Check connection and try again.<br><span style="font-size:10px;color:var(--text3)">'+e.message+'</span></div>';
-    btn.textContent='✨ Retry';btn.disabled=false;
-  }
-}
 function quickUpdatePrice(id, field, label){
   var a=state.assets.find(function(x){return x.id===id;});
   if(!a) return;
@@ -8944,8 +8736,6 @@ function renderAccounts(){
 }
 function deleteAcct(id){customConfirm('🏦','Remove Account','This cannot be undone.',function(){state.accounts=state.accounts.filter(a=>a.id!==id);saveState();renderAccounts();updateTxAccountSelect();renderHistory();renderTransferList();});}
 // Real store-of-value accounts — income deposits here, expenses deduct from here
-var INCOME_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Fixed Deposit','PPF Account','Investment / Demat','Wallet','UPI','Credit Card','Debit Card','Loan Account'];
-var EXPENSE_ACCT_TYPES=['Savings Account','Salary Account','Current Account','Cash','Wallet'];
 // Payment methods — metadata label for expenses only (no balance tracking)
 // PAYMENT_METHODS is now dynamic — see getPaymentMethods()
 
@@ -10160,12 +9950,6 @@ async function setCurr(c,sym,el){
   }
 }
 function updateCurrSymbols(){document.querySelectorAll('.curr').forEach(el=>{if(el.id==='netWorthCurr')return;el.textContent=state.currSymbol;});}
-function setLang(lang,el){
-  state.lang='en';saveState();
-  document.querySelectorAll('#langGrid .font-btn').forEach(b=>b.classList.remove('on'));
-  var enBtn=document.getElementById('lang-en');if(enBtn)enBtn.classList.add('on');
-}
-function toggleFP(){state.fpEnabled=!state.fpEnabled;saveState();var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';showToast(state.fpEnabled?'Fingerprint unlock enabled':'Fingerprint unlock disabled',state.fpEnabled?'green':'yellow');}
 function savePin(){const np=document.getElementById('newPin').value;const cp=document.getElementById('confirmPin').value;if(np.length!==4||!/^\d{4}$/.test(np)){showToast('PIN must be exactly 4 digits','yellow');return;}if(np!==cp){showToast('PINs do not match','red');return;}state.pin=np;saveState();closeModal('pinModal');showToast('PIN updated!','green');}
 // ======== GOOGLE DRIVE SYNC ========
 // Uses Google OAuth2 + Drive REST API — no Firebase, no Supabase
@@ -10401,8 +10185,6 @@ function _doSignoutAndClear(){
   showToast('Signed out. All data cleared.','yellow');
 }
 
-function googleSignIn(){ doGoogleSignIn(); }
-function googleSignOut(){ signOutGoogle(); }
 
 // ── Save Client ID ────────────────────────────────────────────────────────────
 function saveGdriveConfig(){
@@ -10481,18 +10263,6 @@ function findDriveFile(){
   });
 }
 
-function deleteAllDriveBackups(){
-  var q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
-  return driveFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)&spaces=drive'
-  ).then(function(r){ return r.json(); }).then(function(res){
-    if(!res.files||!res.files.length) return;
-    return Promise.all(res.files.map(function(f){
-      return driveFetch('https://www.googleapis.com/drive/v3/files/'+f.id,{
-        method:'DELETE'
-      }).catch(function(){});
-    }));
-  }).catch(function(){});
-}
 
 function syncToCloud(){
   if(!currentUser && !state.isLoggedIn){
@@ -10844,7 +10614,6 @@ function submitEmailAuth(){
   errEl.style.display='block';
 }
 function doPasswordReset(){ showToast('Use Google sign-in — no password needed.','yellow'); }
-function signInWithGoogleDirect(){ doGoogleSignIn(); }
 
 // ======== EXPORT / IMPORT / BACKUP ========
 
@@ -11288,9 +11057,10 @@ async function restoreFromDrive(){
         parsed=JSON.parse(decrypted);
       }
       const imported=parsed.data||parsed;
+      const _keepDrivePw=state.drivePassword,_keepDriveEmail=state.driveEmail;
       Object.assign(state,imported);
       if(!state.liabilities)state.liabilities=[];if(!state.bills)state.bills=[];if(!state.accounts)state.accounts=[];if(!state.recurring)state.recurring=[];if(!state.budgets)state.budgets={};
-      state.driveConnected=true;state.drivePassword=state.drivePassword;state.driveEmail=state.driveEmail;
+      state.driveConnected=true;state.drivePassword=_keepDrivePw;state.driveEmail=_keepDriveEmail;
       saveState();applyTheme(state.theme);applyFont(state.font);updateCurrSymbols();initApp();
       showToast('✅ Restored from Drive backup! '+state.transactions.length+' transactions.','green');
       closeModal('driveModal');
@@ -11570,107 +11340,6 @@ function toggleWealthGroup(scheme){
   renderWealthAssetGrouped();
 }
 
-function renderWealthCashBreakdown(){
-  var el=document.getElementById('wealthCashBreakdown');
-  if(!el)return;
-  var b=window._wealthCashBreakdown;
-  if(!b){el.innerHTML='';return;}
-  var sym=state.currSymbol;
-  var carry=b.carry, curIncome=b.curIncome, curExpense=b.curExpense;
-  var carryAfterExpense=b.carryAfterExpense, cashBank=b.cashBank;
-
-  // If real accounts exist, show per-account breakdown instead of cash-flow formula
-  if(b.hasAccounts && state.accounts.length>0){
-    var totalBal=b.totalAccts;
-    var html='<div style="background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:14px">'
-      +'<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">🏦 Account Balances</div>';
-    state.accounts.forEach(function(ac,i){
-      var info=(typeof ACCT_TYPES!=='undefined'&&ACCT_TYPES[ac.type])||{emoji:'🏦'};
-      var txNet=state.transactions.filter(function(t){return String(t.account)===String(ac.id);}).reduce(function(s,t){return s+(t.type==='income'?t.amount:-t.amount);},0);
-      var opening=typeof ac.openingBalance==='number'?ac.openingBalance:(ac.balance-txNet);
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;'+(i<state.accounts.length-1?'border-bottom:1px solid var(--border)':'')+'">'
-        +'<div style="display:flex;align-items:center;gap:8px">'
-          +'<span style="font-size:16px">'+info.emoji+'</span>'
-          +'<div><div style="font-size:12px;font-weight:800;color:var(--text)">'+ac.name+'</div>'
-          +(Math.abs(opening)>0.5?'<div style="font-size:10px;font-weight:600;color:var(--text3)">Opening: '+sym+fmt(cv(opening))+(txNet!==0?' · Txns: '+(txNet>0?'+':'')+sym+fmt(cv(txNet)):'')+'</div>':'')
-          +'</div>'
-        +'</div>'
-        +'<div style="font-family:var(--font);font-size:14px;font-weight:900;color:'+(ac.balance>=0?'var(--green)':'var(--red)')+'">'+( ac.balance<0?'−':'')+sym+fmt(cv(Math.abs(ac.balance)))+'</div>'
-      +'</div>';
-    });
-    var resultColor=totalBal>0?'var(--green)':totalBal<0?'var(--red)':'var(--text3)';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid var(--border)">'
-      +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Total Balance</div>'
-      +'<div style="font-family:var(--font);font-size:16px;font-weight:900;color:'+resultColor+'">'+(totalBal<0?'−':'')+sym+fmt(cv(Math.abs(totalBal)))+'</div>'
-    +'</div></div>';
-    el.innerHTML=html;
-    return;
-  }
-
-  // Build step-by-step breakdown rows
-  var rows=[];
-
-  // Row 1: Carry forward (prev months saving/deficit)
-  if(carry>0){
-    rows.push({label:'↩️ Carried from prev. months',amt:carry,color:'var(--green)',sign:'+',note:'Savings accumulated from all previous months'});
-  } else if(carry<0){
-    rows.push({label:'↩️ Carried from prev. months',amt:carry,color:'var(--red)',sign:'',note:'Deficit carried over from previous months'});
-  } else {
-    rows.push({label:'↩️ Carried from prev. months',amt:0,color:'var(--text3)',sign:'',note:'No carry — first month or balanced so far'});
-  }
-
-  // Row 2: Expenses deducted from carry first
-  var expFromCarry=carry>0?Math.min(carry,curExpense):0;
-  var expFromIncome=curExpense-expFromCarry;
-  if(curExpense>0){
-    rows.push({label:'📤 Current month expenses',amt:-curExpense,color:'var(--red)',sign:'−',
-      note: expFromCarry>0&&expFromIncome>0
-        ? sym+fmt(cv(expFromCarry))+' from carry · '+sym+fmt(cv(expFromIncome))+' from income'
-        : expFromCarry>=curExpense
-        ? 'Fully covered by carried savings'
-        : 'Fully deducted from current income'
-    });
-  }
-
-  // Row 3: Current month income
-  if(curIncome>0){
-    rows.push({label:'📥 Current month income',amt:curIncome,color:'var(--green)',sign:'+',
-      note: expFromIncome>0
-        ? sym+fmt(cv(expFromIncome))+' used for expenses · '+sym+fmt(cv(curIncome-expFromIncome))+' remains'
-        : 'Fully intact — expenses covered by carry'
-    });
-  }
-
-  // Divider + result
-  var resultColor=cashBank>0?'var(--green)':cashBank<0?'var(--red)':'var(--text3)';
-
-  var html='<div style="background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:14px">'
-    +'<div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">💡 How Cash & Bank is Calculated</div>';
-
-  rows.forEach(function(r,i){
-    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;'+(i<rows.length-1?'border-bottom:1px solid var(--border)':'')+'">'
-      +'<div style="flex:1">'
-        +'<div style="font-size:12px;font-weight:800;color:var(--text)">'+r.label+'</div>'
-        +'<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px">'+r.note+'</div>'
-      +'</div>'
-      +'<div style="font-family:var(--font);font-size:13px;font-weight:900;color:'+r.color+';white-space:nowrap;margin-left:12px">'
-        +(r.amt===0?sym+'0':(r.amt>0?r.sign+sym+fmt(cv(r.amt)):'−'+sym+fmt(cv(Math.abs(r.amt)))))
-      +'</div>'
-    +'</div>';
-  });
-
-  // Total line
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid var(--border)">'
-    +'<div style="font-size:13px;font-weight:900;color:var(--text)">🏦 Available Cash & Bank</div>'
-    +'<div style="font-family:var(--font);font-size:16px;font-weight:900;color:'+resultColor+'">'
-      +(cashBank<0?'−':'')+sym+fmt(cv(Math.abs(cashBank)))
-    +'</div>'
-  +'</div>';
-
-  html+='</div>';
-  el.innerHTML=html;
-  if(state.amountsHidden) _tagAllMoneyElements();
-}
 
 function showAcctBalBreakdown(){
   var sym=state.currSymbol;
@@ -12552,7 +12221,7 @@ function renderDebtCountdown() {
 }
 
 function populatePrepaySelect() {} // legacy stub
-function calcPrepay() {} // legacy stub
+ // legacy stub
 
 // ============ FLEXIBLE INTEREST LOAN CALCULATOR ============
 var _flexExpanded = {};
@@ -12996,7 +12665,7 @@ function fmtShort2(n) {
 var _retActiveTab = 'plans'; // 'plans' | 'new' | 'edit'
 var _retEditId = null;
 
-function calcRetirement() { renderRetirementPage(); } // called by page trigger
+ // called by page trigger
 
 function renderRetirementPage() {
   var c = document.getElementById('retPageContent');
@@ -13413,7 +13082,7 @@ function doEfundTransfer(){
   var note=document.getElementById('efundTransferNote').value||'Emergency Fund Transfer';
   if(!fromId||!toId){customAlert('⚠️','Select both a source account and an emergency fund account.');return;}
   if(!amt||amt<=0){customAlert('⚠️','Enter a valid transfer amount.');return;}
-  var amtINR=amt*(state.currencyRate||1);
+  var amtINR=amt/(state.currencyRate||1);
   var from=(state.accounts||[]).find(function(a){return String(a.id)===String(fromId);});
   var to=(state.accounts||[]).find(function(a){return String(a.id)===String(toId);});
   if(!from||!to){customAlert('⚠️','Account not found.');return;}
@@ -13718,32 +13387,6 @@ function shareSpendingCard(){
 // ======== TRANSACTION SEARCH ADVANCED FILTERS ========
 // Extend renderHistory with advanced search filters
 var _origRenderHistory=renderHistory;
-function renderHistoryExtended(){
-  // Additional filter: date range and category
-  var fromEl=document.getElementById('histFromDate');
-  var toEl=document.getElementById('histToDate');
-  var catEl=document.getElementById('histCatFilter');
-  if(fromEl&&toEl&&catEl){
-    var from=fromEl.value,to=toEl.value,cat=catEl.value;
-    if(from||to||cat){
-      // Re-filter after normal render
-      setTimeout(function(){
-        var items=document.querySelectorAll('#txList [data-txid]');
-        items.forEach(function(item){
-          var txid=item.dataset.txid;
-          var tx=state.transactions.find(function(t){return String(t.id)===txid;});
-          if(!tx){return;}
-          var show=true;
-          if(from&&tx.date<from) show=false;
-          if(to&&tx.date>to) show=false;
-          if(cat&&tx.category!==cat) show=false;
-          item.style.display=show?'':'none';
-        });
-      },50);
-    }
-  }
-  _origRenderHistory();
-}
 
 // ======== INACTIVITY OVERLAY HTML (injected) ========
 (function(){
@@ -13773,7 +13416,6 @@ saveState=function(){
 };
 
 // ── Navigation for new pages via settings or helper ──
-function navToPage(id){ showPage(id); }
 
 // ======== BOOT ========
 migrateOrBootProfiles();
