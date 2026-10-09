@@ -3594,6 +3594,13 @@ function migrateCategoryNames(){
     'Investment':'Passive Income'
   };
   var changed=false;
+  // FIX: never remap names the user created as their own custom categories/sources,
+  // and run the remap only once (flag) so it can't hit new entries on every app open.
+  var _userInc=(state.customIncomeCats||[]);
+  var _userExp=[];Object.values(state.customExpCats||{}).forEach(function(a){(a||[]).forEach(function(n){_userExp.push(n);});});
+  _userInc.forEach(function(n){delete CAT_MIGRATE_INC[n];});
+  _userExp.forEach(function(n){delete CAT_MIGRATE_EXP[n];});
+  var _alreadyMigrated=!!state._catMigrated;
   if(Array.isArray(state.transactions)){
     state.transactions.forEach(function(tx){
       // Remove description field from all transactions
@@ -3601,6 +3608,7 @@ function migrateCategoryNames(){
         delete tx.desc;
         changed=true;
       }
+      if(_alreadyMigrated) return;
       if(tx.type==='expense'&&CAT_MIGRATE_EXP[tx.category]){
         tx.category=CAT_MIGRATE_EXP[tx.category];
         tx.emoji=CAT_EMOJI[tx.category]||'🌀';
@@ -3612,6 +3620,7 @@ function migrateCategoryNames(){
       }
     });
   }
+  if(!state._catMigrated){state._catMigrated=true;changed=true;}
   if(changed) saveState();
 }
 // Fields that must never be stored, backed up or synced (keeps data + backups small)
