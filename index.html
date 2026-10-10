@@ -5790,10 +5790,10 @@ function renderHistory(){
   if(state.amountsHidden) _tagAllMoneyElements();
 }
 
-function _trBalPill(b,color){
-  if(b===null||b===undefined) return '';
+function _trChip(name,b,c){
+  if(b===null||b===undefined) return '<span class="tx-badge" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+escHtml(name||'')+'</span>';
   var neg=b<0;
-  return '<span style="font-size:10px;font-weight:800;color:'+(neg?'var(--red)':color)+';background:'+color+'18;border:1px solid '+color+'33;border-radius:5px;padding:1px 6px;letter-spacing:-0.2px">'+(neg?'\u2212':'')+state.currSymbol+fmt(cv(Math.abs(b)))+'</span>';
+  return '<span style="display:inline-flex;align-items:center;gap:3px;background:'+c+'18;border:1px solid '+c+'33;border-radius:5px;padding:1px 6px;min-width:0"><span style="font-size:9px;color:var(--text3);font-weight:600;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(name||'bal')+'</span><span style="font-size:10px;font-weight:800;color:'+(neg?'var(--red)':c)+';letter-spacing:-0.2px;white-space:nowrap">'+(neg?'\u2212':'')+state.currSymbol+fmt(cv(Math.abs(b)))+'</span></span>';
 }
 function transferHistHTML(t,balInfo){
   var fromAcct=state.accounts.find(function(a){return String(a.id)===String(t.from);});
@@ -5806,14 +5806,10 @@ function transferHistHTML(t,balInfo){
       +'<div class="tx-name">Transfer</div>'
       +'<div class="tx-meta">'+formatDate(t.date)+(t.time?' · '+t.time:'')+(t.note?' · '+t.note:'')+'</div>'
       +'<div class="tx-badges">'
-        +'<span class="tx-badge" style="background:'+fromColor+'22;color:'+fromColor+';border:1px solid '+fromColor+'44">'+t.fromName+'</span>'
+        +_trChip(t.fromName,balInfo?balInfo.fromBal:null,fromColor)
         +'<span style="font-size:10px;color:var(--text3);font-weight:700;padding:0 2px">→</span>'
-        +'<span class="tx-badge" style="background:'+toColor+'22;color:'+toColor+';border:1px solid '+toColor+'44">'+t.toName+'</span>'
+        +_trChip(t.toName,balInfo?balInfo.toBal:null,toColor)
       +'</div>'
-      +(balInfo?'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px"><span style="font-size:9px;color:var(--text3);font-weight:600">bal</span>'
-        +_trBalPill(balInfo.fromBal,fromColor)
-        +'<span style="font-size:10px;color:var(--text3);font-weight:700;padding:0 2px">→</span>'
-        +_trBalPill(balInfo.toBal,toColor)+'</div>':'')
     +'</div>'
     +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;padding-top:2px">'
       +'<div style="font-size:14px;font-weight:900;color:var(--blue)">'+state.currSymbol+fmt(cv(t.amount))+'</div>'
@@ -11747,7 +11743,7 @@ function formatTxTime(t){if(!t)return '';try{const[h,m]=t.split(':');const hr=pa
 
 // ======== SERVICE WORKER — Network-first, versioned cache ========
 // ── Version stamp: change this string on every release to force SW update ──
-var BUILD = 'ft-build-20260630-v22';
+var BUILD = 'ft-build-20261010-v23';
 
 (function(){
   if(!('serviceWorker' in navigator)) return;
@@ -13506,16 +13502,40 @@ initGoogleDrive();
     <!-- Timeline -->
     <div style="display:flex;flex-direction:column;gap:0">
 
-      <!-- v22 LATEST -->
+      <!-- v23 LATEST -->
       <div style="display:flex;gap:14px;padding-bottom:20px">
         <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">22</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow);flex-shrink:0">23</div>
           <div style="width:2px;flex:1;background:linear-gradient(to bottom,var(--accent),transparent);margin-top:6px;min-height:24px"></div>
         </div>
         <div style="flex:1;padding-top:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text)">v22 — 30 Jun 2026</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v23 — 10 Oct 2026</span>
             <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:2px 8px;border-radius:20px">LATEST</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.8">
+            🛠️ <b style="color:var(--text)">Custom categories &amp; income sources fix</b> — names like Cashback or Dividend no longer get silently renamed to Refund / Passive Income on app open; the old-name migration now runs once and skips your own custom names<br>
+            📅 <b style="color:var(--text)">Future dates blocked</b> — new expense, income and transfer entries (add and edit) now reject future dates; uses your local date instead of UTC<br>
+            ⏰ <b style="color:var(--text)">Time on transfers</b> — transfers now have a time, so they sort correctly within the day and no longer show wrong negative balances<br>
+            💰 <b style="color:var(--text)">Transfer balances in History</b> — each transfer shows the balance after it for both accounts as inline chips, same style as split transactions; transfer account dropdowns now match expense/income format<br>
+            🎨 <b style="color:var(--text)">Modern icons added</b> — refreshed, cleaner icon set across the app<br>
+            ⚡ <b style="color:var(--text)">Real-time calculation on stored data</b> — balances and totals are calculated live from your saved data, so they always stay up to date<br>
+            🛒 <b style="color:var(--text)">Buy request feature</b> — raise a request to buy something and track it<br>
+            ⚖️ <b style="color:var(--text)">Reconcile feature</b> — match your account balances with your bank / actual balances and fix differences
+          </div>
+        </div>
+      </div>
+
+
+      <!-- v22 -->
+      <div style="display:flex;gap:14px;padding-bottom:20px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text2);flex-shrink:0">22</div>
+          <div style="width:2px;flex:1;background:var(--border2);margin-top:6px;min-height:24px"></div>
+        </div>
+        <div style="flex:1;padding-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text)">v22 — 30 Jun 2026</span>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.8">
             📊 <b style="color:var(--text)">Expense Trend day-view income fix</b> — Today tab now shows income per category alongside expense (was always 0)<br>
@@ -13793,7 +13813,7 @@ initGoogleDrive();
     </div><!-- /timeline -->
 
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px">
-      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v22 — 30 Jun 2026</span>
+      Current build: <span id="modalBuildLabel" style="color:var(--accent)">v23 — 10 Oct 2026</span>
     </div>
     <button class="btn-cancel" onclick="closeModal('buildHistoryModal')" style="width:100%;margin-top:14px">✕ Close</button>
   </div>
