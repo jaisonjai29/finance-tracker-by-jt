@@ -2832,7 +2832,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;}
     <div class="field"><div class="field-label">📤 From Account</div><select class="field-input" id="transferFrom"><option value="">-- Select --</option></select></div>
     <div class="field"><div class="field-label">📥 To Account</div><select class="field-input" id="transferTo"><option value="">-- Select --</option></select></div>
     <div class="field"><div class="field-label">💰 Amount</div><input type="number" class="field-input" id="transferAmt" placeholder="0" inputmode="decimal"></div>
-    <div class="field"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="transferDate"></div>
+    <div style="display:flex;gap:8px"><div class="field" style="flex:1"><div class="field-label">📅 Date</div><input type="date" class="field-input" id="transferDate"></div><div class="field" style="flex:0 0 120px"><div class="field-label">⏰ Time</div><input type="time" class="field-input" id="transferTime"></div></div>
     <div class="field"><div class="field-label">📌 Notes (optional)</div><input type="text" class="field-input" id="transferNote" placeholder="e.g. Move savings to investment"></div>
     <input type="hidden" id="transferEditId">
     <button class="btn-go" id="transferSaveBtn" onclick="saveTransfer()">✅ Transfer</button>
@@ -5804,7 +5804,7 @@ function transferHistHTML(t,balInfo){
     +'<div class="tx-ico" style="background:rgba(68,138,255,0.12)">🔀</div>'
     +'<div class="tx-body">'
       +'<div class="tx-name">Transfer</div>'
-      +'<div class="tx-meta">'+formatDate(t.date)+(t.note?' · '+t.note:'')+'</div>'
+      +'<div class="tx-meta">'+formatDate(t.date)+(t.time?' · '+t.time:'')+(t.note?' · '+t.note:'')+'</div>'
       +'<div class="tx-badges">'
         +'<span class="tx-badge" style="background:'+fromColor+'22;color:'+fromColor+';border:1px solid '+fromColor+'44">'+t.fromName+'</span>'
         +'<span style="font-size:10px;color:var(--text3);font-weight:700;padding:0 2px">→</span>'
@@ -11948,6 +11948,7 @@ showModal=function(id){
     if(eid&&!eid.value){
       document.getElementById('transferDate').value=_localToday();
       document.getElementById('transferDate').max=_localToday();
+      var _n=new Date();document.getElementById('transferTime').value=String(_n.getHours()).padStart(2,'0')+':'+String(_n.getMinutes()).padStart(2,'0');
       document.getElementById('transferAmt').value='';
       document.getElementById('transferNote').value='';
       document.getElementById('transferFrom').value='';
@@ -12131,6 +12132,7 @@ function editTransfer(id){
   document.getElementById('transferAmt').value=parseFloat((t.amount*(state.currencyRate||1)).toFixed(2));
   document.getElementById('transferDate').value=t.date;
   document.getElementById('transferDate').max=_localToday();
+  document.getElementById('transferTime').value=t.time||'';
   document.getElementById('transferNote').value=t.note||'';
   var titleEl=document.getElementById('transferModalTitle');
   if(titleEl) titleEl.textContent='✏️ Edit Transfer';
@@ -12147,6 +12149,7 @@ function saveTransfer(){
   var toId=document.getElementById('transferTo').value;
   var amt=parseFloat(document.getElementById('transferAmt').value||0);
   var date=document.getElementById('transferDate').value;
+  var time=document.getElementById('transferTime').value||'';
   var note=document.getElementById('transferNote').value.trim();
   var editId=document.getElementById('transferEditId').value||'';
   if(!fromId||!toId){showToast('Select both accounts','yellow');return;}
@@ -12170,11 +12173,11 @@ function saveTransfer(){
       // Update the transfer record in-place
       old.from=fromId; old.to=toId;
       old.fromName=fromAcct.name; old.toName=toAcct.name;
-      old.amount=amtINR; old.date=date; old.note=note;
+      old.amount=amtINR; old.date=date; old.note=note; if(time) old.time=time;
     }
   } else {
     if(!state.transfers) state.transfers=[];
-    state.transfers.unshift({id:Date.now(),from:fromId,to:toId,fromName:fromAcct.name,toName:toAcct.name,amount:amtINR,date:date,note:note});
+    state.transfers.unshift({id:Date.now(),from:fromId,to:toId,fromName:fromAcct.name,toName:toAcct.name,amount:amtINR,date:date,time:time||new Date().toTimeString().slice(0,5),note:note});
   }
 
   // Apply new transfer amounts to accounts
@@ -13123,7 +13126,7 @@ function doEfundTransfer(){
   from.balance-=amtINR; to.balance+=amtINR;
   var today=localDateStr(new Date());
   if(!Array.isArray(state.transfers)) state.transfers=[];
-  state.transfers.push({id:String(Date.now()),from:fromId,to:toId,amount:amtINR,date:today,note:note});
+  state.transfers.push({id:String(Date.now()),from:fromId,to:toId,amount:amtINR,date:today,time:new Date().toTimeString().slice(0,5),note:note});
   saveState();
   document.getElementById('efundTransferAmt').value='';
   document.getElementById('efundTransferNote').value='';
