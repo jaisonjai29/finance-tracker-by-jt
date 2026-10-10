@@ -4025,7 +4025,8 @@ function initApp(){
   }
   updateTxAccountSelect();
 }
-function setTodayDate(){const now=new Date();const d=now.toISOString().split('T')[0];const f=document.getElementById('txDate');if(f){f.value=d;f.max=d;}const tf=document.getElementById('txTime');if(tf){const hh=String(now.getHours()).padStart(2,'0');const mm=String(now.getMinutes()).padStart(2,'0');tf.value=hh+':'+mm;}}
+function _localToday(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
+function setTodayDate(){const now=new Date();const d=_localToday();const f=document.getElementById('txDate');if(f){f.value=d;f.max=d;}const tf=document.getElementById('txTime');if(tf){const hh=String(now.getHours()).padStart(2,'0');const mm=String(now.getMinutes()).padStart(2,'0');tf.value=hh+':'+mm;}}
 function initFpButton(){var fpBtn=document.querySelector('.pin-btn [style*="22px"]')?.parentElement;if(fpBtn)fpBtn.style.opacity=state.fpEnabled?'1':'0.3';}
 
 // ======== NAVIGATION ========
@@ -4514,6 +4515,7 @@ function saveTx(){
   const platform=txType==='expense'?(document.getElementById('txPlatform')?.value||''):'';
   const payMethod=txType==='expense'?(document.getElementById('txPayMethod')?.value||''):'';
   if(!amt||!date||!cat){showToast('Fill amount, date and category','yellow');return;}
+  if(date>_localToday()){showToast('Future dates are not allowed','yellow');return;}
   if(txSplitMode){
     const splits=getSplitRowsData();
     if(splits.length<2){showToast('Add at least 2 splits, or turn Split off','yellow');return;}
@@ -5043,6 +5045,11 @@ function buildRunningBalances(){
     } else {
       var tr = ev.data;
       var fid = String(tr.from), tid = String(tr.to);
+      // record both accounts' balance AFTER this transfer (before undoing it)
+      balMap.set('t'+String(tr.id), {
+        fromBal: acctBal.hasOwnProperty(fid) ? acctBal[fid] : null,
+        toBal:   acctBal.hasOwnProperty(tid) ? acctBal[tid] : null
+      });
       // undo transfer
       if(acctBal.hasOwnProperty(fid)) acctBal[fid] += tr.amount;
       if(acctBal.hasOwnProperty(tid)) acctBal[tid] -= tr.amount;
@@ -5245,7 +5252,7 @@ function customConfirm(icon, title, msg, onOk){
 
 function editTx(id){
   const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=_localToday();
   document.getElementById('editTxId').value=id;
   document.getElementById('editTxAmt').value=parseFloat((tx.amount*(state.currencyRate||1)).toFixed(2));
   const dateField=document.getElementById('editTxDate');
@@ -5384,7 +5391,7 @@ function saveEditTx(){
   const origType=document.getElementById('editTxOrigType').value;
   const origAcct=document.getElementById('editTxOrigAcct').value;
   if(!amt||!date){showToast('Fill amount and date','yellow');return;}
-  const todayMax=new Date().toISOString().split('T')[0];
+  const todayMax=_localToday();
   if(date>todayMax){showToast('Future dates are not allowed','yellow');return;}
   const amtINR2=amt/(state.currencyRate||1);  // convert display currency back to INR
   const tx=state.transactions.find(t=>String(t.id)===String(id));if(!tx)return;
@@ -5775,7 +5782,7 @@ function renderHistory(){
     var summaryHTML=summaryParts.length?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:2px 7px;margin-left:6px;flex-shrink:0;white-space:nowrap;overflow:hidden;max-width:calc(100vw - 120px)">'+summaryParts.join('<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>')+( netStr?'<span style="color:var(--text3);font-weight:700;font-size:8px;padding:0 1px">·</span>'+netStr:'')+'</span>':'';
     html+=`<div style="display:flex;align-items:center;gap:0;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:14px 0 6px;overflow:hidden;white-space:nowrap">${formatDate(date)}${summaryHTML}</div><div class="box" style="padding:8px 14px">`;
     rows.forEach(function(item){
-      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=(item.data._isSplitGroup?splitGroupTxHTML(item.data,runBal):txHTML(item.data,bi));}else{html+=transferHistHTML(item.data);}
+      if(item.isTx){var bi=runBal.get(String(item.data.id))||null;html+=(item.data._isSplitGroup?splitGroupTxHTML(item.data,runBal):txHTML(item.data,bi));}else{html+=transferHistHTML(item.data,runBal.get('t'+String(item.data.id))||null);}
     });
     html+='</div>';
   });
@@ -5783,7 +5790,12 @@ function renderHistory(){
   if(state.amountsHidden) _tagAllMoneyElements();
 }
 
-function transferHistHTML(t){
+function _trBalPill(b,color){
+  if(b===null||b===undefined) return '';
+  var neg=b<0;
+  return '<span style="font-size:10px;font-weight:800;color:'+(neg?'var(--red)':color)+';background:'+color+'18;border:1px solid '+color+'33;border-radius:5px;padding:1px 6px;letter-spacing:-0.2px">'+(neg?'\u2212':'')+state.currSymbol+fmt(cv(Math.abs(b)))+'</span>';
+}
+function transferHistHTML(t,balInfo){
   var fromAcct=state.accounts.find(function(a){return String(a.id)===String(t.from);});
   var toAcct=state.accounts.find(function(a){return String(a.id)===String(t.to);});
   var fromColor=(fromAcct&&fromAcct.color)||'#448aff';
@@ -5798,6 +5810,10 @@ function transferHistHTML(t){
         +'<span style="font-size:10px;color:var(--text3);font-weight:700;padding:0 2px">→</span>'
         +'<span class="tx-badge" style="background:'+toColor+'22;color:'+toColor+';border:1px solid '+toColor+'44">'+t.toName+'</span>'
       +'</div>'
+      +(balInfo?'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px"><span style="font-size:9px;color:var(--text3);font-weight:600">bal</span>'
+        +_trBalPill(balInfo.fromBal,fromColor)
+        +'<span style="font-size:10px;color:var(--text3);font-weight:700;padding:0 2px">→</span>'
+        +_trBalPill(balInfo.toBal,toColor)+'</div>':'')
     +'</div>'
     +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;padding-top:2px">'
       +'<div style="font-size:14px;font-weight:900;color:var(--blue)">'+state.currSymbol+fmt(cv(t.amount))+'</div>'
@@ -11930,7 +11946,8 @@ showModal=function(id){
     // Only reset if NOT called from editTransfer (editTransfer sets editId before calling showModal)
     var eid=document.getElementById('transferEditId');
     if(eid&&!eid.value){
-      document.getElementById('transferDate').value=new Date().toISOString().split('T')[0];
+      document.getElementById('transferDate').value=_localToday();
+      document.getElementById('transferDate').max=_localToday();
       document.getElementById('transferAmt').value='';
       document.getElementById('transferNote').value='';
       document.getElementById('transferFrom').value='';
@@ -12093,7 +12110,12 @@ function populateTransferSelects(){
   var to=document.getElementById('transferTo');
   if(!from||!to) return;
   var opts='<option value="">-- Select --</option>'
-    +state.accounts.map(function(a){return'<option value="'+a.id+'">'+a.name+' ('+state.currSymbol+fmt(cv(a.balance))+')</option>';}).join('');
+    +state.accounts.map(function(a){
+      var info=ACCT_TYPES[a.type]||{emoji:'🏦'};
+      var bal=a.balance!==0?' · '+state.currSymbol+fmtFull(cv(Math.abs(a.balance))):'';
+      var typeLabel=a.type!==a.name?' ['+a.type+']':'';
+      return'<option value="'+a.id+'">'+info.emoji+' '+a.name+typeLabel+bal+'</option>';
+    }).join('');
   from.innerHTML=opts;
   to.innerHTML=opts;
 }
@@ -12108,6 +12130,7 @@ function editTransfer(id){
   document.getElementById('transferTo').value=String(t.to);
   document.getElementById('transferAmt').value=parseFloat((t.amount*(state.currencyRate||1)).toFixed(2));
   document.getElementById('transferDate').value=t.date;
+  document.getElementById('transferDate').max=_localToday();
   document.getElementById('transferNote').value=t.note||'';
   var titleEl=document.getElementById('transferModalTitle');
   if(titleEl) titleEl.textContent='✏️ Edit Transfer';
@@ -12129,6 +12152,8 @@ function saveTransfer(){
   if(!fromId||!toId){showToast('Select both accounts','yellow');return;}
   if(fromId===toId){showToast('Cannot transfer to same account','red');return;}
   if(!amt||amt<=0){showToast('Enter a valid amount','yellow');return;}
+  if(!date){showToast('Select a date','yellow');return;}
+  if(date>_localToday()){showToast('Future dates are not allowed','yellow');return;}
   var amtINR=amt/(state.currencyRate||1);
   var fromAcct=state.accounts.find(function(a){return String(a.id)===String(fromId);});
   var toAcct=state.accounts.find(function(a){return String(a.id)===String(toId);});
