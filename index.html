@@ -7543,6 +7543,7 @@ function triggerDematCSV(){document.getElementById('dematCSVInput').click();}
 function importDematFile(event){
   var file=event.target.files[0];
   if(!file){return;}
+  window._dematMfDiv=undefined; // decided in preview: saved choice, or auto for known broker format
   event.target.value='';
   var name=file.name.toLowerCase();
   var isXLSX=name.endsWith('.xlsx')||name.endsWith('.xls');
@@ -7641,12 +7642,35 @@ function parseDematCSV(text){
   }
 
   var h=headerRow.map(function(x){return x.replace(/["\']/g,'').trim();});
-  var colName   = findCol(h,['symbol','scrip','instrument','stock','security','name','isin']);
-  var colQty    = findCol(h,['qty','quantity','shares','holding','unit']);
-  var colAvg    = findCol(h,['avg','average','cost','buy price','purchase price','buy avg']);
-  var colLtp    = findCol(h,['ltp','last price','current price','market price','close','price','cmp']);
-  var colValue  = findCol(h,['current value','market value','present value','cur val','mkt val','value','amount']);
-  var colPnl    = findCol(h,['p&l','pnl','profit','gain','returns','unrealised','unrealized']);
+  // findCol with an exclusion test (skip headers that are really totals / other columns)
+  function findColEx(arr,keywords,skip){
+    for(var k=0;k<keywords.length;k++){
+      for(var j=0;j<arr.length;j++){
+        var hl=arr[j].toLowerCase();
+        if(hl.includes(keywords[k]) && !(skip&&skip(hl,keywords[k],j))) return j;
+      }
+    }
+    return -1;
+  }
+  var colName   = findCol(h,['symbol','scrip','instrument','stock','security','scheme','name','isin']);
+  var colQty    = findCol(h,['qty','quantity','shares','units','holding','unit']);
+  // Total invested amount column (MF files give a TOTAL, not a per-unit price)
+  var colInv    = findColEx(h,['invested','investment','cost value','total cost','buy value','purchase value','cost amount']);
+  // Per-unit average price — never a total/value/amount column
+  var colAvg    = findColEx(h,['avg','average','buy price','purchase price','buy avg','cost'],function(hl,kw,j){
+    return j===colInv || hl.includes('value') || hl.includes('total') || hl.includes('invested') || hl.includes('amount');
+  });
+  // Current price / NAV (not the average/purchase one)
+  var colLtp    = findColEx(h,['ltp','last price','current price','current nav','latest nav','market price','close','cmp','price','nav'],function(hl,kw,j){
+    return j===colAvg || j===colInv || hl.includes('avg') || hl.includes('average') || hl.includes('purchase') || hl.includes('buy') || hl.includes('cost') || hl.includes('value') || hl.includes('invested');
+  });
+  // Current value — never the invested/cost column
+  var colValue  = findColEx(h,['current value','market value','present value','cur. val','cur val','mkt val','closing value','value','amount'],function(hl,kw,j){
+    return j===colInv || hl.includes('invested') || hl.includes('cost') || hl.includes('purchase') || hl.includes('buy');
+  });
+  var colPnl    = findColEx(h,['p&l','pnl','profit','gain','returns','unrealised','unrealized'],function(hl){
+    return hl.includes('%') || hl.includes('xirr') || hl.includes('percent') || hl.includes('cagr');
+  });
 
   var rows=[];
   for(var i=headerIdx+1;i<lines.length;i++){
@@ -7657,28 +7681,42 @@ function parseDematCSV(text){
 
     function getVal(idx){
       if(idx===-1||!cols[idx]) return '';
-      return cols[idx].replace(/[",\s₹$€£]/g,'').replace(/[()]/g,'').trim();
+      return cols[idx].replace(/[\",\s₹$€£]/g,'').replace(/[()]/g,'').trim();
     }
 
-    var name   = colName>-1  ? cols[colName].replace(/["\']/g,'').trim() : '';
+    var name   = colName>-1  ? cols[colName].replace(/[\"\']/g,'').trim() : '';
     var qty    = parseFloat(getVal(colQty))   || 0;
     var avg    = parseFloat(getVal(colAvg))   || 0;
     var ltp    = parseFloat(getVal(colLtp))   || 0;
     var value  = parseFloat(getVal(colValue)) || 0;
     var pnl    = parseFloat(getVal(colPnl))   || 0;
+    var invCol = parseFloat(getVal(colInv))   || 0;
 
     // Skip empty or header-like rows
     if(!name || name.toLowerCase()==='total' || name.toLowerCase()==='grand total') continue;
-    if(!qty && !value && !avg && !ltp) continue;
+    if(!qty && !value && !avg && !ltp && !invCol) continue;
 
-    // Derive missing values
-    var invested = (avg && qty) ? avg*qty : (value - pnl) || 0;
-    var curValue = value || (ltp && qty ? ltp*qty : invested);
+    // Current value: reported value, else price x quantity
+    var curValue = value || (ltp && qty ? ltp*qty : 0);
+    // Sanity: if the reported value is wildly off from price x qty, trust the reported value
+    if(value && ltp && qty){
+      var calc=ltp*qty;
+      if(calc>0 && (value/calc>8 || value/calc<0.125)){ ltp=qty?value/qty:ltp; }
+    }
+    // Invested: explicit total column first, else avg x qty
+    var invested = invCol || ((avg && qty) ? avg*qty : (value - pnl) || 0);
+    // Sanity: if "avg" was really a total amount, avg x qty explodes -> use avg as the total
+    if(!invCol && avg && qty>1 && curValue>0 && invested>curValue*8 && avg<=curValue*3){
+      invested = avg; avg = invested/qty;
+    }
+    if(!curValue) curValue = invested;
     if(!curValue && !invested) continue;
 
-    rows.push({name:name, qty:qty, avg:avg, ltp:ltp, invested:invested, value:curValue, pnl:pnl});
+    rows.push({name:name, qty:qty, avg:avg, ltp:ltp, invested:invested, value:curValue, pnl:pnl,
+      raw:{qty:colQty>-1?cols[colQty]:'',avg:colAvg>-1?cols[colAvg]:'',ltp:colLtp>-1?cols[colLtp]:'',inv:colInv>-1?cols[colInv]:'',val:colValue>-1?cols[colValue]:'',pnl:colPnl>-1?cols[colPnl]:''}});
   }
-  return {rows:rows, headers:h};
+  function _hn(j){return j>-1?h[j]:'—';}
+  return {rows:rows, headers:h, map:{name:_hn(colName),qty:_hn(colQty),avg:_hn(colAvg),ltp:_hn(colLtp),inv:_hn(colInv),val:_hn(colValue),pnl:_hn(colPnl)}};
 }
 
 function splitCSVLine(line){
@@ -7721,8 +7759,20 @@ function detectScheme(name){
 
 function showDematPreview(result){
   var rows=result.rows;
+  window._dematResult=result;
+  if(window._dematMfDiv===undefined){
+    var _hl=(result.headers||[]).map(function(x){return String(x).toLowerCase();}).join('|');
+    var _knownFmt=_hl.indexOf('scrip name')>-1&&_hl.indexOf('total qty')>-1&&_hl.indexOf('previous close')>-1;
+    window._dematMfDiv=(typeof state.importMfDiv100==='boolean')?state.importMfDiv100:_knownFmt;
+  }
   // Auto-detect scheme for each row
   rows.forEach(function(r){ r.scheme=detectScheme(r.name); });
+  // Optional fix: some broker files give mutual fund NAV / invested / value 100x too large (units are fine)
+  rows.forEach(function(r){
+    if(!r._o) r._o={avg:r.avg,ltp:r.ltp,invested:r.invested,value:r.value,pnl:r.pnl};
+    var f=(window._dematMfDiv && r.scheme==='Mutual Fund')?0.01:1;
+    r.avg=r._o.avg*f; r.ltp=r._o.ltp*f; r.invested=r._o.invested*f; r.value=r._o.value*f; r.pnl=r._o.pnl*f;
+  });
 
   var total=rows.reduce(function(s,r){return s+r.value;},0);
   var totalInv=rows.reduce(function(s,r){return s+r.invested;},0);
@@ -7782,6 +7832,17 @@ function showDematPreview(result){
   html+='</div>';
   html+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:4px;text-align:center">Holdings grouped by type. Existing assets are not affected.</div>';
 
+  if(rows.some(function(r){return r.scheme==='Mutual Fund';})){
+    html+='<label style="display:flex;align-items:flex-start;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer"><input type="checkbox" '+(window._dematMfDiv?'checked ':'')+'onchange="window._dematMfDiv=this.checked;state.importMfDiv100=this.checked;saveState();showDematPreview(window._dematResult)" style="margin-top:2px"><span>Divide mutual fund NAV, invested and current value by 100 (units stay the same). Your choice is remembered for next imports.</span></label>';
+  }
+  // Column check: shows which file column fed each field + raw text of first mutual fund row
+  if(result.map){
+    var mp=result.map, mf=rows.filter(function(r){return r.scheme==='Mutual Fund';})[0]||rows[0];
+    html+='<details style="margin:6px 0;font-size:10px;color:var(--text3)"><summary style="cursor:pointer;font-weight:700">🔍 Column check (tap if values look wrong)</summary><div style="padding:6px 2px;line-height:1.7">'
+      +'Name ← '+escHtml(mp.name)+'<br>Units ← '+escHtml(mp.qty)+'<br>Avg price ← '+escHtml(mp.avg)+'<br>Current price/NAV ← '+escHtml(mp.ltp)+'<br>Invested ← '+escHtml(mp.inv)+'<br>Current value ← '+escHtml(mp.val)+'<br>P&amp;L ← '+escHtml(mp.pnl);
+    if(mf&&mf.raw) html+='<br><b>First row raw text</b> ('+escHtml(mf.name)+'): units="'+escHtml(mf.raw.qty)+'" avg="'+escHtml(mf.raw.avg)+'" price="'+escHtml(mf.raw.ltp)+'" invested="'+escHtml(mf.raw.inv)+'" value="'+escHtml(mf.raw.val)+'"';
+    html+='</div></details>';
+  }
   window._dematImportRows=rows;
   var m=document.getElementById('dematPreviewModal');
   if(m){ document.getElementById('dematPreviewBody').innerHTML=html; if(state.amountsHidden) _tagAllMoneyElements(); showModal('dematPreviewModal'); }
@@ -13520,6 +13581,7 @@ initGoogleDrive();
             💰 <b style="color:var(--text)">Transfer balances in History</b> — each transfer shows the balance after it for both accounts as inline chips, same style as split transactions; transfer account dropdowns now match expense/income format<br>
             🎨 <b style="color:var(--text)">Modern icons added</b> — refreshed, cleaner icon set across the app<br>
             ⚡ <b style="color:var(--text)">Real-time calculation on stored data</b> — balances and totals are calculated live from your saved data, so they always stay up to date<br>
+            📥 <b style="color:var(--text)">Portfolio import improvements</b> — smarter column mapping for mutual fund files, a Column check view in the import preview, and an option to divide mutual fund amounts by 100 when a broker file reports them 100× too large<br>
             🛒 <b style="color:var(--text)">Buy request feature</b> — raise a request to buy something and track it<br>
             ⚖️ <b style="color:var(--text)">Reconcile feature</b> — match your account balances with your bank / actual balances and fix differences
           </div>
